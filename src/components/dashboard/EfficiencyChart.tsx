@@ -11,17 +11,16 @@ import {
 } from "recharts";
 import { getAveragesByMachine, BatchRecord } from "@/data/mockData";
 
-// Definimos que este componente espera recibir "data"
 interface EfficiencyChartProps {
   data: BatchRecord[];
 }
 
 export function EfficiencyChart({ data }: EfficiencyChartProps) {
-  // Ahora usamos la data que nos llega por props
+  // Traducimos las claves del objeto de datos
   const chartData = getAveragesByMachine(data).map(item => ({
     machine: item.machine.replace(/(\d)/, '\n$1'),
-    "Expected Time": item.avgExpected,
-    "Real Time": item.avgReal,
+    "Tiempo Esperado": item.avgExpected,
+    "Tiempo Real": item.avgReal,
   }));
 
   return (
@@ -77,13 +76,13 @@ export function EfficiencyChart({ data }: EfficiencyChartProps) {
                 wrapperStyle={{ paddingTop: '20px' }}
               />
               <Bar 
-                dataKey="Expected Time" 
+                dataKey="Tiempo Esperado" 
                 name="Tiempo Esperado"
                 fill="hsl(var(--chart-expected))" 
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
-                dataKey="Real Time" 
+                dataKey="Tiempo Real" 
                 name="Tiempo Real"
                 fill="hsl(var(--chart-real))" 
                 radius={[4, 4, 0, 0]}

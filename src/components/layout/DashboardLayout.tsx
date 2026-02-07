@@ -19,21 +19,21 @@ interface DashboardLayoutProps {
 const navItems = [
   { 
     path: "/", 
-    label: "Overview", 
+    label: "Resumen", 
     icon: LayoutDashboard,
-    description: "Global dashboard"
+    description: "Tablero principal"
   },
   { 
     path: "/comparison", 
-    label: "Batch Comparison", 
+    label: "Comparación", 
     icon: GitCompare,
-    description: "Compare batches"
+    description: "Comparar lotes"
   },
   { 
     path: "/machine", 
-    label: "Machine Detail", 
+    label: "Maquinaria", 
     icon: Cog,
-    description: "Equipment analysis"
+    description: "Detalle por equipo"
   },
 ];
 
@@ -49,8 +49,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="h-16 flex items-center gap-3 px-6 border-b border-sidebar-border">
           <Beer className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="font-bold text-foreground text-lg">BrewCycle</h1>
-            <p className="text-xs text-muted-foreground">Analytics</p>
+            <h1 className="font-bold text-foreground text-lg">Brew Insights</h1>
+            <p className="text-xs text-muted-foreground">Analítica Industrial</p>
           </div>
         </div>
 
@@ -82,7 +82,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border">
           <p className="text-xs text-muted-foreground text-center">
-            v1.0.0 • Industrial Analytics
+            v1.0.0 • Producción
           </p>
         </div>
       </aside>
@@ -91,7 +91,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Beer className="h-6 w-6 text-primary" />
-          <span className="font-bold text-foreground">BrewCycle</span>
+          <span className="font-bold text-foreground">Brew Insights</span>
         </div>
         <Button 
           variant="ghost" 
