@@ -1,4 +1,4 @@
-// Mock brewing production data for BrewCycle Analytics
+// src/data/mockData.ts
 
 export interface BatchRecord {
   CHARG_NR: string;
@@ -10,143 +10,83 @@ export interface BatchRecord {
   timestamp: string;
 }
 
-export interface MachineGroup {
-  name: string;
-  displayName: string;
+// Obtener lista única de lotes
+export function getUniqueBatchIds(data: BatchRecord[]): string[] {
+  return Array.from(new Set(data.map(d => d.CHARG_NR))).sort();
 }
 
-export const machineGroups: MachineGroup[] = [
-  { name: "Cocedor 1", displayName: "Cocedor 1" },
-  { name: "Cocedor 2", displayName: "Cocedor 2" },
-  { name: "Macerador 1", displayName: "Macerador 1" },
-  { name: "Macerador 2", displayName: "Macerador 2" },
-  { name: "Filtro 1", displayName: "Filtro 1" },
-  { name: "Filtro 2", displayName: "Filtro 2" },
-];
+// Obtener lista única de máquinas/grupos
+export function getUniqueMachineGroups(data: BatchRecord[]): string[] {
+  return Array.from(new Set(data.map(d => d.TEILANL_GRUPO))).sort();
+}
 
-// Generate realistic batch IDs
-const batchIds = [
-  "76E15543", "76E15544", "76E15545", "76E15546", "76E15547",
-  "76E15548", "76E15549", "76E15550", "76E15551", "76E15552",
-  "76E15553", "76E15554", "76E15555", "76E15556", "76E15557",
-  "76E15558", "76E15559", "76E15560", "76E15561", "76E15562",
-  "76E15563", "76E15564", "76E15565", "76E15566", "76E15567",
-];
+// Filtrar datos por máquina
+export function getMachineData(data: BatchRecord[], machineName: string): BatchRecord[] {
+  return data.filter(d => d.TEILANL_GRUPO === machineName);
+}
 
-// Expected times per machine group (in minutes)
-const expectedTimes: Record<string, number> = {
-  "Cocedor 1": 120,
-  "Cocedor 2": 115,
-  "Macerador 1": 90,
-  "Macerador 2": 85,
-  "Filtro 1": 60,
-  "Filtro 2": 55,
-};
-
-// Generate mock data with realistic variations
-function generateMockData(): BatchRecord[] {
-  const data: BatchRecord[] = [];
+// Calcular promedios por máquina para las gráficas
+export function getAveragesByMachine(data: BatchRecord[]) {
+  const groups = getUniqueMachineGroups(data);
   
-  batchIds.forEach((batchId, batchIndex) => {
-    machineGroups.forEach((machine) => {
-      const expected = expectedTimes[machine.name];
-      
-      // Add some realistic variation (-15% to +40%)
-      // Some batches intentionally have larger delays
-      const hasDelay = Math.random() < 0.15; // 15% chance of significant delay
-      const variation = hasDelay 
-        ? (0.3 + Math.random() * 0.2) // 30-50% over expected
-        : (-0.15 + Math.random() * 0.3); // -15% to +15%
-      
-      const real = Math.round(expected * (1 + variation));
-      const delta = real - expected;
-      
-      // Idle time correlates somewhat with delays
-      const idle = hasDelay
-        ? Math.round(15 + Math.random() * 35) // 15-50 min idle
-        : Math.round(2 + Math.random() * 12); // 2-14 min idle
-      
-      // Generate timestamp (spread over last 30 days)
-      const date = new Date();
-      date.setDate(date.getDate() - (batchIds.length - batchIndex));
-      date.setHours(6 + Math.floor(Math.random() * 12));
-      
-      data.push({
-        CHARG_NR: batchId,
-        TEILANL_GRUPO: machine.name,
-        real_total_min: real,
-        esperado_total_min: expected,
-        delta_total_min: delta,
-        idle_wall_minus_sumsteps_min: idle,
-        timestamp: date.toISOString(),
-      });
-    });
-  });
-  
-  return data;
-}
-
-export const batchData: BatchRecord[] = generateMockData();
-
-// Helper functions for data aggregation
-export function getUniqueBatchIds(): string[] {
-  return [...new Set(batchData.map(d => d.CHARG_NR))];
-}
-
-export function getUniqueMachineGroups(): string[] {
-  return [...new Set(batchData.map(d => d.TEILANL_GRUPO))];
-}
-
-export function getBatchById(batchId: string): BatchRecord[] {
-  return batchData.filter(d => d.CHARG_NR === batchId);
-}
-
-export function getMachineData(machineName: string): BatchRecord[] {
-  return batchData.filter(d => d.TEILANL_GRUPO === machineName);
-}
-
-export function getAveragesByMachine(): { 
-  machine: string; 
-  avgReal: number; 
-  avgExpected: number; 
-  avgDelta: number;
-  avgIdle: number;
-}[] {
-  return machineGroups.map(machine => {
-    const machineRecords = getMachineData(machine.name);
-    const count = machineRecords.length;
+  return groups.map(machineName => {
+    const records = getMachineData(data, machineName);
+    const count = records.length;
     
+    if (count === 0) return { machine: machineName, avgReal: 0, avgExpected: 0, avgDelta: 0, avgIdle: 0 };
+
+    const sumReal = records.reduce((acc, r) => acc + r.real_total_min, 0);
+    const sumExp = records.reduce((acc, r) => acc + r.esperado_total_min, 0);
+    const sumDelta = records.reduce((acc, r) => acc + r.delta_total_min, 0);
+    const sumIdle = records.reduce((acc, r) => acc + r.idle_wall_minus_sumsteps_min, 0);
+
     return {
-      machine: machine.name,
-      avgReal: Math.round(machineRecords.reduce((sum, r) => sum + r.real_total_min, 0) / count),
-      avgExpected: Math.round(machineRecords.reduce((sum, r) => sum + r.esperado_total_min, 0) / count),
-      avgDelta: Math.round(machineRecords.reduce((sum, r) => sum + r.delta_total_min, 0) / count),
-      avgIdle: Math.round(machineRecords.reduce((sum, r) => sum + r.idle_wall_minus_sumsteps_min, 0) / count),
+      machine: machineName,
+      avgReal: Math.round(sumReal / count),
+      avgExpected: Math.round(sumExp / count),
+      avgDelta: Math.round(sumDelta / count),
+      avgIdle: Math.round(sumIdle / count),
     };
   });
 }
 
-export function getDelayAlerts(threshold: number = 30): BatchRecord[] {
-  return batchData
+// KPI: Total de lotes
+export function getTotalBatches(data: BatchRecord[]): number {
+  return new Set(data.map(d => d.CHARG_NR)).size;
+}
+
+// KPI: Desviación promedio global (%)
+export function getAverageCycleDeviation(data: BatchRecord[]): number {
+  if (data.length === 0) return 0;
+  
+  const validData = data.filter(d => d.esperado_total_min > 0);
+  if (validData.length === 0) return 0;
+
+  const totalDelta = validData.reduce((sum, d) => sum + d.delta_total_min, 0);
+  const totalExpected = validData.reduce((sum, d) => sum + d.esperado_total_min, 0);
+  
+  return Math.round((totalDelta / totalExpected) * 100 * 10) / 10;
+}
+
+// KPI: Máquina con más tiempo muerto promedio (CORREGIDO)
+export function getMachineWithHighestIdleTime(data: BatchRecord[]) {
+  const averages = getAveragesByMachine(data);
+  
+  if (averages.length === 0) {
+    return { machine: "N/A", idleTime: 0 };
+  }
+  
+  // Usamos el primer elemento como base y comparamos contra él
+  const highest = averages.reduce((prev, curr) => 
+    (curr.avgIdle > prev.avgIdle) ? curr : prev
+  );
+
+  return { machine: highest.machine, idleTime: highest.avgIdle };
+}
+
+// Alertas: Lotes con retrasos mayores al umbral (minutos)
+export function getDelayAlerts(data: BatchRecord[], threshold: number = 30): BatchRecord[] {
+  return data
     .filter(d => d.delta_total_min > threshold)
     .sort((a, b) => b.delta_total_min - a.delta_total_min);
-}
-
-export function getTotalBatches(): number {
-  return getUniqueBatchIds().length;
-}
-
-export function getAverageCycleDeviation(): number {
-  const allDeltas = batchData.map(d => d.delta_total_min);
-  const avgDelta = allDeltas.reduce((sum, d) => sum + d, 0) / allDeltas.length;
-  const avgExpected = batchData.reduce((sum, d) => sum + d.esperado_total_min, 0) / batchData.length;
-  return Math.round((avgDelta / avgExpected) * 100 * 10) / 10;
-}
-
-export function getMachineWithHighestIdleTime(): { machine: string; idleTime: number } {
-  const averages = getAveragesByMachine();
-  const highest = averages.reduce((prev, curr) => 
-    curr.avgIdle > prev.avgIdle ? curr : prev
-  );
-  return { machine: highest.machine, idleTime: highest.avgIdle };
 }
