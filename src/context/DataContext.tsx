@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { BatchRecord } from "@/data/mockData";
+import { useLocalStorage } from "@/hooks/use-local-storage"; // Importamos el hook
 
 interface DataContextType {
   data: BatchRecord[];
@@ -9,7 +10,9 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<BatchRecord[]>([]);
+  // CAMBIO: Usamos useLocalStorage con la clave "brew-insights-data"
+  // Esto guardará todo el dataset en el navegador.
+  const [data, setData] = useLocalStorage<BatchRecord[]>("brew-insights-data", []);
 
   return (
     <DataContext.Provider value={{ data, setData }}>

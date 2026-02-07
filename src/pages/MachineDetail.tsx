@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,17 +6,23 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { AlertTriangle, Clock } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueMachineGroups, getMachineData } from "@/data/mockData";
+import { useLocalStorage } from "@/hooks/use-local-storage"; // Importamos el hook
 
 export default function MachineDetail() {
   const { data } = useData();
   const machineGroups = getUniqueMachineGroups(data);
-  const [selectedMachine, setSelectedMachine] = useState<string>("");
+  
+  // Usamos useLocalStorage con una key única para persistir la selección
+  const [selectedMachine, setSelectedMachine] = useLocalStorage<string>("machine-detail-selection", "");
 
   useEffect(() => {
-    if (machineGroups.length > 0 && !selectedMachine) {
-      setSelectedMachine(machineGroups[0]);
+    if (machineGroups.length > 0) {
+      // Si no hay selección o la máquina guardada no existe en los datos actuales, seleccionamos la primera
+      if (!selectedMachine || !machineGroups.includes(selectedMachine)) {
+        setSelectedMachine(machineGroups[0]);
+      }
     }
-  }, [machineGroups]);
+  }, [machineGroups, selectedMachine, setSelectedMachine]);
 
   if (data.length === 0) {
     return (
