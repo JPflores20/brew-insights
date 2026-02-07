@@ -2,30 +2,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Clock } from "lucide-react";
-import { getDelayAlerts } from "@/data/mockData";
+import { getDelayAlerts, BatchRecord } from "@/data/mockData";
 
-export function AlertsWidget() {
-  const alerts = getDelayAlerts(30);
+// Definimos que este componente espera recibir "data"
+interface AlertsWidgetProps {
+  data: BatchRecord[];
+}
+
+export function AlertsWidget({ data }: AlertsWidgetProps) {
+  // Pasamos la data recibida a la función auxiliar
+  const alerts = getDelayAlerts(data, 30);
 
   return (
     <Card className="bg-card border-border h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-chart-delay" />
-          Delay Alerts
+          Alertas de Retraso
           <Badge variant="destructive" className="ml-auto">
             {alerts.length}
           </Badge>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Batches with delays &gt; 30 minutes
+          Lotes con retrasos &gt; 30 minutos
         </p>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[350px] pr-4">
           {alerts.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              No significant delays detected
+              No se detectaron retrasos significativos
             </p>
           ) : (
             <div className="space-y-3">
@@ -52,7 +58,7 @@ export function AlertsWidget() {
                     </Badge>
                   </div>
                   <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Expected: {alert.esperado_total_min}m</span>
+                    <span>Esp: {alert.esperado_total_min}m</span>
                     <span>Real: {alert.real_total_min}m</span>
                   </div>
                 </div>

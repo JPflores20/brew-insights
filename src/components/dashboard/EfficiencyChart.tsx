@@ -9,10 +9,16 @@ import {
   Legend, 
   ResponsiveContainer 
 } from "recharts";
-import { getAveragesByMachine } from "@/data/mockData";
+import { getAveragesByMachine, BatchRecord } from "@/data/mockData";
 
-export function EfficiencyChart() {
-  const data = getAveragesByMachine().map(item => ({
+// Definimos que este componente espera recibir "data"
+interface EfficiencyChartProps {
+  data: BatchRecord[];
+}
+
+export function EfficiencyChart({ data }: EfficiencyChartProps) {
+  // Ahora usamos la data que nos llega por props
+  const chartData = getAveragesByMachine(data).map(item => ({
     machine: item.machine.replace(/(\d)/, '\n$1'),
     "Expected Time": item.avgExpected,
     "Real Time": item.avgReal,
@@ -22,14 +28,14 @@ export function EfficiencyChart() {
     <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-foreground">
-          Average Efficiency by Machine Group
+          Eficiencia Promedio por Grupo
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
             >
               <CartesianGrid 
@@ -52,7 +58,7 @@ export function EfficiencyChart() {
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={{ stroke: 'hsl(var(--border))' }}
                 label={{ 
-                  value: 'Minutes', 
+                  value: 'Minutos', 
                   angle: -90, 
                   position: 'insideLeft',
                   fill: 'hsl(var(--muted-foreground))'
@@ -72,11 +78,13 @@ export function EfficiencyChart() {
               />
               <Bar 
                 dataKey="Expected Time" 
+                name="Tiempo Esperado"
                 fill="hsl(var(--chart-expected))" 
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="Real Time" 
+                name="Tiempo Real"
                 fill="hsl(var(--chart-real))" 
                 radius={[4, 4, 0, 0]}
               />
