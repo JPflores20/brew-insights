@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { BatchRecord } from '@/data/mockData';
+import { BatchRecord, BatchStep } from '@/data/mockData';
 
 // --- FUNCIONES DE LIMPIEZA ---
 
@@ -49,7 +49,7 @@ function buildDate(row: any, prefix: string): Date | null {
   return new Date(year, m - 1, d, h || 0, min || 0, s || 0);
 }
 
-// --- PROCESADOR PRINCIPAL (MEJORADO) ---
+// --- PROCESADOR PRINCIPAL ---
 
 export async function processExcelFile(file: File): Promise<BatchRecord[]> {
   const data = await file.arrayBuffer();
@@ -67,9 +67,15 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     const start = buildDate(row, "SZ");
     const end = buildDate(row, "EZ");
     
+    // Capturamos el nombre y número del paso para el Drill-down
+    const gopName = String(row.GOP_NAME || "").trim();
+    const gopNr = String(row.GOP_NR || "").trim();
+
     return {
       CHARG_NR: chargNr,
       TEILANL_GRUPO: teilGroup(teilanl),
+      GOP_NAME: gopName,
+      GOP_NR: gopNr,
       start,
       end,
       swMin,
@@ -77,7 +83,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     };
   }).filter(e => e.CHARG_NR && e.TEILANL_GRUPO !== "SIN_TEILANL");
 
-  // 2. Agrupar eventos por Lote + Grupo en listas
+  // 2. Agrupar eventos por Lote + Grupo
   const groupedEvents = new Map<string, any[]>();
   events.forEach(evt => {
     const key = `${evt.CHARG_NR}|${evt.TEILANL_GRUPO}`;
@@ -85,9 +91,9 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     groupedEvents.get(key)?.push(evt);
   });
 
-  // 3. Procesar cada grupo ordenado cronológicamente para detectar Gaps
+  // 3. Procesar cada grupo para crear el registro BatchRecord completo
   return Array.from(groupedEvents.values()).map(group => {
-    // Ordenar por fecha de inicio
+    // Ordenar cronológicamente
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
 
     let real_total = 0;
@@ -95,25 +101,43 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     let total_idle = 0;
     let max_gap = 0;
     
-    // Tomamos el fin del primer evento como referencia inicial
+    // Array para guardar los pasos detallados
+    const steps: BatchStep[] = [];
+    // Array para compatibilidad de alertas
+    const alerts: string[] = [];
+
     let lastEnd = group[0].end ? group[0].end.getTime() : (group[0].start?.getTime() || 0);
 
-    // Iteramos para sumar tiempos y detectar gaps
     group.forEach((evt, index) => {
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
 
+      // Crear el paso
+      steps.push({
+        stepName: evt.GOP_NAME || `Paso ${index + 1}`,
+        stepNr: evt.GOP_NR,
+        durationMin: Math.round(evt.iwMin * 100) / 100,
+        expectedDurationMin: Math.round(evt.swMin * 100) / 100,
+        startTime: evt.start ? evt.start.toISOString() : "",
+        endTime: evt.end ? evt.end.toISOString() : ""
+      });
+
+      // Calcular Gaps
       if (index > 0 && evt.start) {
         const currentStart = evt.start.getTime();
-        // Si el paso actual empieza DESPUÉS de que terminó el anterior, hay un hueco
-        if (currentStart > lastEnd) {
+        // Si hay un hueco mayor a 1 minuto entre el fin del anterior y el inicio de este
+        if (currentStart > lastEnd + 60000) { 
           const gapMin = (currentStart - lastEnd) / 60000;
           total_idle += gapMin;
           if (gapMin > max_gap) max_gap = gapMin;
+          
+          // Generar alerta si el gap es significativo (>15 min)
+          if (gapMin > 15) {
+             alerts.push(`Tiempo muerto de ${Math.round(gapMin)} min antes de ${evt.GOP_NAME}`);
+          }
         }
       }
 
-      // Actualizamos el final más lejano conocido
       if (evt.end && evt.end.getTime() > lastEnd) {
         lastEnd = evt.end.getTime();
       }
@@ -125,9 +149,11 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       real_total_min: Math.round(real_total * 100) / 100,
       esperado_total_min: Math.round(esperado_total * 100) / 100,
       delta_total_min: Math.round((real_total - esperado_total) * 100) / 100,
-      idle_wall_minus_sumsteps_min: Math.round(total_idle * 100) / 100, // Ahora es la suma de gaps reales
-      max_gap_min: Math.round(max_gap * 100) / 100,                     // Nuevo campo
-      timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString()
+      idle_wall_minus_sumsteps_min: Math.round(total_idle * 100) / 100,
+      max_gap_min: Math.round(max_gap * 100) / 100,
+      timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString(),
+      steps: steps, // Guardamos los pasos
+      alerts: alerts
     };
   });
 }
