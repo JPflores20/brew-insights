@@ -1,25 +1,24 @@
-import { useEffect } from "react"; // Quitamos useState
+import { useEffect, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ArrowRight } from "lucide-react";
 import { useData } from "@/context/DataContext";
-import { getUniqueBatchIds, getBatchById, getUniqueMachineGroups } from "@/data/mockData";
-import { useLocalStorage } from "@/hooks/use-local-storage"; // Importamos el hook
+import { getUniqueBatchIds, getBatchById } from "@/data/mockData";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export default function BatchComparison() {
   const { data } = useData();
   const batchIds = getUniqueBatchIds(data);
   
-  // CAMBIO: Estados persistentes para la selección
+  // Estados persistentes para la selección
   const [batchA, setBatchA] = useLocalStorage<string>("batch-comparison-a", "");
   const [batchB, setBatchB] = useLocalStorage<string>("batch-comparison-b", "");
 
   // Lógica inteligente para inicializar
   useEffect(() => {
     if (batchIds.length >= 2) {
-      // Solo reseteamos si no hay nada guardado O si lo guardado ya no existe en los datos
       if (!batchA || !batchIds.includes(batchA)) {
         setBatchA(batchIds[0]);
       }
@@ -41,14 +40,19 @@ export default function BatchComparison() {
 
   const batchAData = getBatchById(data, batchA);
   const batchBData = getBatchById(data, batchB);
-  const machines = getUniqueMachineGroups(data);
 
-  // Preparar datos para gráfica (Esto crea un array con la comparación)
-  const comparisonData = machines.map(machineName => {
+  // 1. FILTRADO: Solo mostramos máquinas que tengan datos en alguno de los dos lotes
+  const relevantMachines = useMemo(() => {
+    const machinesA = batchAData.map(d => d.TEILANL_GRUPO);
+    const machinesB = batchBData.map(d => d.TEILANL_GRUPO);
+    return Array.from(new Set([...machinesA, ...machinesB])).sort();
+  }, [batchAData, batchBData]);
+
+  // Preparar datos para gráfica
+  const comparisonData = relevantMachines.map(machineName => {
     const recordA = batchAData.find(d => d.TEILANL_GRUPO === machineName);
     const recordB = batchBData.find(d => d.TEILANL_GRUPO === machineName);
     
-    // Si no hay dato, usamos 0 para que la gráfica no falle
     return {
       machine: machineName,
       [batchA || 'Lote A']: recordA?.real_total_min || 0,
@@ -92,15 +96,29 @@ export default function BatchComparison() {
         {batchA && batchB && (
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
-              <div className="h-[400px]">
+              {/* Aumentamos un poco la altura para dar espacio a los textos rotados */}
+              <div className="h-[500px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <BarChart 
+                    data={comparisonData} 
+                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }} // Aumentamos margen inferior (bottom)
+                  >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    
+                    {/* CAMBIO: Rotación de textos en eje X */}
                     <XAxis 
                         dataKey="machine" 
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }} 
+                        tick={{ 
+                            fill: 'hsl(var(--muted-foreground))',
+                            fontSize: 12 
+                        }} 
                         axisLine={{ stroke: 'hsl(var(--border))' }}
+                        interval={0} // Muestra todas las etiquetas
+                        angle={-45}  // Rota el texto 45 grados
+                        textAnchor="end" // Alinea el final del texto con la marca
+                        height={80} // Altura extra para que quepan
                     />
+                    
                     <YAxis 
                         label={{ value: 'Minutos', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
                         tick={{ fill: 'hsl(var(--muted-foreground))' }} 
