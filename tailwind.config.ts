@@ -57,6 +57,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Chart colors
+        chart: {
+          expected: "hsl(var(--chart-expected))",
+          real: "hsl(var(--chart-real))",
+          delay: "hsl(var(--chart-delay))",
+          idle: "hsl(var(--chart-idle))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
