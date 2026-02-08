@@ -11,14 +11,15 @@ export interface BatchStep {
 export interface BatchRecord {
   CHARG_NR: string;
   TEILANL_GRUPO: string;
+  productName: string; // <-- NUEVO CAMPO
   real_total_min: number;
   esperado_total_min: number;
   delta_total_min: number;
   idle_wall_minus_sumsteps_min: number;
   max_gap_min: number;
   timestamp: string;
-  steps: BatchStep[]; // <-- Nuevo campo para el detalle
-  alerts: string[];   // Mantenemos alerts por compatibilidad
+  steps: BatchStep[];
+  alerts: string[];
 }
 
 // --- HELPERS BÁSICOS ---

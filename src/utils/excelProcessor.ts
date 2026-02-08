@@ -70,12 +70,16 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     // Capturamos el nombre y número del paso
     const gopName = String(row.GOP_NAME || "").trim();
     const gopNr = String(row.GOP_NR || "").trim();
+    
+    // Capturamos el producto (Columna P es REZEPT o PRODUCT)
+    const productName = String(row.REZEPT || row.PRODUCT || "").trim();
 
     return {
       CHARG_NR: chargNr,
       TEILANL_GRUPO: teilGroup(teilanl),
       GOP_NAME: gopName,
       GOP_NR: gopNr,
+      productName, // <-- Guardamos el producto
       start,
       end,
       swMin,
@@ -91,7 +95,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     groupedEvents.get(key)?.push(evt);
   });
 
-  // 3. Procesar cada grupo para crear el registro BatchRecord completo
+  // 3. Procesar cada grupo
   return Array.from(groupedEvents.values()).map(group => {
     // Ordenar cronológicamente
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
@@ -101,13 +105,10 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     let total_idle = 0;
     let max_gap = 0;
     
-    // Array para guardar los pasos detallados
     const steps: BatchStep[] = [];
     const alerts: string[] = [];
 
     let lastEnd = group[0].end ? group[0].end.getTime() : (group[0].start?.getTime() || 0);
-    
-    // CONTADOR PARA LAS ESPERAS
     let waitCounter = 0;
 
     group.forEach((evt, index) => {
@@ -118,7 +119,6 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       if (index > 0 && evt.start) {
         const currentStart = evt.start.getTime();
         
-        // Si hay un espacio entre el final anterior y el inicio actual
         if (currentStart > lastEnd) {
           const gapMs = currentStart - lastEnd;
           const gapMin = gapMs / 60000;
@@ -126,11 +126,8 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
           if (gapMin > 0) {
              total_idle += gapMin;
              if (gapMin > max_gap) max_gap = gapMin;
-             
-             // Incrementamos el contador de esperas para este lote
              waitCounter++;
 
-             // Insertamos el paso de espera con nombre único
              steps.push({
                stepName: `⏳ Espera ${waitCounter}`,
                stepNr: "", 
@@ -140,7 +137,6 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
                endTime: evt.start.toISOString()
              });
              
-             // Alerta si es una espera larga (>15 min)
              if (gapMin > 15) {
                 alerts.push(`Espera de ${Math.round(gapMin)} min detectada antes de ${evt.GOP_NAME}`);
              }
@@ -148,7 +144,6 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
         }
       }
 
-      // Insertamos el paso real del proceso
       steps.push({
         stepName: evt.GOP_NAME || `Paso ${index + 1}`,
         stepNr: evt.GOP_NR,
@@ -158,7 +153,6 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
         endTime: evt.end ? evt.end.toISOString() : ""
       });
 
-      // Actualizamos lastEnd
       if (evt.end && evt.end.getTime() > lastEnd) {
         lastEnd = evt.end.getTime();
       }
@@ -167,6 +161,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     return {
       CHARG_NR: group[0].CHARG_NR,
       TEILANL_GRUPO: group[0].TEILANL_GRUPO,
+      productName: group[0].productName || "Desconocido", // <-- Asignamos el producto al registro final
       real_total_min: Math.round(real_total * 100) / 100,
       esperado_total_min: Math.round(esperado_total * 100) / 100,
       delta_total_min: Math.round((real_total - esperado_total) * 100) / 100,

@@ -45,7 +45,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { analyzeProcessGaps } from "@/utils/gemini";
-// --- NUEVOS IMPORTS PARA VISUALIZACIÓN ---
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -58,6 +57,15 @@ export default function MachineDetail() {
   // ---------------------------
 
   const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
+
+  // Mapa auxiliar para obtener nombre de producto rápido
+  const batchProductMap = useMemo(() => {
+    const map = new Map<string, string>();
+    data.forEach(d => {
+        if(d.productName) map.set(d.CHARG_NR, d.productName);
+    });
+    return map;
+  }, [data]);
 
   const [selectedBatchId, setSelectedBatchId] = useLocalStorage<string>(
     "detail-batch-selection-v2",
@@ -88,6 +96,7 @@ export default function MachineDetail() {
         if (totalWaitTime > 1) {
           issues.push({
             batch: record.CHARG_NR,
+            product: record.productName, // Añadido para mostrar en sugerencias si quisieras
             machine: record.TEILANL_GRUPO,
             totalWait: Math.round(totalWaitTime * 100) / 100,
             waitCount: waitSteps.length,
@@ -277,6 +286,10 @@ export default function MachineDetail() {
                             {issue.machine}
                           </span>
                         </div>
+                        <div className="text-[10px] text-muted-foreground mb-1 font-medium">
+                            {/* Mostramos el producto en la sugerencia también */}
+                            {issue.product}
+                        </div>
                         <p className="text-xs text-red-500 font-medium flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           Perdido: {issue.totalWait} min ({issue.waitCount}{" "}
@@ -320,7 +333,7 @@ export default function MachineDetail() {
                 <SelectContent>
                   {allBatches.map((batch) => (
                     <SelectItem key={batch} value={batch}>
-                      {batch}
+                      {batch} - {batchProductMap.get(batch) || "Sin producto"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -410,7 +423,7 @@ export default function MachineDetail() {
                       Secuencia de Pasos ({selectedBatchId} - {selectedMachine})
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Desglose detallado por operación
+                        {selectedRecord.productName} {/* Muestra el producto aquí también */}
                     </p>
                   </div>
                 </div>

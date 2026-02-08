@@ -12,6 +12,15 @@ export default function BatchComparison() {
   const { data } = useData();
   const batchIds = getUniqueBatchIds(data);
   
+  // Mapa auxiliar para obtener nombre de producto rápido (Igual que en MachineDetail)
+  const batchProductMap = useMemo(() => {
+    const map = new Map<string, string>();
+    data.forEach(d => {
+        if(d.productName) map.set(d.CHARG_NR, d.productName);
+    });
+    return map;
+  }, [data]);
+
   // Estados persistentes para la selección
   const [batchA, setBatchA] = useLocalStorage<string>("batch-comparison-a", "");
   const [batchB, setBatchB] = useLocalStorage<string>("batch-comparison-b", "");
@@ -76,7 +85,11 @@ export default function BatchComparison() {
                 <Select value={batchA} onValueChange={setBatchA}>
                   <SelectTrigger><SelectValue placeholder="Seleccionar Lote A" /></SelectTrigger>
                   <SelectContent>
-                    {batchIds.map(id => <SelectItem key={id} value={id}>{id}</SelectItem>)}
+                    {batchIds.map(id => (
+                      <SelectItem key={id} value={id}>
+                        {id} - {batchProductMap.get(id) || "Sin producto"}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -85,7 +98,11 @@ export default function BatchComparison() {
                 <Select value={batchB} onValueChange={setBatchB}>
                   <SelectTrigger><SelectValue placeholder="Seleccionar Lote B" /></SelectTrigger>
                   <SelectContent>
-                    {batchIds.map(id => <SelectItem key={id} value={id}>{id}</SelectItem>)}
+                    {batchIds.map(id => (
+                      <SelectItem key={id} value={id}>
+                        {id} - {batchProductMap.get(id) || "Sin producto"}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -105,7 +122,7 @@ export default function BatchComparison() {
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     
-                    {/* CAMBIO: Rotación de textos en eje X */}
+                    {/* Rotación de textos en eje X */}
                     <XAxis 
                         dataKey="machine" 
                         tick={{ 
@@ -129,8 +146,18 @@ export default function BatchComparison() {
                         cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
                     />
                     <Legend wrapperStyle={{ paddingTop: '20px' }}/>
-                    <Bar dataKey={batchA} fill="hsl(var(--primary))" name={`Lote ${batchA}`} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey={batchB} fill="hsl(var(--chart-real))" name={`Lote ${batchB}`} radius={[4, 4, 0, 0]} />
+                    <Bar 
+                      dataKey={batchA} 
+                      fill="hsl(var(--primary))" 
+                      name={`Lote ${batchA} (${batchProductMap.get(batchA) || ''})`} 
+                      radius={[4, 4, 0, 0]} 
+                    />
+                    <Bar 
+                      dataKey={batchB} 
+                      fill="hsl(var(--chart-real))" 
+                      name={`Lote ${batchB} (${batchProductMap.get(batchB) || ''})`} 
+                      radius={[4, 4, 0, 0]} 
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
