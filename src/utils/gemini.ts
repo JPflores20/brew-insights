@@ -10,14 +10,14 @@ export async function analyzeProcessGaps(
 ) {
   // Verificación de seguridad
   if (!import.meta.env.VITE_GEMINI_API_KEY) {
-    return "Error de Configuración: No se encontró la variable VITE_GEMINI_API_KEY. Asegúrate de que el archivo se llame '.env' (no 'Gemini.env') y reinicia la terminal.";
+    return "⚠️ Error: No se detectó la API Key. Por favor DETÉN la terminal (Ctrl+C) y reinicia con 'npm run dev'.";
   }
 
   try {
-    // CAMBIO: Usamos la versión específica 'gemini-1.5-flash-001'
-    // Esto evita errores de "alias no encontrado" en la API v1beta.
-    // Si este falla, intenta cambiarlo a "gemini-pro".
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+    // CAMBIO FINAL: Usamos 'gemini-1.5-flash'
+    // Esta es la versión alias estándar. Es la más rápida y funciona
+    // en todas las cuentas gratuitas nuevas.
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       Actúa como un experto Ingeniero Industrial Senior especializado en optimización de procesos de cervecería.
@@ -40,7 +40,6 @@ export async function analyzeProcessGaps(
 
   } catch (error: any) {
     console.error("Error consultando a Gemini:", error);
-    
-    return `⚠️ Error técnico de IA: ${error.message || "Error desconocido"}. \n\nPor favor verifica la consola del navegador (F12) para más detalles.`;
+    return `⚠️ Error técnico de IA: ${error.message || "Error desconocido"}. \n\nIntenta recargar la página (Ctrl+Shift+R).`;
   }
 }
