@@ -1,26 +1,54 @@
 import { useEffect, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { AlertTriangle, Clock, ListFilter } from "lucide-react";
+import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AlertTriangle, Clock, ListFilter, AlertCircle, ArrowRight, Search, CheckCircle2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 
 export default function MachineDetail() {
   const { data } = useData();
   
-  // 1. Obtener todos los lotes únicos disponibles
   const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
 
-  // --- ESTADOS (Persistentes) ---
   const [selectedBatchId, setSelectedBatchId] = useLocalStorage<string>("detail-batch-selection-v2", "");
   const [selectedMachine, setSelectedMachine] = useLocalStorage<string>("detail-machine-selection-v2", "");
 
-  // --- EFECTOS DE SELECCIÓN ---
+  // --- LÓGICA DE DETECCION GLOBAL DE PROBLEMAS (NUEVO) ---
+  const problematicBatches = useMemo(() => {
+    const issues: any[] = [];
+    
+    data.forEach(record => {
+      // Buscamos pasos que sean esperas
+      const waitSteps = record.steps ? record.steps.filter(s => s.stepName.includes("Espera")) : [];
+      
+      if (waitSteps.length > 0) {
+        const totalWaitTime = waitSteps.reduce((acc, step) => acc + step.durationMin, 0);
+        
+        // Solo mostramos si la espera total es significativa (> 1 min)
+        if (totalWaitTime > 1) {
+            issues.push({
+                batch: record.CHARG_NR,
+                machine: record.TEILANL_GRUPO,
+                totalWait: Math.round(totalWaitTime * 100) / 100,
+                waitCount: waitSteps.length,
+                timestamp: record.timestamp
+            });
+        }
+      }
+    });
 
-  // 1. Inicializar Lote si es necesario
+    // Ordenamos por tiempo de espera (de mayor a menor) para mostrar lo más crítico arriba
+    return issues.sort((a, b) => b.totalWait - a.totalWait);
+  }, [data]);
+
+  // --- LÓGICA DE SELECCIÓN ---
+
   useEffect(() => {
     if (allBatches.length > 0) {
       if (!selectedBatchId || !allBatches.includes(selectedBatchId)) {
@@ -29,14 +57,12 @@ export default function MachineDetail() {
     }
   }, [allBatches, selectedBatchId, setSelectedBatchId]);
 
-  // 2. Calcular máquinas disponibles para el lote seleccionado
   const availableMachinesForBatch = useMemo(() => {
     if (!selectedBatchId) return [];
     const records = data.filter(d => d.CHARG_NR === selectedBatchId);
     return Array.from(new Set(records.map(r => r.TEILANL_GRUPO))).sort();
   }, [data, selectedBatchId]);
 
-  // 3. Inicializar Máquina cuando cambia el lote
   useEffect(() => {
     if (availableMachinesForBatch.length > 0) {
       if (!selectedMachine || !availableMachinesForBatch.includes(selectedMachine)) {
@@ -47,31 +73,35 @@ export default function MachineDetail() {
     }
   }, [availableMachinesForBatch, selectedMachine, setSelectedMachine]);
 
+  // --- DATOS DEL LOTE SELECCIONADO ---
 
-  // --- DATOS PARA VISUALIZACIÓN ---
-
-  if (data.length === 0) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-[50vh] items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <Clock className="mx-auto h-12 w-12 opacity-50 mb-4" />
-            <h2 className="text-xl font-semibold">Sin Datos</h2>
-            <p>Por favor carga un archivo Excel en la pestaña "Resumen" primero.</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  // A. Registro Específico
   const selectedRecord = data.find(
     d => d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
   );
   
   const stepsData = selectedRecord?.steps || [];
 
-  // B. Contexto Histórico
+  // Reporte de huecos para el lote seleccionado
+  const gapsReport = useMemo(() => {
+    if (!stepsData.length) return [];
+    
+    return stepsData.map((step, index) => {
+      if (!step.stepName.includes("Espera")) return null;
+      
+      const prevStep = index > 0 ? stepsData[index - 1].stepName : "Inicio";
+      const nextStep = index < stepsData.length - 1 ? stepsData[index + 1].stepName : "Fin";
+      
+      return {
+        id: index,
+        name: step.stepName,
+        duration: step.durationMin,
+        startTime: new Date(step.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        prevStep,
+        nextStep
+      };
+    }).filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [stepsData]);
+
   const machineHistoryData = useMemo(() => {
      if (!selectedMachine) return [];
      return getMachineData(data, selectedMachine)
@@ -87,15 +117,78 @@ export default function MachineDetail() {
   const currentGap = selectedRecord ? selectedRecord.max_gap_min : 0;
   const currentIdle = selectedRecord ? selectedRecord.idle_wall_minus_sumsteps_min : 0;
 
+  // Función para cargar una sugerencia
+  const loadSuggestion = (batch: string, machine: string) => {
+      setSelectedBatchId(batch);
+      setSelectedMachine(machine);
+      // Scroll suave hacia la gráfica
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+  };
+
+  if (data.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <Clock className="mx-auto h-12 w-12 opacity-50 mb-4" />
+            <h2 className="text-xl font-semibold">Sin Datos</h2>
+            <p>Por favor carga un archivo Excel en la pestaña "Resumen" primero.</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Detalle de Lote y Pasos</h1>
-          <p className="text-muted-foreground">Selecciona un lote para analizar su ejecución paso a paso</p>
+          <p className="text-muted-foreground">Selecciona un lote o revisa las sugerencias automáticas</p>
         </div>
 
-        {/* --- SELECTORES --- */}
+        {/* --- NUEVO PANEL: SUGERENCIAS DE PROBLEMAS --- */}
+        {problematicBatches.length > 0 && (
+            <Card className="bg-card border-border border-l-4 border-l-orange-500">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                        <Search className="h-5 w-5 text-orange-500" />
+                        <CardTitle className="text-lg">🔍 Detección Automática de Problemas</CardTitle>
+                    </div>
+                    <CardDescription>Se han encontrado {problematicBatches.length} registros con tiempos muertos significativos.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-[200px] w-full pr-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {problematicBatches.map((issue, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Badge variant="secondary" className="font-mono">{issue.batch}</Badge>
+                                            <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={issue.machine}>{issue.machine}</span>
+                                        </div>
+                                        <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            Perdido: {issue.totalWait} min ({issue.waitCount} esperas)
+                                        </p>
+                                    </div>
+                                    <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        className="h-8 text-xs ml-2"
+                                        onClick={() => loadSuggestion(issue.batch, issue.machine)}
+                                    >
+                                        Analizar
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+        )}
+
+        {/* SELECTORES MANUALES */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-card border-border">
                 <CardHeader className="pb-2 pt-4">
@@ -140,7 +233,7 @@ export default function MachineDetail() {
             </Card>
         </div>
 
-        {/* --- KPIs --- */}
+        {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
@@ -168,69 +261,149 @@ export default function MachineDetail() {
           </Card>
         </div>
 
-        {/* --- GRÁFICO DE PASOS (DETALLE) --- */}
-        {selectedRecord && stepsData.length > 0 ? (
-            <Card className="bg-card border-border p-6 border-l-4 border-l-primary">
-                <div className="flex items-center gap-2 mb-6">
-                    <ListFilter className="h-5 w-5 text-primary" />
-                    <div>
-                        <CardTitle className="text-lg font-semibold">
-                            Secuencia de Pasos ({selectedBatchId} en {selectedMachine})
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">Desglose detallado por operación (GOP_NAME)</p>
-                    </div>
-                </div>
-                
-                <div className="h-[500px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart 
-                        data={stepsData} 
-                        layout="vertical" 
-                        margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-                        barCategoryGap="20%"
-                    >
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={true} />
-                        <XAxis type="number" hide />
-                        <YAxis 
-                            dataKey="stepName" 
-                            type="category" 
-                            width={200}
-                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                            interval={0}
-                        />
-                        <Tooltip 
-                            contentStyle={{ 
-                                backgroundColor: 'hsl(var(--popover))', 
-                                borderColor: 'hsl(var(--border))', 
-                                borderRadius: '8px',
-                                color: 'hsl(var(--popover-foreground))'
-                            }}
-                            cursor={{fill: 'transparent'}}
-                        />
-                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                        {/* Barra Real: Verde (Primary) */}
-                        <Bar dataKey="durationMin" name="Duración Real (min)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* GRÁFICA */}
+            <div className="lg:col-span-2 space-y-6">
+                {selectedRecord && stepsData.length > 0 ? (
+                    <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-full">
+                        <div className="flex items-center gap-2 mb-6">
+                            <ListFilter className="h-5 w-5 text-primary" />
+                            <div>
+                                <CardTitle className="text-lg font-semibold">
+                                    Secuencia de Pasos ({selectedBatchId} - {selectedMachine})
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">Desglose detallado por operación</p>
+                            </div>
+                        </div>
                         
-                        {/* Barra Esperada: Amarillo Ámbar (Para resaltar más) */}
-                        <Bar dataKey="expectedDurationMin" name="Duración Esperada (min)" fill="#fbbf24" radius={[0, 4, 4, 0]} barSize={10} />
-                    </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </Card>
-        ) : (
-             selectedRecord && (
-                <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500">
-                    <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                        <p className="text-sm font-medium">
-                          No se encontraron pasos detallados. Intenta recargar el archivo Excel.
-                        </p>
-                    </div>
-                </Card>
-             )
-        )}
+                        <div className="h-[500px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                            <BarChart 
+                                data={stepsData} 
+                                layout="vertical" 
+                                margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+                                barCategoryGap="20%"
+                            >
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={true} />
+                                <XAxis type="number" hide />
+                                <YAxis 
+                                    dataKey="stepName" 
+                                    type="category" 
+                                    width={180}
+                                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                                    interval={0}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ 
+                                        backgroundColor: 'hsl(var(--popover))', 
+                                        borderColor: 'hsl(var(--border))', 
+                                        borderRadius: '8px',
+                                        color: 'hsl(var(--popover-foreground))'
+                                    }}
+                                    cursor={{fill: 'transparent'}}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                                
+                                <Bar 
+                                    dataKey="durationMin" 
+                                    name="Duración Real (min)" 
+                                    fill="hsl(var(--primary))" 
+                                    radius={[0, 4, 4, 0]} 
+                                    barSize={20}
+                                >
+                                    {stepsData.map((entry, index) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.stepName.includes("Espera") ? "#ef4444" : "hsl(var(--primary))"} 
+                                        />
+                                    ))}
+                                </Bar>
+                                
+                                <Bar dataKey="expectedDurationMin" name="Duración Esperada (min)" fill="#fbbf24" radius={[0, 4, 4, 0]} barSize={10} />
+                            </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </Card>
+                ) : (
+                    <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500">
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                            <p className="text-sm font-medium">
+                            Selecciona un lote para ver los detalles.
+                            </p>
+                        </div>
+                    </Card>
+                )}
+            </div>
 
-        {/* --- TENDENCIA HISTÓRICA --- */}
+            {/* REPORTE DE ANOMALÍAS DETALLADO */}
+            <div className="lg:col-span-1">
+                <Card className="bg-card border-border h-full flex flex-col">
+                    <CardHeader className="pb-3 border-b border-border">
+                        <div className="flex items-center gap-2 text-red-500">
+                            <AlertCircle className="h-5 w-5" />
+                            <CardTitle className="text-lg">Detalle de Esperas</CardTitle>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {gapsReport.length > 0 
+                                ? `Lista de esperas encontradas en el lote ${selectedBatchId}` 
+                                : "No hay esperas en este lote específico"}
+                        </p>
+                    </CardHeader>
+                    
+                    <CardContent className="flex-1 p-0">
+                        {gapsReport.length > 0 ? (
+                            <ScrollArea className="h-[500px] w-full p-4">
+                                <div className="space-y-4">
+                                    {gapsReport.map((gap) => (
+                                        <div key={gap.id} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm animate-in fade-in slide-in-from-right-4 duration-500">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <Badge variant="outline" className="text-red-500 border-red-500/30 bg-red-500/5 font-bold">
+                                                    {gap.name}
+                                                </Badge>
+                                                <span className="font-mono font-bold text-red-500">
+                                                    {gap.duration} min
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="text-xs text-muted-foreground space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    <span>Inicio: {gap.startTime}</span>
+                                                </div>
+                                                <div className="mt-2 pt-2 border-t border-red-500/10 flex flex-col gap-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="opacity-70">Después de:</span>
+                                                        <span className="font-medium text-foreground truncate max-w-[120px]" title={gap.prevStep}>{gap.prevStep}</span>
+                                                    </div>
+                                                    <div className="flex justify-center my-1 opacity-20">
+                                                        <ArrowRight className="h-3 w-3 rotate-90" />
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="opacity-70">Antes de:</span>
+                                                        <span className="font-medium text-foreground truncate max-w-[120px]" title={gap.nextStep}>{gap.nextStep}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground p-6 text-center">
+                                <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center mb-3">
+                                    <CheckCircle2 className="h-6 w-6 text-green-500" />
+                                </div>
+                                <p className="text-sm">Todo correcto</p>
+                                <p className="text-xs mt-1">Selecciona un lote con problemas de la lista superior para ver detalles aquí.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+
+        {/* ... (Sección Histórico se mantiene igual) ... */}
         {machineHistoryData.length > 0 && (
             <Card className="bg-card border-border h-[400px] p-6 opacity-90 hover:opacity-100 transition-opacity">
             <CardTitle className="mb-6 text-lg font-semibold flex items-center justify-between">

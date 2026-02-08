@@ -93,7 +93,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
 
   // 3. Procesar cada grupo para crear el registro BatchRecord completo
   return Array.from(groupedEvents.values()).map(group => {
-    // Ordenar cronológicamente por fecha de inicio
+    // Ordenar cronológicamente
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
 
     let real_total = 0;
@@ -103,45 +103,46 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     
     // Array para guardar los pasos detallados
     const steps: BatchStep[] = [];
-    // Array para compatibilidad de alertas
     const alerts: string[] = [];
 
-    // Inicializamos el fin del "último paso" con el fin del primero (para empezar a comparar desde el segundo)
     let lastEnd = group[0].end ? group[0].end.getTime() : (group[0].start?.getTime() || 0);
+    
+    // CONTADOR PARA LAS ESPERAS
+    let waitCounter = 0;
 
     group.forEach((evt, index) => {
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
 
-      // DETECCIÓN DE GAP (Tiempo Muerto) VISUAL
-      // Solo verificamos huecos a partir del segundo elemento (index > 0)
+      // DETECCIÓN DE HUECOS (TIEMPOS MUERTOS)
       if (index > 0 && evt.start) {
         const currentStart = evt.start.getTime();
         
-        // Calculamos el hueco exacto entre el fin del paso anterior y el inicio del actual
+        // Si hay un espacio entre el final anterior y el inicio actual
         if (currentStart > lastEnd) {
           const gapMs = currentStart - lastEnd;
           const gapMin = gapMs / 60000;
           
-          // Si el gap es positivo (aunque sea segundos), lo registramos
           if (gapMin > 0) {
              total_idle += gapMin;
              if (gapMin > max_gap) max_gap = gapMin;
              
-             // AQUÍ ESTÁ EL CAMBIO CLAVE:
-             // Insertamos un paso artificial llamado "Tiempo Muerto" para que salga en la gráfica
+             // Incrementamos el contador de esperas para este lote
+             waitCounter++;
+
+             // Insertamos el paso de espera con nombre único
              steps.push({
-               stepName: "⏳ Tiempo Muerto",
+               stepName: `⏳ Espera ${waitCounter}`,
                stepNr: "", 
-               durationMin: Number(gapMin.toFixed(2)), // Redondeamos a 2 decimales para limpieza
-               expectedDurationMin: 0, // No se espera tiempo muerto, así que 0
+               durationMin: Number(gapMin.toFixed(2)),
+               expectedDurationMin: 0,
                startTime: new Date(lastEnd).toISOString(),
                endTime: evt.start.toISOString()
              });
              
-             // Generar alerta si el gap es significativo (>15 min)
+             // Alerta si es una espera larga (>15 min)
              if (gapMin > 15) {
-                alerts.push(`Tiempo muerto de ${Math.round(gapMin)} min detectado antes de ${evt.GOP_NAME}`);
+                alerts.push(`Espera de ${Math.round(gapMin)} min detectada antes de ${evt.GOP_NAME}`);
              }
           }
         }
@@ -157,8 +158,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
         endTime: evt.end ? evt.end.toISOString() : ""
       });
 
-      // Actualizamos lastEnd para el siguiente ciclo
-      // Tomamos el mayor valor de fin encontrado hasta ahora (por si hay pasos solapados)
+      // Actualizamos lastEnd
       if (evt.end && evt.end.getTime() > lastEnd) {
         lastEnd = evt.end.getTime();
       }
@@ -173,7 +173,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       idle_wall_minus_sumsteps_min: Math.round(total_idle * 100) / 100,
       max_gap_min: Math.round(max_gap * 100) / 100,
       timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString(),
-      steps: steps, // Guardamos los pasos incluyendo los gaps insertados
+      steps: steps,
       alerts: alerts
     };
   });
