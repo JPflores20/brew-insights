@@ -67,7 +67,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     const start = buildDate(row, "SZ");
     const end = buildDate(row, "EZ");
     
-    // Capturamos el nombre y número del paso para el Drill-down
+    // Capturamos el nombre y número del paso
     const gopName = String(row.GOP_NAME || "").trim();
     const gopNr = String(row.GOP_NR || "").trim();
 
@@ -93,7 +93,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
 
   // 3. Procesar cada grupo para crear el registro BatchRecord completo
   return Array.from(groupedEvents.values()).map(group => {
-    // Ordenar cronológicamente
+    // Ordenar cronológicamente por fecha de inicio
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
 
     let real_total = 0;
@@ -106,13 +106,48 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     // Array para compatibilidad de alertas
     const alerts: string[] = [];
 
+    // Inicializamos el fin del "último paso" con el fin del primero (para empezar a comparar desde el segundo)
     let lastEnd = group[0].end ? group[0].end.getTime() : (group[0].start?.getTime() || 0);
 
     group.forEach((evt, index) => {
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
 
-      // Crear el paso
+      // DETECCIÓN DE GAP (Tiempo Muerto) VISUAL
+      // Solo verificamos huecos a partir del segundo elemento (index > 0)
+      if (index > 0 && evt.start) {
+        const currentStart = evt.start.getTime();
+        
+        // Calculamos el hueco exacto entre el fin del paso anterior y el inicio del actual
+        if (currentStart > lastEnd) {
+          const gapMs = currentStart - lastEnd;
+          const gapMin = gapMs / 60000;
+          
+          // Si el gap es positivo (aunque sea segundos), lo registramos
+          if (gapMin > 0) {
+             total_idle += gapMin;
+             if (gapMin > max_gap) max_gap = gapMin;
+             
+             // AQUÍ ESTÁ EL CAMBIO CLAVE:
+             // Insertamos un paso artificial llamado "Tiempo Muerto" para que salga en la gráfica
+             steps.push({
+               stepName: "⏳ Tiempo Muerto",
+               stepNr: "", 
+               durationMin: Number(gapMin.toFixed(2)), // Redondeamos a 2 decimales para limpieza
+               expectedDurationMin: 0, // No se espera tiempo muerto, así que 0
+               startTime: new Date(lastEnd).toISOString(),
+               endTime: evt.start.toISOString()
+             });
+             
+             // Generar alerta si el gap es significativo (>15 min)
+             if (gapMin > 15) {
+                alerts.push(`Tiempo muerto de ${Math.round(gapMin)} min detectado antes de ${evt.GOP_NAME}`);
+             }
+          }
+        }
+      }
+
+      // Insertamos el paso real del proceso
       steps.push({
         stepName: evt.GOP_NAME || `Paso ${index + 1}`,
         stepNr: evt.GOP_NR,
@@ -122,22 +157,8 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
         endTime: evt.end ? evt.end.toISOString() : ""
       });
 
-      // Calcular Gaps
-      if (index > 0 && evt.start) {
-        const currentStart = evt.start.getTime();
-        // Si hay un hueco mayor a 1 minuto entre el fin del anterior y el inicio de este
-        if (currentStart > lastEnd + 60000) { 
-          const gapMin = (currentStart - lastEnd) / 60000;
-          total_idle += gapMin;
-          if (gapMin > max_gap) max_gap = gapMin;
-          
-          // Generar alerta si el gap es significativo (>15 min)
-          if (gapMin > 15) {
-             alerts.push(`Tiempo muerto de ${Math.round(gapMin)} min antes de ${evt.GOP_NAME}`);
-          }
-        }
-      }
-
+      // Actualizamos lastEnd para el siguiente ciclo
+      // Tomamos el mayor valor de fin encontrado hasta ahora (por si hay pasos solapados)
       if (evt.end && evt.end.getTime() > lastEnd) {
         lastEnd = evt.end.getTime();
       }
@@ -152,7 +173,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       idle_wall_minus_sumsteps_min: Math.round(total_idle * 100) / 100,
       max_gap_min: Math.round(max_gap * 100) / 100,
       timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString(),
-      steps: steps, // Guardamos los pasos
+      steps: steps, // Guardamos los pasos incluyendo los gaps insertados
       alerts: alerts
     };
   });
