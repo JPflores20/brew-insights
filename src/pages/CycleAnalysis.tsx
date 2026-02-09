@@ -18,7 +18,7 @@ import {
   ResponsiveContainer, 
   ReferenceLine 
 } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { AlertCircle, Clock, TrendingUp, Activity } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -40,7 +40,11 @@ export default function CycleAnalysis() {
   const uniqueSteps = useMemo(() => {
     if (data.length === 0) return [];
     const batchWithSteps = data.find(d => d.steps && d.steps.length > 0);
-    return batchWithSteps ? batchWithSteps.steps.map(s => s.stepName) : [];
+    return batchWithSteps 
+      ? batchWithSteps.steps
+          .map(s => s.stepName)
+          .filter(name => !name.includes("⏳ Espera")) 
+      : [];
   }, [data]);
 
   useMemo(() => {
@@ -49,59 +53,154 @@ export default function CycleAnalysis() {
     }
   }, [uniqueProducts, selectedProduct, setSelectedProduct]);
 
-  // Filtrar y ordenar datos
+  // Filtrar datos por producto
   const filteredData = useMemo(() => {
     if (!selectedProduct) return [];
-    const batches = data.filter(d => d.productName === selectedProduct);
-    // Orden cronológico
-    return batches.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    return data.filter(d => d.productName === selectedProduct);
   }, [data, selectedProduct]);
 
-  // Transformar para Gráficas
-  const chartData = useMemo(() => {
-    return filteredData.map(batch => {
-      let startTime: number;
-      let endTime: number;
-      let duration: number;
-
-      if (selectedStep === "FULL_CYCLE") {
-        startTime = new Date(batch.timestamp).getTime();
-        if (batch.steps && batch.steps.length > 0) {
-           const lastStep = batch.steps[batch.steps.length - 1];
-           endTime = lastStep.endTime ? parseISO(lastStep.endTime).getTime() : startTime + (batch.real_total_min * 60000);
-        } else {
-           endTime = startTime + (batch.real_total_min * 60000);
-        }
-        duration = batch.real_total_min;
+  // --- ALGORITMO DE FUSIÓN DE INTERVALOS ---
+  // Calcula la duración real unificando solapamientos y duplicados
+  const calculateMergedDuration = (intervals: { start: number; end: number }[]): number => {
+    if (intervals.length === 0) return 0;
+    
+    // 1. Ordenar por inicio
+    intervals.sort((a, b) => a.start - b.start);
+    
+    const merged = [];
+    let current = intervals[0];
+    
+    for (let i = 1; i < intervals.length; i++) {
+      const next = intervals[i];
+      
+      if (next.start < current.end) {
+        // Solapamiento: extendemos el final si es necesario (Fusión)
+        current.end = Math.max(current.end, next.end);
       } else {
+        // No hay solapamiento: guardamos el actual y avanzamos
+        merged.push(current);
+        current = next;
+      }
+    }
+    merged.push(current);
+    
+    // Sumar duraciones de los intervalos fusionados
+    const totalMs = merged.reduce((acc, interval) => acc + (interval.end - interval.start), 0);
+    return totalMs / 60000; // Convertir a minutos
+  };
+
+  // --- LÓGICA DE DATOS PARA GRÁFICAS ---
+  const chartData = useMemo(() => {
+    if (selectedStep === "FULL_CYCLE") {
+      // Agrupar por ID de Lote para consolidar partes
+      const groupedBatches = new Map<string, {
+        id: string;
+        startTime: number;
+        endTime: number;
+        intervals: { start: number; end: number }[];
+      }>();
+
+      filteredData.forEach(batch => {
+        const id = batch.CHARG_NR;
+        if (!id) return;
+
+        const batchStart = new Date(batch.timestamp).getTime();
+        let batchEnd = batchStart + (batch.real_total_min * 60000);
+        
+        // Recolectar intervalos de tiempo de cada paso ACTIVO
+        const batchIntervals: { start: number; end: number }[] = [];
+        
+        if (batch.steps && batch.steps.length > 0) {
+          batch.steps.forEach(step => {
+            // Ignorar esperas
+            if (step.stepName.includes("⏳ Espera")) return;
+            
+            // Validar fechas del paso
+            if (step.startTime && step.endTime) {
+              const s = parseISO(step.startTime).getTime();
+              const e = parseISO(step.endTime).getTime();
+              if (!isNaN(s) && !isNaN(e) && e > s) {
+                batchIntervals.push({ start: s, end: e });
+              }
+            }
+          });
+          
+          // Actualizar fin del lote basado en el último paso real
+          const lastStep = batch.steps[batch.steps.length - 1];
+          if (lastStep.endTime) {
+             const le = parseISO(lastStep.endTime).getTime();
+             if (!isNaN(le)) batchEnd = le;
+          }
+        } else {
+          // Fallback si no hay pasos detallados: Usamos el tiempo total del lote menos idle
+          const idleTimeMs = (batch.idle_wall_minus_sumsteps_min || 0) * 60000;
+          batchIntervals.push({ start: batchStart, end: Math.max(batchStart, batchEnd - idleTimeMs) });
+        }
+
+        if (!groupedBatches.has(id)) {
+          groupedBatches.set(id, {
+            id,
+            startTime: batchStart,
+            endTime: batchEnd,
+            intervals: batchIntervals
+          });
+        } else {
+          const existing = groupedBatches.get(id)!;
+          existing.startTime = Math.min(existing.startTime, batchStart);
+          existing.endTime = Math.max(existing.endTime, batchEnd);
+          // Acumulamos intervalos para luego fusionarlos
+          existing.intervals.push(...batchIntervals);
+        }
+      });
+
+      // Procesar cada lote agrupado
+      return Array.from(groupedBatches.values())
+        .map(b => {
+          // AQUI ESTÁ LA MAGIA: Calculamos duración fusionando intervalos
+          const uniqueDuration = calculateMergedDuration(b.intervals);
+          const fullDateFormat = "dd/MM/yyyy HH:mm";
+
+          return {
+            id: b.id,
+            startTime: b.startTime,
+            endTime: b.endTime,
+            duration: Math.round(uniqueDuration * 100) / 100, // Duración Real Sin Duplicados
+            startLabel: format(b.startTime, fullDateFormat),
+            endLabel: format(b.endTime, fullDateFormat),
+            startOffset: 0,
+            durationMs: b.endTime - b.startTime
+          };
+        })
+        .sort((a, b) => a.startTime - b.startTime)
+        .filter(d => d.duration > 0.1);
+
+    } else {
+      // Lógica para pasos individuales (sin cambios mayores, solo validación)
+      return filteredData.map(batch => {
         const step = batch.steps?.find(s => s.stepName === selectedStep);
         if (step) {
-          startTime = step.startTime ? parseISO(step.startTime).getTime() : 0;
-          endTime = step.endTime ? parseISO(step.endTime).getTime() : 0;
-          duration = step.durationMin;
-        } else {
-          return null;
+          const startTime = step.startTime ? parseISO(step.startTime).getTime() : 0;
+          const endTime = step.endTime ? parseISO(step.endTime).getTime() : 0;
+          const fullDateFormat = "dd/MM/yyyy HH:mm";
+          if (!startTime || !endTime) return null;
+
+          return {
+            id: batch.CHARG_NR,
+            machine: batch.TEILANL_GRUPO,
+            startTime,
+            endTime,
+            duration: step.durationMin,
+            startLabel: format(startTime, fullDateFormat),
+            endLabel: format(endTime, fullDateFormat),
+            startOffset: 0, 
+            durationMs: endTime - startTime
+          };
         }
-      }
-
-      if (!startTime || !endTime) return null;
-
-      // --- CAMBIO AQUÍ: FORMATO DE FECHA COMPLETA ---
-      const fullDateFormat = "dd/MM/yyyy HH:mm";
-
-      return {
-        id: batch.CHARG_NR,
-        machine: batch.TEILANL_GRUPO,
-        startTime,
-        endTime,
-        duration,
-        startLabel: format(startTime, fullDateFormat), // Fecha completa inicio
-        endLabel: format(endTime, fullDateFormat),     // Fecha completa fin
-        // Datos para Gantt
-        startOffset: 0, 
-        durationMs: endTime - startTime
-      };
-    }).filter(Boolean) as any[];
+        return null;
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => a.startTime - b.startTime) as any[];
+    }
   }, [filteredData, selectedStep]);
 
   // Estadísticas
@@ -117,7 +216,7 @@ export default function CycleAnalysis() {
     };
   }, [chartData]);
 
-  // Ajuste para Gantt (Offsets)
+  // Ajuste para Gantt
   const minTime = chartData.length > 0 ? Math.min(...chartData.map(d => d.startTime)) : 0;
   const maxTime = chartData.length > 0 ? Math.max(...chartData.map(d => d.endTime)) : 0;
   
@@ -148,7 +247,7 @@ export default function CycleAnalysis() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Análisis de Tiempos</h1>
-            <p className="text-muted-foreground">Comparativa de duración real vs teórica y secuencia.</p>
+            <p className="text-muted-foreground">Comparativa de duración real (consolidada) vs teórica.</p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3 bg-card p-2 rounded-lg border shadow-sm">
@@ -167,7 +266,7 @@ export default function CycleAnalysis() {
               <Select value={selectedStep} onValueChange={setSelectedStep}>
                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FULL_CYCLE">Ciclo Completo</SelectItem>
+                  <SelectItem value="FULL_CYCLE">Ciclo Completo (Total)</SelectItem>
                   {uniqueSteps.map(step => <SelectItem key={step} value={step}>{step}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -189,7 +288,7 @@ export default function CycleAnalysis() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Lotes</CardTitle>
+              <CardTitle className="text-sm font-medium">Lotes Únicos</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{stats.count}</div></CardContent>
@@ -212,7 +311,7 @@ export default function CycleAnalysis() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+{stats.max - theoreticalDuration} min</div>
+              <div className="text-2xl font-bold">+{Math.round((stats.max - theoreticalDuration) * 100) / 100} min</div>
               <p className="text-xs text-muted-foreground">Peor caso: {stats.max} min</p>
             </CardContent>
           </Card>
@@ -229,12 +328,12 @@ export default function CycleAnalysis() {
           </Card>
         </div>
 
-        {/* 1. GRÁFICO DE ÁREA: Tendencia y Comparación Teórica */}
+        {/* 1. GRÁFICO DE TENDENCIA (AREA CHART) */}
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Tendencia de Duración vs Meta</CardTitle>
+            <CardTitle>Tendencia de Duración Total vs Meta</CardTitle>
             <CardDescription>
-              La línea roja indica el tiempo teórico ({theoreticalDuration} min).
+              Cada punto representa un Lote Único. La duración es la suma real de tiempos activos (sin duplicados).
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[400px]">
@@ -246,6 +345,7 @@ export default function CycleAnalysis() {
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis 
                   dataKey="id" 
                   tick={{ fontSize: 10 }} 
@@ -253,25 +353,22 @@ export default function CycleAnalysis() {
                   angle={-45}
                   textAnchor="end"
                   height={60}
+                  label={{ value: 'Nº Lote (Ordenado por Inicio)', position: 'insideBottom', offset: -10, fontSize: 12 }}
                 />
-                <YAxis label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }} />
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <YAxis label={{ value: 'Minutos Activos', angle: -90, position: 'insideLeft' }} />
                 
-                {/* TOOLTIP PERSONALIZADO CON FECHA COMPLETA */}
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
                         <div className="bg-popover border border-border p-3 rounded-md shadow-md text-sm text-popover-foreground">
-                          <p className="font-bold mb-2 text-primary">{data.id}</p>
+                          <p className="font-bold mb-2 text-primary">Lote: {data.id}</p>
                           <div className="grid grid-cols-[60px_1fr] gap-x-2 gap-y-1">
                              <span className="text-muted-foreground">Duración:</span>
-                             <span className="font-bold">{data.duration} min</span>
-                             
+                             <span className="font-bold">{data.duration} min (Real)</span>
                              <span className="text-muted-foreground">Inicio:</span>
                              <span>{data.startLabel}</span>
-                             
                              <span className="text-muted-foreground">Fin:</span>
                              <span>{data.endLabel}</span>
                           </div>
@@ -295,18 +392,18 @@ export default function CycleAnalysis() {
                   stroke="hsl(var(--primary))" 
                   fillOpacity={1} 
                   fill="url(#colorDuration)" 
-                  name="Duración"
+                  name="Duración Total"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* 2. GANTT: Secuencia y Solapamiento */}
+        {/* 2. GANTT: Secuencia Global */}
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Secuencia de Lotes (Gantt)</CardTitle>
-            <CardDescription>Visualización de horarios de inicio y fin para detectar solapamientos.</CardDescription>
+            <CardTitle>Cronograma Global de Producción</CardTitle>
+            <CardDescription>Secuencia de lotes únicos en el tiempo (Inicio a Fin).</CardDescription>
           </CardHeader>
           <CardContent className="h-[400px] overflow-auto">
             <div className="min-w-[800px] h-full">
@@ -315,7 +412,7 @@ export default function CycleAnalysis() {
                   data={ganttData}
                   layout="vertical"
                   barSize={15}
-                  margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.2} />
                   <YAxis type="category" dataKey="id" width={80} tick={{ fontSize: 10 }} />
