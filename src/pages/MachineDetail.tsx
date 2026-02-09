@@ -38,8 +38,10 @@ import {
   Sparkles,
   Loader2,
   Timer,
-  Droplets,
-  Scale
+  Droplets, // Icono Materiales
+  Scale,    // Icono Peso/Volumen
+  Gauge,    // Icono Parámetros
+  Thermometer // Icono Temperatura
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -81,11 +83,9 @@ export default function MachineDetail() {
     setAiAnalysis(null);
   }, [selectedBatchId, selectedMachine]);
 
-  // --- DETECCIÓN DE PROBLEMAS (Top Issues) ---
   const problematicBatches = useMemo(() => {
     const issues: any[] = [];
     data.forEach((record) => {
-      // Problema si hay Gap > 5min O Retraso > 5min
       const hasGap = record.idle_wall_minus_sumsteps_min > 5;
       const hasDelay = record.delta_total_min > 5;
 
@@ -96,18 +96,16 @@ export default function MachineDetail() {
           machine: record.TEILANL_GRUPO,
           totalWait: record.idle_wall_minus_sumsteps_min,
           totalDelay: record.delta_total_min,
-          isDelay: !hasGap && hasDelay, // Priorizamos Gap como causa si existe
+          isDelay: !hasGap && hasDelay,
           timestamp: record.timestamp,
         });
       }
     });
-    // Ordenamos por magnitud
     return issues.sort((a, b) => 
         Math.max(b.totalWait, b.totalDelay) - Math.max(a.totalWait, a.totalDelay)
     );
   }, [data]);
 
-  // --- SELECTORES INTELIGENTES ---
   useEffect(() => {
     if (allBatches.length > 0) {
       if (!selectedBatchId || !allBatches.includes(selectedBatchId)) {
@@ -142,14 +140,13 @@ export default function MachineDetail() {
 
   const stepsData = selectedRecord?.steps || [];
   const materialsData = selectedRecord?.materials || [];
+  const parametersData = selectedRecord?.parameters || []; // <--- NUEVO
 
-  // --- REPORTE DE ANOMALÍAS (GAPS + RETRASOS) ---
   const anomaliesReport = useMemo(() => {
     if (!stepsData.length) return [];
     return stepsData
       .map((step, index) => {
         const isGap = step.stepName.includes("Espera");
-        // Paso lento = dura más de lo esperado (+1 min de tolerancia)
         const isSlow = !isGap && step.expectedDurationMin > 0 && step.durationMin > (step.expectedDurationMin + 1);
 
         if (!isGap && !isSlow) return null;
@@ -254,7 +251,7 @@ export default function MachineDetail() {
           </p>
         </div>
 
-        {/* --- 1. PANEL DE SUGERENCIAS --- */}
+        {/* --- PANEL DE SUGERENCIAS --- */}
         {problematicBatches.length > 0 && (
           <Card className="bg-card border-border border-l-4 border-l-orange-500">
             <CardHeader className="pb-3">
@@ -265,7 +262,7 @@ export default function MachineDetail() {
                 </CardTitle>
               </div>
               <CardDescription>
-                Se han encontrado {problematicBatches.length} registros con ineficiencias (Esperas o Retrasos).
+                Se han encontrado {problematicBatches.length} registros con ineficiencias.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -315,7 +312,7 @@ export default function MachineDetail() {
           </Card>
         )}
 
-        {/* --- 2. SELECTORES --- */}
+        {/* --- SELECTORES --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="pb-2 pt-4">
@@ -381,7 +378,7 @@ export default function MachineDetail() {
           </Card>
         </div>
 
-        {/* --- 3. TARJETAS KPI --- */}
+        {/* --- KPI CARDS --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
@@ -416,10 +413,8 @@ export default function MachineDetail() {
           </Card>
         </div>
 
-        {/* --- 4. GRID PRINCIPAL (Gráfica + Información) --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* GRÁFICA DE PASOS (Ocupa 2/3 de ancho) */}
+          {/* GRÁFICA (Ocupa 2/3 de ancho) */}
           <div className="lg:col-span-2 space-y-6">
             {selectedRecord && stepsData.length > 0 ? (
               <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-full">
@@ -477,31 +472,15 @@ export default function MachineDetail() {
                           { value: "Duración Esperada (min)", type: "rect", color: "#fbbf24" },
                         ]}
                       />
-                      <Bar
-                        dataKey="durationMin"
-                        name="Duración Real (min)"
-                        fill="hsl(var(--primary))"
-                        radius={[0, 4, 4, 0]}
-                        barSize={20}
-                      >
+                      <Bar dataKey="durationMin" name="Duración Real (min)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20}>
                         {stepsData.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={
-                              entry.stepName.includes("Espera")
-                                ? "#ef4444"
-                                : "hsl(var(--primary))"
-                            }
+                            fill={entry.stepName.includes("Espera") ? "#ef4444" : "hsl(var(--primary))"}
                           />
                         ))}
                       </Bar>
-                      <Bar
-                        dataKey="expectedDurationMin"
-                        name="Duración Esperada (min)"
-                        fill="#fbbf24"
-                        radius={[0, 4, 4, 0]}
-                        barSize={10}
-                      />
+                      <Bar dataKey="expectedDurationMin" name="Duración Esperada (min)" fill="#fbbf24" radius={[0, 4, 4, 0]} barSize={10} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -532,7 +511,7 @@ export default function MachineDetail() {
                         <CardDescription>Ingredientes registrados en este lote</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <ScrollArea className="h-[250px] w-full p-4">
+                        <ScrollArea className="h-[200px] w-full p-4">
                             <div className="space-y-3">
                                 {materialsData.map((mat, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
@@ -563,7 +542,46 @@ export default function MachineDetail() {
                 </Card>
             )}
 
-            {/* TARJETA DE INTELIGENCIA ARTIFICIAL (GEMINI) */}
+            {/* NUEVO: TARJETA DE PARÁMETROS DE PROCESO */}
+            {parametersData.length > 0 && (
+                <Card className="bg-card border-border shadow-sm">
+                    <CardHeader className="pb-3 border-b border-border">
+                        <div className="flex items-center gap-2">
+                            <Gauge className="h-5 w-5 text-blue-600" />
+                            <CardTitle className="text-lg">Parámetros</CardTitle>
+                        </div>
+                        <CardDescription>Variables (Temp, Presión)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <ScrollArea className="h-[200px] w-full p-4">
+                            <div className="space-y-3">
+                                {parametersData.map((param, idx) => (
+                                    <div key={idx} className="p-3 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <p className="text-xs text-muted-foreground font-mono uppercase truncate max-w-[150px]">{param.stepName}</p>
+                                            <Badge variant="outline" className="text-[10px] h-5">{param.unit}</Badge>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Thermometer className="h-4 w-4 text-blue-500" />
+                                                <span className="text-sm font-medium">{param.name}</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-sm font-bold text-foreground">{param.value}</span>
+                                                {param.target > 0 && (
+                                                    <span className="text-xs text-muted-foreground ml-2">/ {param.target}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* TARJETA GEMINI */}
             {anomaliesReport.length > 0 && (
               <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-indigo-500/10 dark:via-purple-500/5 dark:to-fuchsia-500/10" />
@@ -661,7 +679,7 @@ export default function MachineDetail() {
               </Card>
             )}
 
-            {/* LISTA DETALLADA DE ANOMALÍAS (GAPS Y RETRASOS) */}
+            {/* LISTA DETALLADA DE ANOMALÍAS */}
             <Card className="bg-card border-border flex-1 flex flex-col">
               <CardHeader className="pb-3 border-b border-border">
                 <div className="flex items-center gap-2 text-foreground">

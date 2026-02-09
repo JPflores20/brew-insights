@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { EfficiencyChart } from "@/components/dashboard/EfficiencyChart";
@@ -9,35 +9,45 @@ import {
   Clock, 
   Upload, 
   FileSpreadsheet, 
-  Beer, // Mantenemos el icono para el texto final
+  Beer, 
   Info, 
-  AlertTriangle 
+  AlertTriangle,
+  // --- NUEVOS ICONOS ---
+  Factory, 
+  Sun,
+  Moon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { processExcelFile } from "@/utils/excelProcessor";
 import { useData } from "@/context/DataContext"; 
 import { 
   getTotalBatches, 
   getAverageCycleDeviation, 
-  getMachineWithHighestIdleTime
+  getMachineWithHighestIdleTime,
+  // --- NUEVAS FUNCIONES DE MOCKDATA (Asegúrate de tenerlas en mockData.ts) ---
+  getRecipeStats, 
+  getShiftStats
 } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+// --- NUEVOS IMPORTES PARA GRÁFICAS ---
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 export default function Overview() {
   const { data, setData } = useData(); 
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  // 1. Nuevo estado para controlar el porcentaje de llenado (0-100)
+  
+  // --- LÓGICA ORIGINAL DE ESTADO (Mantenida) ---
   const [uploadProgress, setUploadProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Función para limpiar el intervalo del simulador
+  // --- LÓGICA DE ANIMACIÓN Y CARGA (Mantenida intacta) ---
   const clearProgressInterval = () => {
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
@@ -49,36 +59,31 @@ export default function Overview() {
     setLoading(true);
     setUploadProgress(0);
 
-    // 2. Iniciar simulación de progreso
-    // Incrementa rápidamente al principio, luego más lento hasta el 90%
+    // Simulación de llenado (Lógica original)
     progressIntervalRef.current = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev >= 90) {
-          // Si llega al 90% y aún no termina el proceso real, se queda ahí "esperando"
-          return 90 + Math.random() * 2; // Pequeña variación para que parezca vivo
+          return 90 + Math.random() * 2; 
         }
-        // Incremento rápido inicial
         const increment = Math.random() * 15;
         return Math.min(prev + increment, 90);
       });
     }, 300);
 
     try {
-      // El procesamiento real (puede tardar unos segundos)
       const processedData = await processExcelFile(file);
       
-      // 3. Proceso terminado: Llenar al 100%
+      // Finalización (Lógica original)
       clearProgressInterval();
       setUploadProgress(100);
 
-      // Pequeña pausa visual para disfrutar la cerveza llena antes de mostrar el dashboard
+      // Pequeña pausa visual
       await new Promise(resolve => setTimeout(resolve, 800));
 
       setData(processedData); 
       toast({
         title: "¡Tanque lleno!",
         description: `Se han procesado ${processedData.length} registros correctamente.`,
-        // Usamos un color dorado para el toast de éxito
         className: "bg-amber-500 text-white border-none",
       });
     } catch (error) {
@@ -95,7 +100,6 @@ export default function Overview() {
     }
   };
 
-  // Limpieza al desmontar el componente por si acaso
   useEffect(() => {
     return () => clearProgressInterval();
   }, []);
@@ -127,13 +131,21 @@ export default function Overview() {
     } else {
       toast({
         variant: "destructive",
-        title: "Archivo incorrecto",
+        title: "Ingrediente incorrecto",
         description: "Por favor arrastra un archivo Excel (.xlsx o .xls).",
       });
     }
   };
 
+  // --- CÁLCULOS (Originales + Nuevos) ---
+  const totalBatches = getTotalBatches(data);
+  const avgDeviation = getAverageCycleDeviation(data);
   const highestIdle = getMachineWithHighestIdleTime(data);
+  
+  // Nuevos cálculos (solo si hay datos)
+  const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
+  const shiftStats = useMemo(() => getShiftStats ? getShiftStats(data) : [], [data]);
+
   const handleNavigateToDetail = () => {
     if (highestIdle.machine !== "N/A") {
       window.localStorage.setItem("detail-machine-selection-v2", JSON.stringify(highestIdle.machine));
@@ -141,14 +153,13 @@ export default function Overview() {
     }
   };
 
+  // --- RENDERIZADO (Lógica original de carga) ---
   if (data.length === 0) {
     return (
       <DashboardLayout>
-        {/* Contenedor principal de la zona de carga */}
         <div 
           className={cn(
             "relative flex h-[70vh] flex-col items-center justify-center space-y-6 text-center rounded-xl transition-all overflow-hidden",
-            // Si está cargando, quitamos bordes y fondo para que se vea la animación completa
             loading ? "" : "border-2 border-dashed",
             !loading && isDragging ? "border-amber-500 bg-amber-500/5 scale-[1.02]" : "border-border",
           )}
@@ -157,38 +168,26 @@ export default function Overview() {
           onDrop={handleDrop}
         >
           {loading ? (
-            /* --- 4. NUEVA ANIMACIÓN DE CERVEZA LLENANDO LA PANTALLA --- */
+            /* ANIMACIÓN CERVEZA (Original) */
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
-               
-               {/* Contenedor del Líquido y Espuma (ocupa todo el espacio disponible) */}
                <div className="absolute inset-x-0 bottom-0 h-full w-full overflow-hidden rounded-xl">
-                 
-                 {/* CAPA DE LÍQUIDO (Cerveza Ámbar) */}
                  <div 
                    className="absolute bottom-0 w-full bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 transition-all duration-300 ease-out"
-                   // Usamos estilo en línea para controlar la altura dinámicamente
                    style={{ height: `${uploadProgress}%` }}
                  >
-                    {/* Burbujas decorativas dentro del líquido */}
                     <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:20px_20px] animate-pulse"></div>
                  </div>
-
-                 {/* CAPA DE ESPUMA (Blanca, encima del líquido) */}
                  <div 
                    className="absolute w-full h-12 bg-white/90 backdrop-blur-md transition-all duration-300 ease-out flex items-end overflow-hidden shadow-sm"
-                   // La espuma sube junto con el líquido
                    style={{ bottom: `${uploadProgress}%`, opacity: uploadProgress > 0 ? 1 : 0 }}
                  >
-                    {/* Efecto "ola" en la parte superior de la espuma */}
                    <div className="w-[200%] h-full bg-[radial-gradient(circle,white_60%,transparent_65%)] bg-[length:30px_60px] relative -top-4 animate-[spin_4s_linear_infinite] opacity-70"></div>
                    <div className="w-[200%] h-full bg-[radial-gradient(circle,white_60%,transparent_65%)] bg-[length:40px_50px] relative -top-2 -left-10 animate-[spin_3s_linear_reverse_infinite]"></div>
                  </div>
                </div>
 
-               {/* TEXTO E ICONO SUPERPUESTOS (Siempre visibles encima del líquido) */}
                <div className="relative z-10 flex flex-col items-center space-y-4 p-8 rounded-2xl bg-background/20 backdrop-blur-md border border-white/20 shadow-2xl animate-in fade-in zoom-in duration-500">
                  <div className="relative">
-                    {/* Icono de Beer que brilla y rebota al final */}
                    <Beer className={cn(
                      "h-20 w-20 text-amber-100 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]",
                      uploadProgress >= 100 ? "animate-bounce" : "animate-pulse"
@@ -203,16 +202,14 @@ export default function Overview() {
                    </p>
                  </div>
                </div>
-
             </div>
           ) : (
-            /* --- ESTADO NORMAL (DRAG & DROP) --- */
+            /* UI DRAG & DROP (Original) */
             <>
               <div className={cn(
                 "rounded-full p-6 transition-transform duration-300",
                 isDragging ? "bg-amber-500/20 scale-110" : "bg-primary/10"
               )}>
-                {/* Cambiamos el icono a Beer si se arrastra para dar feedback temático */}
                 {isDragging ? (
                     <Beer className="h-16 w-16 text-amber-500 animate-bounce" />
                 ) : (
@@ -252,9 +249,6 @@ export default function Overview() {
     );
   }
 
-  const totalBatches = getTotalBatches(data);
-  const avgDeviation = getAverageCycleDeviation(data);
-
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
@@ -268,7 +262,6 @@ export default function Overview() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <KPICard title="Total Lotes" value={totalBatches} subtitle="Cargados" icon={Boxes} variant="success" />
         <KPICard title="Desviación Promedio" value={`${avgDeviation > 0 ? '+' : ''}${avgDeviation}%`} subtitle="Vs Esperado" icon={TrendingUp} variant={avgDeviation > 10 ? "danger" : "success"} />
-        
         <KPICard 
           title="Mayor Tiempo Muerto" 
           value={`${highestIdle.idleTime} min`} 
@@ -284,6 +277,81 @@ export default function Overview() {
         <div className="lg:col-span-1"><AlertsWidget data={data} /></div>
       </div>
 
+      {/* --- AQUI COMIENZAN LAS SECCIONES NUEVAS (AÑADIDO) --- */}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
+        {/* 1. Comparativa de Recetas */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Factory className="h-5 w-5 text-purple-500" />
+              Rendimiento por Receta
+            </CardTitle>
+            <CardDescription>Comparación de tiempos reales y tiempos muertos promedio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={recipeStats.slice(0, 5)} layout="vertical" margin={{ left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={120} tick={{fontSize: 10}} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="avgReal" name="T. Real Promedio" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+                  <Bar dataKey="avgIdle" name="T. Muerto Promedio" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Análisis de Turnos */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Moon className="h-5 w-5 text-indigo-500" />
+              Eficiencia por Turno
+            </CardTitle>
+            <CardDescription>Desempeño acumulado por horario de inicio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {shiftStats.map((shift) => (
+                <div key={shift.name} className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("p-2 rounded-full", 
+                        shift.name.includes("Matutino") ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" : 
+                        shift.name.includes("Vespertino") ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" : 
+                        "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                    )}>
+                      {shift.name.includes("Matutino") ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{shift.name}</p>
+                      <p className="text-xs text-muted-foreground">{shift.batches} lotes iniciados</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={cn("text-sm font-bold", shift.avgIdle > 15 ? "text-red-500" : "text-green-600")}>
+                      {shift.avgIdle} min
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">T. Muerto Promedio</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* --- FIN SECCIONES NUEVAS --- */}
+
+      {/* GLOSARIO ORIGINAL (Mantenido) */}
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">

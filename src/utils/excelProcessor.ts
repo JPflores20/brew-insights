@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
-import { BatchRecord, BatchStep, BatchMaterial } from '@/data/mockData';
+import { BatchRecord, BatchStep, BatchMaterial, BatchParameter } from '@/data/mockData';
 
-// --- FUNCIONES DE LIMPIEZA ---
+// --- LIMPIEZA DE DATOS ---
 function normalizeText(s: any): string {
   if (!s) return "";
   let str = String(s).trim();
@@ -56,7 +56,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
   const worksheet = workbook.Sheets[sheetName];
   const rawData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
-  // 1. Mapear eventos crudos
+  // 1. Mapeo inicial de filas
   const events = rawData.map(row => {
     const chargNr = String(row.CHARG_NR || row.COCIMIENTO || "").trim();
     const teilanl = String(row.TEILANL || "").trim();
@@ -64,26 +64,34 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     const iwMin = (parseFloat(row.IW_ZEIT) || 0) / 60;
     const start = buildDate(row, "SZ");
     const end = buildDate(row, "EZ");
+    const startHour = row.SZ_STUNDE ? parseInt(row.SZ_STUNDE) : 0; // Capturamos la hora
+    
     const gopName = String(row.GOP_NAME || "").trim();
     const gopNr = String(row.GOP_NR || "").trim();
     const productName = String(row.REZEPT || row.PRODUCT || "").trim();
 
-    // --- NUEVO: EXTRACCIÓN DE MATERIALES (DFMs) ---
+    // Arrays temporales para esta fila
     const rowMaterials: { name: string, val: number, exp: number, unit: string }[] = [];
+    const rowParams: { name: string, val: number, target: number, unit: string }[] = [];
     
+    // Escaneamos las 24 columnas DFM posibles
     for (let i = 1; i <= 24; i++) {
         const name = row[`NAME_DFM${i}`];
         const val = parseFloat(row[`IW_DFM${i}`]); 
         const exp = parseFloat(row[`SW_DFM${i}`]); 
-        const unit = row[`DIM_DFM${i}`]; 
+        let unit = String(row[`DIM_DFM${i}`] || "").trim().toLowerCase();
 
-        if (name && (val > 0 || exp > 0)) {
-            rowMaterials.push({ 
-                name: String(name).trim(), 
-                val: val || 0, 
-                exp: exp || 0, 
-                unit: String(unit || "").trim() 
-            });
+        if (name && (val !== undefined || exp !== undefined)) {
+            // Clasificación inteligente basada en unidades
+            const isMaterial = ['kg', 'hl', 'l', 'g', 'lbs'].includes(unit);
+            const isParam = ['c', '°c', 'bar', 'mbar', 'm3/h', '%', 'rpm', 'hz', 'a'].includes(unit);
+
+            if (isMaterial) {
+                rowMaterials.push({ name: String(name).trim(), val: val || 0, exp: exp || 0, unit });
+            } else if (isParam || (!isMaterial && val > 0)) {
+                // Si tiene valor y no es material explícito, lo tratamos como parámetro
+                rowParams.push({ name: String(name).trim(), val: val || 0, target: exp || 0, unit });
+            }
         }
     }
 
@@ -95,13 +103,15 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       productName,
       start,
       end,
+      startHour, // Importante para el análisis de turnos
       swMin,
       iwMin,
-      materials: rowMaterials 
+      materials: rowMaterials,
+      parameters: rowParams 
     };
   }).filter(e => e.CHARG_NR && e.TEILANL_GRUPO !== "SIN_TEILANL");
 
-  // 2. Agrupar eventos
+  // 2. Agrupación por Lote + Máquina
   const groupedEvents = new Map<string, any[]>();
   events.forEach(evt => {
     const key = `${evt.CHARG_NR}|${evt.TEILANL_GRUPO}`;
@@ -109,7 +119,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     groupedEvents.get(key)?.push(evt);
   });
 
-  // 3. Procesar cada grupo
+  // 3. Consolidación de registros
   return Array.from(groupedEvents.values()).map(group => {
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
 
@@ -120,9 +130,8 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     
     const steps: BatchStep[] = [];
     const alerts: string[] = [];
-    
-    // --- NUEVO: CONSOLIDACIÓN DE MATERIALES ---
     const materialsMap = new Map<string, BatchMaterial>();
+    const parametersList: BatchParameter[] = [];
 
     let lastEnd = group[0].end ? group[0].end.getTime() : (group[0].start?.getTime() || 0);
     let waitCounter = 0;
@@ -131,6 +140,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
 
+      // Detección de Gaps
       if (index > 0 && evt.start) {
         const currentStart = evt.start.getTime();
         if (currentStart > lastEnd) {
@@ -153,19 +163,26 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
         }
       }
 
+      // Sumar materiales si son el mismo (ej. agua en varios pasos)
       evt.materials.forEach((mat: any) => {
           const key = `${mat.name}_${mat.unit}`;
           if (!materialsMap.has(key)) {
-              materialsMap.set(key, { 
-                  name: mat.name, 
-                  totalReal: 0, 
-                  totalExpected: 0, 
-                  unit: mat.unit 
-              });
+              materialsMap.set(key, { name: mat.name, totalReal: 0, totalExpected: 0, unit: mat.unit });
           }
           const existing = materialsMap.get(key)!;
           existing.totalReal += mat.val;
           existing.totalExpected += mat.exp;
+      });
+
+      // Listar parámetros
+      evt.parameters.forEach((param: any) => {
+          parametersList.push({
+              name: param.name,
+              value: param.val,
+              target: param.target,
+              unit: param.unit,
+              stepName: evt.GOP_NAME
+          });
       });
 
       steps.push({
@@ -192,8 +209,10 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       idle_wall_minus_sumsteps_min: Math.round(total_idle * 100) / 100,
       max_gap_min: Math.round(max_gap * 100) / 100,
       timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString(),
+      startHour: group[0].startHour, // Pasamos la hora de inicio
       steps: steps,
-      materials: Array.from(materialsMap.values()), 
+      materials: Array.from(materialsMap.values()),
+      parameters: parametersList,
       alerts: alerts
     };
   });

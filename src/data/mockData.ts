@@ -1,3 +1,7 @@
+import { format } from "date-fns";
+
+// --- INTERFACES ---
+
 export interface BatchStep {
   stepName: string;
   stepNr: string;
@@ -7,12 +11,19 @@ export interface BatchStep {
   endTime: string;
 }
 
-// --- NUEVA INTERFAZ PARA MATERIALES ---
 export interface BatchMaterial {
   name: string;
   totalReal: number;
   totalExpected: number;
   unit: string;
+}
+
+export interface BatchParameter {
+  name: string;
+  value: number;
+  target: number;
+  unit: string;
+  stepName: string;
 }
 
 export interface BatchRecord {
@@ -25,12 +36,14 @@ export interface BatchRecord {
   idle_wall_minus_sumsteps_min: number;
   max_gap_min: number;
   timestamp: string;
+  startHour: number;
   steps: BatchStep[];
-  materials: BatchMaterial[]; // <-- Campo nuevo
+  materials: BatchMaterial[];
+  parameters: BatchParameter[];
   alerts: string[];
 }
 
-// --- HELPERS (Se mantienen igual) ---
+// --- HELPERS BÁSICOS ---
 
 export function getUniqueBatchIds(data: BatchRecord[]): string[] {
   return Array.from(new Set(data.map(d => d.CHARG_NR))).sort();
@@ -47,6 +60,8 @@ export function getBatchById(data: BatchRecord[], batchId: string): BatchRecord[
 export function getMachineData(data: BatchRecord[], machineName: string): BatchRecord[] {
   return data.filter(d => d.TEILANL_GRUPO === machineName);
 }
+
+// --- ESTADÍSTICAS POR MÁQUINA (Esta es la que faltaba) ---
 
 export function getAveragesByMachine(data: BatchRecord[]) {
   const groups = getUniqueMachineGroups(data);
@@ -69,6 +84,8 @@ export function getAveragesByMachine(data: BatchRecord[]) {
     };
   });
 }
+
+// --- OTRAS ESTADÍSTICAS ---
 
 export function getTotalBatches(data: BatchRecord[]): number {
   return new Set(data.map(d => d.CHARG_NR)).size;
@@ -94,4 +111,56 @@ export function getDelayAlerts(data: BatchRecord[], threshold: number = 30): Bat
   return data
     .filter(d => d.delta_total_min > threshold)
     .sort((a, b) => b.delta_total_min - a.delta_total_min);
+}
+
+// --- NUEVAS FUNCIONES PARA EL DASHBOARD AVANZADO ---
+
+export function getRecipeStats(data: BatchRecord[]) {
+  const recipes = new Map<string, { count: number, totalReal: number, totalExpected: number, totalIdle: number }>();
+
+  data.forEach(d => {
+    const name = d.productName || "Desconocido";
+    if (!recipes.has(name)) {
+      recipes.set(name, { count: 0, totalReal: 0, totalExpected: 0, totalIdle: 0 });
+    }
+    const r = recipes.get(name)!;
+    r.count++;
+    r.totalReal += d.real_total_min;
+    r.totalExpected += d.esperado_total_min;
+    r.totalIdle += d.idle_wall_minus_sumsteps_min;
+  });
+
+  return Array.from(recipes.entries()).map(([name, stats]) => ({
+    name,
+    avgReal: Math.round(stats.totalReal / stats.count),
+    avgExpected: Math.round(stats.totalExpected / stats.count),
+    avgIdle: Math.round(stats.totalIdle / stats.count),
+    batchCount: stats.count
+  })).sort((a, b) => b.avgIdle - a.avgIdle);
+}
+
+export function getShiftStats(data: BatchRecord[]) {
+  const shifts = {
+    "Turno 1 (Matutino)": { count: 0, totalDelta: 0, totalIdle: 0 },
+    "Turno 2 (Vespertino)": { count: 0, totalDelta: 0, totalIdle: 0 },
+    "Turno 3 (Nocturno)": { count: 0, totalDelta: 0, totalIdle: 0 },
+  };
+
+  data.forEach(d => {
+    let shiftKey: keyof typeof shifts;
+    if (d.startHour >= 6 && d.startHour < 14) shiftKey = "Turno 1 (Matutino)";
+    else if (d.startHour >= 14 && d.startHour < 22) shiftKey = "Turno 2 (Vespertino)";
+    else shiftKey = "Turno 3 (Nocturno)";
+
+    shifts[shiftKey].count++;
+    shifts[shiftKey].totalDelta += d.delta_total_min;
+    shifts[shiftKey].totalIdle += d.idle_wall_minus_sumsteps_min;
+  });
+
+  return Object.entries(shifts).map(([name, stats]) => ({
+    name,
+    batches: stats.count,
+    avgDelta: stats.count > 0 ? Math.round(stats.totalDelta / stats.count) : 0,
+    avgIdle: stats.count > 0 ? Math.round(stats.totalIdle / stats.count) : 0,
+  }));
 }
