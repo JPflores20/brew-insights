@@ -18,7 +18,7 @@ import {
   ResponsiveContainer, 
   ReferenceLine 
 } from "recharts";
-import { format, parseISO, isValid } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { AlertCircle, Clock, TrendingUp, Activity } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -56,15 +56,17 @@ export default function CycleAnalysis() {
   // Filtrar datos por producto
   const filteredData = useMemo(() => {
     if (!selectedProduct) return [];
-    return data.filter(d => d.productName === selectedProduct);
+    const targetBatchIds = new Set(
+      data
+        .filter(d => d.productName === selectedProduct)
+        .map(d => d.CHARG_NR)
+    );
+    return data.filter(d => targetBatchIds.has(d.CHARG_NR));
   }, [data, selectedProduct]);
 
   // --- ALGORITMO DE FUSIÓN DE INTERVALOS ---
-  // Calcula la duración real unificando solapamientos y duplicados
   const calculateMergedDuration = (intervals: { start: number; end: number }[]): number => {
     if (intervals.length === 0) return 0;
-    
-    // 1. Ordenar por inicio
     intervals.sort((a, b) => a.start - b.start);
     
     const merged = [];
@@ -72,32 +74,28 @@ export default function CycleAnalysis() {
     
     for (let i = 1; i < intervals.length; i++) {
       const next = intervals[i];
-      
       if (next.start < current.end) {
-        // Solapamiento: extendemos el final si es necesario (Fusión)
         current.end = Math.max(current.end, next.end);
       } else {
-        // No hay solapamiento: guardamos el actual y avanzamos
         merged.push(current);
         current = next;
       }
     }
     merged.push(current);
     
-    // Sumar duraciones de los intervalos fusionados
-    const totalMs = merged.reduce((acc, interval) => acc + (interval.end - interval.start), 0);
-    return totalMs / 60000; // Convertir a minutos
+    return merged.reduce((acc, interval) => acc + (interval.end - interval.start), 0) / 60000;
   };
 
   // --- LÓGICA DE DATOS PARA GRÁFICAS ---
   const chartData = useMemo(() => {
     if (selectedStep === "FULL_CYCLE") {
-      // Agrupar por ID de Lote para consolidar partes
       const groupedBatches = new Map<string, {
         id: string;
         startTime: number;
         endTime: number;
         intervals: { start: number; end: number }[];
+        uniqueSteps: Set<string>;
+        totalExpected: number;
       }>();
 
       filteredData.forEach(batch => {
@@ -107,15 +105,35 @@ export default function CycleAnalysis() {
         const batchStart = new Date(batch.timestamp).getTime();
         let batchEnd = batchStart + (batch.real_total_min * 60000);
         
-        // Recolectar intervalos de tiempo de cada paso ACTIVO
         const batchIntervals: { start: number; end: number }[] = [];
+        const batchSteps = batch.steps || [];
         
-        if (batch.steps && batch.steps.length > 0) {
-          batch.steps.forEach(step => {
-            // Ignorar esperas
+        if (!groupedBatches.has(id)) {
+          groupedBatches.set(id, {
+            id,
+            startTime: batchStart,
+            endTime: batchEnd,
+            intervals: [],
+            uniqueSteps: new Set(),
+            totalExpected: 0
+          });
+        }
+        const currentGroup = groupedBatches.get(id)!;
+
+        currentGroup.startTime = Math.min(currentGroup.startTime, batchStart);
+        if (batchSteps.length > 0) {
+           const lastStep = batchSteps[batchSteps.length - 1];
+           if (lastStep.endTime) {
+             const le = parseISO(lastStep.endTime).getTime();
+             if (!isNaN(le)) batchEnd = le;
+           }
+        }
+        currentGroup.endTime = Math.max(currentGroup.endTime, batchEnd);
+
+        if (batchSteps.length > 0) {
+          batchSteps.forEach(step => {
             if (step.stepName.includes("⏳ Espera")) return;
             
-            // Validar fechas del paso
             if (step.startTime && step.endTime) {
               const s = parseISO(step.startTime).getTime();
               const e = parseISO(step.endTime).getTime();
@@ -123,48 +141,34 @@ export default function CycleAnalysis() {
                 batchIntervals.push({ start: s, end: e });
               }
             }
+
+            const stepKey = `${step.stepName}|${step.startTime}`;
+            if (!currentGroup.uniqueSteps.has(stepKey)) {
+              currentGroup.uniqueSteps.add(stepKey);
+              currentGroup.totalExpected += step.expectedDurationMin;
+            }
           });
-          
-          // Actualizar fin del lote basado en el último paso real
-          const lastStep = batch.steps[batch.steps.length - 1];
-          if (lastStep.endTime) {
-             const le = parseISO(lastStep.endTime).getTime();
-             if (!isNaN(le)) batchEnd = le;
-          }
         } else {
-          // Fallback si no hay pasos detallados: Usamos el tiempo total del lote menos idle
           const idleTimeMs = (batch.idle_wall_minus_sumsteps_min || 0) * 60000;
           batchIntervals.push({ start: batchStart, end: Math.max(batchStart, batchEnd - idleTimeMs) });
+          currentGroup.totalExpected += batch.esperado_total_min;
         }
 
-        if (!groupedBatches.has(id)) {
-          groupedBatches.set(id, {
-            id,
-            startTime: batchStart,
-            endTime: batchEnd,
-            intervals: batchIntervals
-          });
-        } else {
-          const existing = groupedBatches.get(id)!;
-          existing.startTime = Math.min(existing.startTime, batchStart);
-          existing.endTime = Math.max(existing.endTime, batchEnd);
-          // Acumulamos intervalos para luego fusionarlos
-          existing.intervals.push(...batchIntervals);
-        }
+        currentGroup.intervals.push(...batchIntervals);
       });
 
-      // Procesar cada lote agrupado
       return Array.from(groupedBatches.values())
         .map(b => {
-          // AQUI ESTÁ LA MAGIA: Calculamos duración fusionando intervalos
           const uniqueDuration = calculateMergedDuration(b.intervals);
+          const finalExpected = b.totalExpected > 1 ? b.totalExpected : theoreticalDuration;
           const fullDateFormat = "dd/MM/yyyy HH:mm";
 
           return {
             id: b.id,
             startTime: b.startTime,
             endTime: b.endTime,
-            duration: Math.round(uniqueDuration * 100) / 100, // Duración Real Sin Duplicados
+            duration: Math.round(uniqueDuration * 100) / 100,
+            expectedDuration: Math.round(finalExpected * 100) / 100,
             startLabel: format(b.startTime, fullDateFormat),
             endLabel: format(b.endTime, fullDateFormat),
             startOffset: 0,
@@ -175,7 +179,6 @@ export default function CycleAnalysis() {
         .filter(d => d.duration > 0.1);
 
     } else {
-      // Lógica para pasos individuales (sin cambios mayores, solo validación)
       return filteredData.map(batch => {
         const step = batch.steps?.find(s => s.stepName === selectedStep);
         if (step) {
@@ -190,6 +193,7 @@ export default function CycleAnalysis() {
             startTime,
             endTime,
             duration: step.durationMin,
+            expectedDuration: step.expectedDurationMin || theoreticalDuration,
             startLabel: format(startTime, fullDateFormat),
             endLabel: format(endTime, fullDateFormat),
             startOffset: 0, 
@@ -201,7 +205,7 @@ export default function CycleAnalysis() {
       .filter(Boolean)
       .sort((a: any, b: any) => a.startTime - b.startTime) as any[];
     }
-  }, [filteredData, selectedStep]);
+  }, [filteredData, selectedStep, theoreticalDuration]);
 
   // Estadísticas
   const stats = useMemo(() => {
@@ -247,7 +251,7 @@ export default function CycleAnalysis() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Análisis de Tiempos</h1>
-            <p className="text-muted-foreground">Comparativa de duración real (consolidada) vs teórica.</p>
+            <p className="text-muted-foreground">Comparativa: Área Verde (Ideal) vs Área Azul (Real).</p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3 bg-card p-2 rounded-lg border shadow-sm">
@@ -273,7 +277,7 @@ export default function CycleAnalysis() {
             </div>
 
             <div className="w-full sm:w-[120px]">
-              <Label className="text-xs text-muted-foreground mb-1 block">Meta Teórica (min)</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Meta Global (min)</Label>
               <Input 
                 type="number" 
                 className="h-8" 
@@ -302,7 +306,7 @@ export default function CycleAnalysis() {
               <div className={`text-2xl font-bold ${stats.avg > theoreticalDuration ? 'text-red-500' : 'text-green-500'}`}>
                 {stats.avg} min
               </div>
-              <p className="text-xs text-muted-foreground">Meta: {theoreticalDuration} min</p>
+              <p className="text-xs text-muted-foreground">Meta Global: {theoreticalDuration} min</p>
             </CardContent>
           </Card>
           <Card>
@@ -331,20 +335,28 @@ export default function CycleAnalysis() {
         {/* 1. GRÁFICO DE TENDENCIA (AREA CHART) */}
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Tendencia de Duración Total vs Meta</CardTitle>
+            <CardTitle>Tendencia de Duración Total vs Ideal</CardTitle>
             <CardDescription>
-              Cada punto representa un Lote Único. La duración es la suma real de tiempos activos (sin duplicados).
+              Comparativa visual: 
+              <span className="text-green-600 font-bold"> Verde = Ideal</span> vs 
+              <span className="text-blue-600 font-bold"> Azul = Real</span>.
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                {/* DEFINICIÓN DE COLORES PERSONALIZADOS */}
                 <defs>
-                  <linearGradient id="colorDuration" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorIdeal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
+                
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis 
                   dataKey="id" 
@@ -355,7 +367,7 @@ export default function CycleAnalysis() {
                   height={60}
                   label={{ value: 'Nº Lote (Ordenado por Inicio)', position: 'insideBottom', offset: -10, fontSize: 12 }}
                 />
-                <YAxis label={{ value: 'Minutos Activos', angle: -90, position: 'insideLeft' }} />
+                <YAxis label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }} />
                 
                 <Tooltip 
                   content={({ active, payload }) => {
@@ -364,13 +376,15 @@ export default function CycleAnalysis() {
                       return (
                         <div className="bg-popover border border-border p-3 rounded-md shadow-md text-sm text-popover-foreground">
                           <p className="font-bold mb-2 text-primary">Lote: {data.id}</p>
-                          <div className="grid grid-cols-[60px_1fr] gap-x-2 gap-y-1">
-                             <span className="text-muted-foreground">Duración:</span>
-                             <span className="font-bold">{data.duration} min (Real)</span>
+                          <div className="grid grid-cols-[80px_1fr] gap-x-2 gap-y-1">
+                             <span className="text-muted-foreground">Real:</span>
+                             <span className="font-bold text-blue-600">{data.duration} min</span>
+                             
+                             <span className="text-muted-foreground">Ideal:</span>
+                             <span className="font-bold text-green-600">{data.expectedDuration} min</span>
+
                              <span className="text-muted-foreground">Inicio:</span>
                              <span>{data.startLabel}</span>
-                             <span className="text-muted-foreground">Fin:</span>
-                             <span>{data.endLabel}</span>
                           </div>
                         </div>
                       );
@@ -381,18 +395,29 @@ export default function CycleAnalysis() {
                 
                 <ReferenceLine 
                     y={theoreticalDuration} 
-                    label={{ value: 'Meta', position: 'insideTopRight', fill: 'red', fontSize: 12 }} 
                     stroke="red" 
                     strokeDasharray="3 3" 
+                    label={{ value: 'Meta Global', position: 'insideTopRight', fill: 'red', fontSize: 10 }}
                 />
                 
+                {/* ÁREA DE TIEMPO IDEAL (FONDO - VERDE) */}
+                <Area 
+                  type="monotone" 
+                  dataKey="expectedDuration" 
+                  stroke="#16a34a" 
+                  fillOpacity={1} 
+                  fill="url(#colorIdeal)" 
+                  name="Duración Ideal"
+                />
+
+                {/* ÁREA DE TIEMPO REAL (FRENTE - AZUL) */}
                 <Area 
                   type="monotone" 
                   dataKey="duration" 
-                  stroke="hsl(var(--primary))" 
-                  fillOpacity={1} 
-                  fill="url(#colorDuration)" 
-                  name="Duración Total"
+                  stroke="#2563eb" 
+                  fillOpacity={0.7} 
+                  fill="url(#colorReal)" 
+                  name="Duración Real"
                 />
               </AreaChart>
             </ResponsiveContainer>

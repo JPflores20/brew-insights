@@ -35,13 +35,12 @@ import {
   ArrowRight,
   Search,
   CheckCircle2,
-  Sparkles,
-  Loader2,
   Timer,
-  Droplets,
   Scale,
   Gauge,
   Thermometer,
+  Package,
+  Filter
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -50,15 +49,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { analyzeProcessGaps } from "@/utils/gemini";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MachineDetail() {
   const { data } = useData();
-
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
 
   const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
 
@@ -79,9 +73,8 @@ export default function MachineDetail() {
     ""
   );
 
-  useEffect(() => {
-    setAiAnalysis(null);
-  }, [selectedBatchId, selectedMachine]);
+  // --- ESTADO PARA EL FILTRO DE PARÁMETROS ---
+  const [paramFilter, setParamFilter] = useState<"all" | "process" | "materials">("process");
 
   const problematicBatches = useMemo(() => {
     const issues: any[] = [];
@@ -140,8 +133,25 @@ export default function MachineDetail() {
   );
 
   const stepsData = selectedRecord?.steps || [];
-  const materialsData = selectedRecord?.materials || [];
   const parametersData = selectedRecord?.parameters || [];
+
+  // --- LÓGICA DE FILTRADO DE PARÁMETROS ---
+  const filteredParameters = useMemo(() => {
+    if (paramFilter === "all") return parametersData;
+
+    return parametersData.filter((p) => {
+      const u = (p.unit || "").toLowerCase();
+      // Detectar si es una variable de proceso típica (Temperatura, Presión, Flujo, Velocidad, etc.)
+      const isProcessVar = /°c|bar|mbar|pa|rpm|hz|%|hl\/h|m3\/h|l\/min|a|v|kw/.test(u);
+      
+      if (paramFilter === "process") {
+        return isProcessVar;
+      } else {
+        // "materials": Todo lo que NO es proceso (sacos, kg, pzas, sin unidad, etc.)
+        return !isProcessVar;
+      }
+    });
+  }, [parametersData, paramFilter]);
 
   const anomaliesReport = useMemo(() => {
     if (!stepsData.length) return [];
@@ -218,23 +228,7 @@ export default function MachineDetail() {
     window.scrollTo({ top: 400, behavior: "smooth" });
   };
 
-  const handleConsultAI = async () => {
-    if (anomaliesReport.length === 0) return;
-
-    setIsAnalyzing(true);
-    setAiAnalysis(null);
-
-    const result = await analyzeProcessGaps(
-      selectedBatchId,
-      selectedMachine,
-      anomaliesReport
-    );
-
-    setAiAnalysis(result);
-    setIsAnalyzing(false);
-  };
-
-  // ✅ ESTILO UNIFICADO PARA TOOLTIP (para que no se vea blanco)
+  // ✅ ESTILO UNIFICADO PARA TOOLTIP
   const themedTooltipContentStyle: CSSProperties = {
     backgroundColor: "hsl(var(--popover))",
     borderColor: "hsl(var(--border))",
@@ -245,159 +239,156 @@ export default function MachineDetail() {
 
   const themedTooltipLabelStyle: CSSProperties = {
     color: "hsl(var(--popover-foreground))",
+    fontWeight: "bold",
   };
 
   const themedTooltipItemStyle: CSSProperties = {
     color: "hsl(var(--popover-foreground))",
   };
 
-// ===============================
-//  Cp / Cpk (ΔT = value - target) con límites configurables por el usuario
-// ===============================
-type SpecLimits = Record<string, { lsl: string; usl: string }>;
+  // ===============================
+  //  Cp / Cpk (ΔT = value - target)
+  // ===============================
+  type SpecLimits = Record<string, { lsl: string; usl: string }>;
 
-const [specLimits, setSpecLimits] = useLocalStorage<SpecLimits>(
-  "cpk-temp-delta-specs-v1",
-  {}
-);
+  const [specLimits, setSpecLimits] = useLocalStorage<SpecLimits>(
+    "cpk-temp-delta-specs-v1",
+    {}
+  );
 
-const mean = (arr: number[]) =>
-  arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+  const mean = (arr: number[]) =>
+    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
-// desviación estándar muestral (n-1)
-const stdDevSample = (arr: number[]) => {
-  if (arr.length < 2) return 0;
-  const m = mean(arr);
-  const v =
-    arr.reduce((acc, x) => acc + Math.pow(x - m, 2), 0) / (arr.length - 1);
-  return Math.sqrt(v);
-};
-
-const calcCpCpk = (values: number[], lsl: number, usl: number) => {
-  const n = values.length;
-  const m = mean(values);
-  const s = stdDevSample(values);
-
-  if (
-    n < 2 ||
-    s <= 0 ||
-    !Number.isFinite(s) ||
-    !Number.isFinite(lsl) ||
-    !Number.isFinite(usl) ||
-    usl <= lsl
-  ) {
-    return { n, mean: m, sigma: s, cp: null as number | null, cpk: null as number | null };
-  }
-
-  const cp = (usl - lsl) / (6 * s);
-  const cpu = (usl - m) / (3 * s);
-  const cpl = (m - lsl) / (3 * s);
-  const cpk = Math.min(cpu, cpl);
-
-  return { n, mean: m, sigma: s, cp, cpk };
-};
-
-const updateSpec = (paramName: string, field: "lsl" | "usl", value: string) => {
-  setSpecLimits({
-    ...specLimits,
-    [paramName]: {
-      lsl: specLimits[paramName]?.lsl ?? "",
-      usl: specLimits[paramName]?.usl ?? "",
-      [field]: value,
-    },
-  });
-};
-
-const clearSpec = (paramName: string) => {
-  const next = { ...specLimits };
-  delete next[paramName];
-  setSpecLimits(next);
-};
-
-// Cp/Cpk por parámetro usando ΔT (value - target) para la máquina seleccionada
-const cpCpkByParam = useMemo(() => {
-  if (!selectedMachine) return [];
-
-  const allParams = data
-    .filter((r) => r.TEILANL_GRUPO === selectedMachine)
-    .flatMap((r) => r.parameters || []);
-
-  const groups = new Map<string, typeof allParams>();
-  allParams.forEach((p) => {
-    const arr = groups.get(p.name) ?? [];
-    arr.push(p);
-    groups.set(p.name, arr);
-  });
-
-  const results = Array.from(groups.entries()).map(([name, items]) => {
-    const deltas = items
-      .map((p) => Number(p.value) - Number(p.target))
-      .filter((v) => Number.isFinite(v));
-
-    const unit = items[0]?.unit || "";
-    const lslStr = specLimits[name]?.lsl ?? "";
-    const uslStr = specLimits[name]?.usl ?? "";
-    const lsl = Number(lslStr);
-    const usl = Number(uslStr);
-
-    const stats = calcCpCpk(deltas, lsl, usl);
-
-    const hasSpec = Number.isFinite(lsl) && Number.isFinite(usl) && usl > lsl;
-
-    return {
-      name,
-      unit,
-      n: stats.n,
-      mean: stats.mean,
-      sigma: stats.sigma,
-      lsl: Number.isFinite(lsl) ? lsl : null,
-      usl: Number.isFinite(usl) ? usl : null,
-      cp: stats.cp,
-      cpk: stats.cpk,
-      hasSpec,
-    };
-  });
-
-  // primero los que tienen spec válido; luego por peor Cpk
-  return results.sort((a, b) => {
-    if (a.hasSpec && !b.hasSpec) return -1;
-    if (!a.hasSpec && b.hasSpec) return 1;
-    return (a.cpk ?? 999) - (b.cpk ?? 999);
-  });
-}, [data, selectedMachine, specLimits]);
-
-const formatNum = (v: number | null, d = 2) => {
-  if (v === null || !Number.isFinite(v)) return "—";
-  const rounded = Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
-  return rounded.toLocaleString(undefined, { maximumFractionDigits: d });
-};
-
-const cpkBadge = (cpk: number | null) => {
-  if (cpk === null || !Number.isFinite(cpk)) {
-    return {
-      text: "Sin Cpk",
-      cls: "bg-muted text-muted-foreground border border-border",
-    };
-  }
-  if (cpk >= 1.33) {
-    return {
-      text: "OK (≥1.33)",
-      cls: "bg-green-500/10 text-green-700 border border-green-500/20",
-    };
-  }
-  if (cpk >= 1.0) {
-    return {
-      text: "Riesgo (1.00-1.32)",
-      cls: "bg-yellow-500/10 text-yellow-700 border border-yellow-500/20",
-    };
-  }
-  return {
-    text: "Fuera (<1.00)",
-    cls: "bg-red-500/10 text-red-700 border border-red-500/20",
+  const stdDevSample = (arr: number[]) => {
+    if (arr.length < 2) return 0;
+    const m = mean(arr);
+    const v =
+      arr.reduce((acc, x) => acc + Math.pow(x - m, 2), 0) / (arr.length - 1);
+    return Math.sqrt(v);
   };
-};
 
-  // ✅ Helpers: formato, truncado, intervalos dinámicos de ticks
+  const calcCpCpk = (values: number[], lsl: number, usl: number) => {
+    const n = values.length;
+    const m = mean(values);
+    const s = stdDevSample(values);
+
+    if (
+      n < 2 ||
+      s <= 0 ||
+      !Number.isFinite(s) ||
+      !Number.isFinite(lsl) ||
+      !Number.isFinite(usl) ||
+      usl <= lsl
+    ) {
+      return { n, mean: m, sigma: s, cp: null as number | null, cpk: null as number | null };
+    }
+
+    const cp = (usl - lsl) / (6 * s);
+    const cpu = (usl - m) / (3 * s);
+    const cpl = (m - lsl) / (3 * s);
+    const cpk = Math.min(cpu, cpl);
+
+    return { n, mean: m, sigma: s, cp, cpk };
+  };
+
+  const updateSpec = (paramName: string, field: "lsl" | "usl", value: string) => {
+    setSpecLimits({
+      ...specLimits,
+      [paramName]: {
+        lsl: specLimits[paramName]?.lsl ?? "",
+        usl: specLimits[paramName]?.usl ?? "",
+        [field]: value,
+      },
+    });
+  };
+
+  const clearSpec = (paramName: string) => {
+    const next = { ...specLimits };
+    delete next[paramName];
+    setSpecLimits(next);
+  };
+
+  const cpCpkByParam = useMemo(() => {
+    if (!selectedMachine) return [];
+
+    const allParams = data
+      .filter((r) => r.TEILANL_GRUPO === selectedMachine)
+      .flatMap((r) => r.parameters || []);
+
+    const groups = new Map<string, typeof allParams>();
+    allParams.forEach((p) => {
+      const arr = groups.get(p.name) ?? [];
+      arr.push(p);
+      groups.set(p.name, arr);
+    });
+
+    const results = Array.from(groups.entries()).map(([name, items]) => {
+      const deltas = items
+        .map((p) => Number(p.value) - Number(p.target))
+        .filter((v) => Number.isFinite(v));
+
+      const unit = items[0]?.unit || "";
+      const lslStr = specLimits[name]?.lsl ?? "";
+      const uslStr = specLimits[name]?.usl ?? "";
+      const lsl = Number(lslStr);
+      const usl = Number(uslStr);
+
+      const stats = calcCpCpk(deltas, lsl, usl);
+
+      const hasSpec = Number.isFinite(lsl) && Number.isFinite(usl) && usl > lsl;
+
+      return {
+        name,
+        unit,
+        n: stats.n,
+        mean: stats.mean,
+        sigma: stats.sigma,
+        lsl: Number.isFinite(lsl) ? lsl : null,
+        usl: Number.isFinite(usl) ? usl : null,
+        cp: stats.cp,
+        cpk: stats.cpk,
+        hasSpec,
+      };
+    });
+
+    return results.sort((a, b) => {
+      if (a.hasSpec && !b.hasSpec) return -1;
+      if (!a.hasSpec && b.hasSpec) return 1;
+      return (a.cpk ?? 999) - (b.cpk ?? 999);
+    });
+  }, [data, selectedMachine, specLimits]);
+
+  const formatNum = (v: number | null, d = 2) => {
+    if (v === null || !Number.isFinite(v)) return "—";
+    const rounded = Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: d });
+  };
+
+  const cpkBadge = (cpk: number | null) => {
+    if (cpk === null || !Number.isFinite(cpk)) {
+      return {
+        text: "Sin Cpk",
+        cls: "bg-muted text-muted-foreground border border-border",
+      };
+    }
+    if (cpk >= 1.33) {
+      return {
+        text: "OK (≥1.33)",
+        cls: "bg-green-500/10 text-green-700 border border-green-500/20",
+      };
+    }
+    if (cpk >= 1.0) {
+      return {
+        text: "Riesgo (1.00-1.32)",
+        cls: "bg-yellow-500/10 text-yellow-700 border border-yellow-500/20",
+      };
+    }
+    return {
+      text: "Fuera (<1.00)",
+      cls: "bg-red-500/10 text-red-700 border border-red-500/20",
+    };
+  };
+
   const formatNumber = (v: any, decimals = 2) => {
     const num = typeof v === "number" ? v : Number(v);
     if (Number.isNaN(num)) return String(v);
@@ -413,21 +404,13 @@ const cpkBadge = (cpk: number | null) => {
     return s.length > max ? s.slice(0, max - 1) + "…" : s;
   };
 
-  const materialTickInterval = useMemo(() => {
-    const n = materialsData.length;
-    if (n <= 10) return 0;
-    if (n <= 20) return 1;
-    if (n <= 30) return 2;
-    return Math.ceil(n / 10);
-  }, [materialsData.length]);
-
   const paramTickInterval = useMemo(() => {
-    const n = parametersData.length;
+    const n = filteredParameters.length;
     if (n <= 10) return 0;
     if (n <= 20) return 1;
     if (n <= 30) return 2;
     return Math.ceil(n / 10);
-  }, [parametersData.length]);
+  }, [filteredParameters.length]);
 
   const getParamUnit = (payload: any) => {
     const unit =
@@ -776,214 +759,11 @@ const cpkBadge = (cpk: number | null) => {
                 </div>
               </Card>
             )}
-
-            {/* 2) CONSUMO DE MATERIALES */}
-            {materialsData.length > 0 && (
-              <Card className="bg-card border-border shadow-sm h-[500px] flex flex-col">
-                <CardHeader className="pb-3 border-b border-border">
-                  <div className="flex items-center gap-2">
-                    <Scale className="h-5 w-5 text-green-600" />
-                    <CardTitle className="text-lg">Consumo de Materiales</CardTitle>
-                  </div>
-                  <CardDescription>Real vs Esperado (Acumulado)</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0 flex-1">
-                  <div className="h-[400px] w-full p-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={materialsData}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 12 }}
-                          interval={materialTickInterval}
-                          minTickGap={12}
-                          angle={-20}
-                          textAnchor="end"
-                          height={90}
-                          tickFormatter={(v) => truncateLabel(v, 18)}
-                        />
-                        <YAxis tick={{ fontSize: 12 }} />
-
-                        {/* ✅ TOOLTIP bonito + valores con unidad */}
-                        <Tooltip
-                          contentStyle={themedTooltipContentStyle}
-                          labelStyle={themedTooltipLabelStyle}
-                          itemStyle={themedTooltipItemStyle}
-                          cursor={{ fill: "transparent" }}
-                          labelFormatter={(label) => String(label)}
-                          formatter={(value: any, name: any) => {
-                            return [`${formatNumber(value, 2)} kg/hl`, name];
-                          }}
-                        />
-
-                        <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                        <Area
-                          type="monotone"
-                          dataKey="totalExpected"
-                          stroke="#94a3b8"
-                          fillOpacity={1}
-                          fill="url(#colorExp)"
-                          name="Meta"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="totalReal"
-                          stroke="#16a34a"
-                          fillOpacity={0.6}
-                          fill="url(#colorReal)"
-                          name="Real"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* --- PANEL INSIGHTS (derecha) --- */}
           <div className="xl:col-span-4">
             <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
-              {/* TARJETA GEMINI */}
-              {anomaliesReport.length > 0 && (
-                <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-indigo-500/10 dark:via-purple-500/5 dark:to-fuchsia-500/10" />
-                  <CardHeader className="relative pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/40">
-                          <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                        </div>
-                        <div className="space-y-0.5">
-                          <CardTitle className="text-base font-semibold leading-none">
-                            Gemini Insights
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            Diagnóstico de ineficiencias.
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Badge className="bg-indigo-600/10 text-indigo-700 border border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-800/40">
-                        AI
-                      </Badge>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="gap-1.5">
-                        <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
-                        {anomaliesReport.length} problemas
-                      </Badge>
-                      <Badge variant="secondary" className="gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-blue-500" />
-                        {Math.round(totalImpactMinutes * 10) / 10} min impactados
-                      </Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="relative pt-0">
-                    {!aiAnalysis ? (
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-border/60 bg-background/60 p-3">
-                          <p className="text-sm text-muted-foreground">
-                            Analizaré tanto{" "}
-                            <span className="font-medium text-foreground">
-                              paradas (gaps)
-                            </span>{" "}
-                            como{" "}
-                            <span className="font-medium text-foreground">
-                              pasos lentos
-                            </span>
-                            .
-                          </p>
-                        </div>
-                        <Button
-                          onClick={handleConsultAI}
-                          disabled={isAnalyzing}
-                          className="w-full text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 hover:from-indigo-700 hover:via-purple-700 hover:to-fuchsia-700 shadow-sm"
-                        >
-                          {isAnalyzing ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Analizando...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="mr-2 h-4 w-4" />
-                              Consultar a Gemini{" "}
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <Badge className="bg-green-500/10 text-green-700 border border-green-500/20">
-                            Respuesta generada
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8"
-                            onClick={() => setAiAnalysis(null)}
-                          >
-                            Limpiar
-                          </Button>
-                        </div>
-                        <ScrollArea className="h-[360px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                p: ({ children }) => (
-                                  <p className="mb-2 leading-relaxed text-foreground/90">
-                                    {children}
-                                  </p>
-                                ),
-                                ul: ({ children }) => (
-                                  <ul className="list-disc pl-4 mb-2 space-y-1">
-                                    {children}
-                                  </ul>
-                                ),
-                                ol: ({ children }) => (
-                                  <ol className="list-decimal pl-4 mb-2 space-y-1">
-                                    {children}
-                                  </ol>
-                                ),
-                                li: ({ children }) => (
-                                  <li className="text-foreground/80">{children}</li>
-                                ),
-                                strong: ({ children }) => (
-                                  <span className="font-bold text-indigo-500 dark:text-indigo-400">
-                                    {children}
-                                  </span>
-                                ),
-                              }}
-                            >
-                              {aiAnalysis}
-                            </ReactMarkdown>
-                          </div>
-                        </ScrollArea>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
               {/* LISTA DETALLADA DE ANOMALÍAS */}
               <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)]">
                 <CardHeader className="pb-3 border-b border-border">
@@ -1070,221 +850,249 @@ const cpkBadge = (cpk: number | null) => {
           </div>
         </div>
 
-
-{/* ===============================
-    PANEL: Límites Cp/Cpk (usuario) + resultados de ΔT
-   =============================== */}
-{selectedMachine && (
-  <Card className="bg-card border-border">
-    <CardHeader className="pb-3 border-b border-border">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Gauge className="h-5 w-5 text-indigo-600" />
-            Cp / Cpk de ΔT (Real - Target)
-          </CardTitle>
-          <CardDescription>
-            Define límites LSL/USL por parámetro para calcular capacidad del proceso en{" "}
-            <strong>{selectedMachine}</strong>.
-          </CardDescription>
-        </div>
-        <Badge variant="secondary" className="font-mono">
-          Máquina: {selectedMachine}
-        </Badge>
-      </div>
-    </CardHeader>
-
-    <CardContent className="pt-4">
-      {cpCpkByParam.length === 0 ? (
-        <div className="text-sm text-muted-foreground">
-          No hay parámetros para calcular Cp/Cpk en esta máquina.
-        </div>
-      ) : (
-        <ScrollArea className="h-[320px] w-full pr-4">
-          <div className="space-y-3">
-            {cpCpkByParam.map((row) => {
-              const badge = cpkBadge(row.cpk);
-              return (
-                <div
-                  key={row.name}
-                  className="rounded-lg border border-border p-3 bg-background/50"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-foreground truncate">
-                          {row.name}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          ΔT ({row.unit || "u"})
-                        </Badge>
-                        <span className={`px-2 py-1 rounded-md text-xs ${badge.cls}`}>
-                          {badge.text}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs text-muted-foreground">
-                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                          n:{" "}
-                          <strong className="text-foreground">
-                            {row.n}
-                          </strong>
-                        </div>
-                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                          μ:{" "}
-                          <strong className="text-foreground">
-                            {formatNum(row.mean, 3)}
-                          </strong>
-                        </div>
-                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                          σ:{" "}
-                          <strong className="text-foreground">
-                            {formatNum(row.sigma, 3)}
-                          </strong>
-                        </div>
-                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                          Cp:{" "}
-                          <strong className="text-foreground">
-                            {formatNum(row.cp, 2)}
-                          </strong>
-                        </div>
-                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                          Cpk:{" "}
-                          <strong className="text-foreground">
-                            {formatNum(row.cpk, 2)}
-                          </strong>
-                        </div>
-                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                          Spec:{" "}
-                          <strong className="text-foreground">
-                            {row.lsl === null || row.usl === null
-                              ? "—"
-                              : `${row.lsl} / ${row.usl}`}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Inputs LSL/USL */}
-                    <div className="grid grid-cols-2 gap-2 lg:w-[260px]">
-                      <div>
-                        <label className="text-xs text-muted-foreground">
-                          LSL
-                        </label>
-                        <Input
-                          value={specLimits[row.name]?.lsl ?? ""}
-                          onChange={(e) =>
-                            updateSpec(row.name, "lsl", e.target.value)
-                          }
-                          placeholder="Ej: -0.5"
-                          inputMode="decimal"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">
-                          USL
-                        </label>
-                        <Input
-                          value={specLimits[row.name]?.usl ?? ""}
-                          onChange={(e) =>
-                            updateSpec(row.name, "usl", e.target.value)
-                          }
-                          placeholder="Ej: 0.5"
-                          inputMode="decimal"
-                        />
-                      </div>
-
-                      <div className="col-span-2 flex justify-end">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8"
-                          onClick={() => clearSpec(row.name)}
-                        >
-                          Limpiar límites
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {!row.hasSpec && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      💡 Agrega LSL y USL válidos (USL &gt; LSL) para calcular Cp/Cpk.
-                    </p>
-                  )}
+        {/* ===============================
+            PANEL: Límites Cp/Cpk (usuario) + resultados de ΔT
+           =============================== */}
+        {selectedMachine && (
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3 border-b border-border">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Gauge className="h-5 w-5 text-indigo-600" />
+                    Cp / Cpk de ΔT (Real - Target)
+                  </CardTitle>
+                  <CardDescription>
+                    Define límites LSL/USL por parámetro para calcular capacidad del proceso en{" "}
+                    <strong>{selectedMachine}</strong>.
+                  </CardDescription>
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      )}
-    </CardContent>
-  </Card>
-)}
+                <Badge variant="secondary" className="font-mono">
+                  Máquina: {selectedMachine}
+                </Badge>
+              </div>
+            </CardHeader>
 
-        {/* ✅ FULL-WIDTH: PARÁMETROS DE PROCESO */}
+            <CardContent className="pt-4">
+              {cpCpkByParam.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No hay parámetros para calcular Cp/Cpk en esta máquina.
+                </div>
+              ) : (
+                <ScrollArea className="h-[320px] w-full pr-4">
+                  <div className="space-y-3">
+                    {cpCpkByParam.map((row) => {
+                      const badge = cpkBadge(row.cpk);
+                      return (
+                        <div
+                          key={row.name}
+                          className="rounded-lg border border-border p-3 bg-background/50"
+                        >
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-foreground truncate">
+                                  {row.name}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  ΔT ({row.unit || "u"})
+                                </Badge>
+                                <span className={`px-2 py-1 rounded-md text-xs ${badge.cls}`}>
+                                  {badge.text}
+                                </span>
+                              </div>
+
+                              <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs text-muted-foreground">
+                                <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                  n:{" "}
+                                  <strong className="text-foreground">
+                                    {row.n}
+                                  </strong>
+                                </div>
+                                <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                  μ:{" "}
+                                  <strong className="text-foreground">
+                                    {formatNum(row.mean, 3)}
+                                  </strong>
+                                </div>
+                                <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                  σ:{" "}
+                                  <strong className="text-foreground">
+                                    {formatNum(row.sigma, 3)}
+                                  </strong>
+                                </div>
+                                <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                  Cp:{" "}
+                                  <strong className="text-foreground">
+                                    {formatNum(row.cp, 2)}
+                                  </strong>
+                                </div>
+                                <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                  Cpk:{" "}
+                                  <strong className="text-foreground">
+                                    {formatNum(row.cpk, 2)}
+                                  </strong>
+                                </div>
+                                <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                  Spec:{" "}
+                                  <strong className="text-foreground">
+                                    {row.lsl === null || row.usl === null
+                                      ? "—"
+                                      : `${row.lsl} / ${row.usl}`}
+                                  </strong>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Inputs LSL/USL */}
+                            <div className="grid grid-cols-2 gap-2 lg:w-[260px]">
+                              <div>
+                                <label className="text-xs text-muted-foreground">
+                                  LSL
+                                </label>
+                                <Input
+                                  value={specLimits[row.name]?.lsl ?? ""}
+                                  onChange={(e) =>
+                                    updateSpec(row.name, "lsl", e.target.value)
+                                  }
+                                  placeholder="Ej: -0.5"
+                                  inputMode="decimal"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground">
+                                  USL
+                                </label>
+                                <Input
+                                  value={specLimits[row.name]?.usl ?? ""}
+                                  onChange={(e) =>
+                                    updateSpec(row.name, "usl", e.target.value)
+                                  }
+                                  placeholder="Ej: 0.5"
+                                  inputMode="decimal"
+                                />
+                              </div>
+
+                              <div className="col-span-2 flex justify-end">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8"
+                                  onClick={() => clearSpec(row.name)}
+                                >
+                                  Limpiar límites
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {!row.hasSpec && (
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              💡 Agrega LSL y USL válidos (USL &gt; LSL) para calcular Cp/Cpk.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ✅ FULL-WIDTH: ANÁLISIS DE VARIABLES (PARÁMETROS O MATERIALES) */}
         {parametersData.length > 0 && (
           <Card className="bg-card border-border shadow-sm w-full flex flex-col">
-            <CardHeader className="pb-3 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Gauge className="h-5 w-5 text-blue-600" />
-                <Thermometer className="h-5 w-5 text-sky-600 opacity-70" />
-                <CardTitle className="text-lg">Parámetros de Proceso</CardTitle>
+            <CardHeader className="pb-3 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Gauge className="h-5 w-5 text-blue-600" />
+                  <Thermometer className="h-5 w-5 text-sky-600 opacity-70" />
+                  <CardTitle className="text-lg">Análisis de Variables</CardTitle>
+                </div>
+                <CardDescription>
+                  Visualiza variables de proceso o adiciones de materiales paso a paso.
+                </CardDescription>
               </div>
-              <CardDescription>Variación de Temperatura/Presión por Paso</CardDescription>
+
+              {/* Selector de Filtro (Tabs) */}
+              <Tabs 
+                value={paramFilter} 
+                onValueChange={(val) => setParamFilter(val as any)} 
+                className="w-full sm:w-[320px]"
+              >
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="all" className="text-xs">
+                    <Filter className="h-3 w-3 mr-1" /> Todos
+                  </TabsTrigger>
+                  <TabsTrigger value="process" className="text-xs">
+                    <Gauge className="h-3 w-3 mr-1" /> Proceso
+                  </TabsTrigger>
+                  <TabsTrigger value="materials" className="text-xs">
+                    <Package className="h-3 w-3 mr-1" /> Materiales
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </CardHeader>
+
             <CardContent className="p-0">
               <div className="h-[420px] w-full p-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={parametersData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
+                {filteredParameters.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={filteredParameters}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
 
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
 
-                    <XAxis
-                      dataKey="stepName"
-                      tick={{ fontSize: 12 }}
-                      interval={paramTickInterval}
-                      minTickGap={12}
-                      angle={-20}
-                      textAnchor="end"
-                      height={90}
-                      tickFormatter={(v) => truncateLabel(v, 22)}
-                    />
-                    <YAxis tick={{ fontSize: 12 }} />
+                      <XAxis
+                        dataKey="stepName"
+                        tick={{ fontSize: 12 }}
+                        interval={paramTickInterval}
+                        minTickGap={12}
+                        angle={-20}
+                        textAnchor="end"
+                        height={90}
+                        tickFormatter={(v) => truncateLabel(v, 22)}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
 
-                    {/* ✅ TOOLTIP bonito + unidad automática */}
-                    <Tooltip
-                      contentStyle={themedTooltipContentStyle}
-                      labelStyle={themedTooltipLabelStyle}
-                      itemStyle={themedTooltipItemStyle}
-                      cursor={{ fill: "transparent" }}
-                      labelFormatter={(label) => String(label)}
-                      formatter={(value: any, name: any, props: any) => {
-                        const unit = getParamUnit(props?.payload);
-                        return [`${formatNumber(value, 2)}${unit}`, name];
-                      }}
-                    />
+                      <Tooltip
+                        contentStyle={themedTooltipContentStyle}
+                        labelStyle={themedTooltipLabelStyle}
+                        itemStyle={themedTooltipItemStyle}
+                        cursor={{ fill: "transparent" }}
+                        labelFormatter={(label) => String(label)}
+                        formatter={(value: any, name: any, props: any) => {
+                          const unit = getParamUnit(props?.payload);
+                          return [`${formatNumber(value, 2)}${unit}`, name];
+                        }}
+                      />
 
-                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#3b82f6"
-                      fillOpacity={1}
-                      fill="url(#colorParam)"
-                      name="Valor Registrado"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                      <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"}
+                        fillOpacity={1}
+                        fill="url(#colorParam)"
+                        name={paramFilter === 'materials' ? "Cantidad" : "Valor Registrado"}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <p>No hay datos para la categoría seleccionada.</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
