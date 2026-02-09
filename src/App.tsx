@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Overview from "./pages/Overview";
 import BatchComparison from "./pages/BatchComparison";
 import MachineDetail from "./pages/MachineDetail";
+import CycleAnalysis from "./pages/CycleAnalysis"; // <--- IMPORTAR AQUÍ
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,7 +21,7 @@ const App = () => (
           <Route path="/" element={<Overview />} />
           <Route path="/comparison" element={<BatchComparison />} />
           <Route path="/machine" element={<MachineDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/cycles" element={<CycleAnalysis />} /> {/* <--- RUTA NUEVA */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -7,7 +7,8 @@ import {
   Cog, 
   Beer,
   Menu,
-  X
+  X,
+  Timer // <--- IMPORTAR ICONO NUEVO
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,13 @@ const navItems = [
     label: "Maquinaria", 
     icon: Cog,
     description: "Detalle por equipo"
+  },
+  // --- NUEVO ITEM ---
+  { 
+    path: "/cycles", 
+    label: "Ciclos & Gantt", 
+    icon: Timer,
+    description: "Tiempos y secuencia"
   },
 ];
 
