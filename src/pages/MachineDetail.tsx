@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
   Card,
@@ -49,6 +49,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { analyzeProcessGaps } from "@/utils/gemini";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -234,7 +235,7 @@ export default function MachineDetail() {
   };
 
   // ✅ ESTILO UNIFICADO PARA TOOLTIP (para que no se vea blanco)
-  const themedTooltipContentStyle: React.CSSProperties = {
+  const themedTooltipContentStyle: CSSProperties = {
     backgroundColor: "hsl(var(--popover))",
     borderColor: "hsl(var(--border))",
     borderRadius: "8px",
@@ -242,13 +243,159 @@ export default function MachineDetail() {
     fontSize: "14px",
   };
 
-  const themedTooltipLabelStyle: React.CSSProperties = {
+  const themedTooltipLabelStyle: CSSProperties = {
     color: "hsl(var(--popover-foreground))",
   };
 
-  const themedTooltipItemStyle: React.CSSProperties = {
+  const themedTooltipItemStyle: CSSProperties = {
     color: "hsl(var(--popover-foreground))",
   };
+
+// ===============================
+//  Cp / Cpk (ΔT = value - target) con límites configurables por el usuario
+// ===============================
+type SpecLimits = Record<string, { lsl: string; usl: string }>;
+
+const [specLimits, setSpecLimits] = useLocalStorage<SpecLimits>(
+  "cpk-temp-delta-specs-v1",
+  {}
+);
+
+const mean = (arr: number[]) =>
+  arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+// desviación estándar muestral (n-1)
+const stdDevSample = (arr: number[]) => {
+  if (arr.length < 2) return 0;
+  const m = mean(arr);
+  const v =
+    arr.reduce((acc, x) => acc + Math.pow(x - m, 2), 0) / (arr.length - 1);
+  return Math.sqrt(v);
+};
+
+const calcCpCpk = (values: number[], lsl: number, usl: number) => {
+  const n = values.length;
+  const m = mean(values);
+  const s = stdDevSample(values);
+
+  if (
+    n < 2 ||
+    s <= 0 ||
+    !Number.isFinite(s) ||
+    !Number.isFinite(lsl) ||
+    !Number.isFinite(usl) ||
+    usl <= lsl
+  ) {
+    return { n, mean: m, sigma: s, cp: null as number | null, cpk: null as number | null };
+  }
+
+  const cp = (usl - lsl) / (6 * s);
+  const cpu = (usl - m) / (3 * s);
+  const cpl = (m - lsl) / (3 * s);
+  const cpk = Math.min(cpu, cpl);
+
+  return { n, mean: m, sigma: s, cp, cpk };
+};
+
+const updateSpec = (paramName: string, field: "lsl" | "usl", value: string) => {
+  setSpecLimits({
+    ...specLimits,
+    [paramName]: {
+      lsl: specLimits[paramName]?.lsl ?? "",
+      usl: specLimits[paramName]?.usl ?? "",
+      [field]: value,
+    },
+  });
+};
+
+const clearSpec = (paramName: string) => {
+  const next = { ...specLimits };
+  delete next[paramName];
+  setSpecLimits(next);
+};
+
+// Cp/Cpk por parámetro usando ΔT (value - target) para la máquina seleccionada
+const cpCpkByParam = useMemo(() => {
+  if (!selectedMachine) return [];
+
+  const allParams = data
+    .filter((r) => r.TEILANL_GRUPO === selectedMachine)
+    .flatMap((r) => r.parameters || []);
+
+  const groups = new Map<string, typeof allParams>();
+  allParams.forEach((p) => {
+    const arr = groups.get(p.name) ?? [];
+    arr.push(p);
+    groups.set(p.name, arr);
+  });
+
+  const results = Array.from(groups.entries()).map(([name, items]) => {
+    const deltas = items
+      .map((p) => Number(p.value) - Number(p.target))
+      .filter((v) => Number.isFinite(v));
+
+    const unit = items[0]?.unit || "";
+    const lslStr = specLimits[name]?.lsl ?? "";
+    const uslStr = specLimits[name]?.usl ?? "";
+    const lsl = Number(lslStr);
+    const usl = Number(uslStr);
+
+    const stats = calcCpCpk(deltas, lsl, usl);
+
+    const hasSpec = Number.isFinite(lsl) && Number.isFinite(usl) && usl > lsl;
+
+    return {
+      name,
+      unit,
+      n: stats.n,
+      mean: stats.mean,
+      sigma: stats.sigma,
+      lsl: Number.isFinite(lsl) ? lsl : null,
+      usl: Number.isFinite(usl) ? usl : null,
+      cp: stats.cp,
+      cpk: stats.cpk,
+      hasSpec,
+    };
+  });
+
+  // primero los que tienen spec válido; luego por peor Cpk
+  return results.sort((a, b) => {
+    if (a.hasSpec && !b.hasSpec) return -1;
+    if (!a.hasSpec && b.hasSpec) return 1;
+    return (a.cpk ?? 999) - (b.cpk ?? 999);
+  });
+}, [data, selectedMachine, specLimits]);
+
+const formatNum = (v: number | null, d = 2) => {
+  if (v === null || !Number.isFinite(v)) return "—";
+  const rounded = Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
+  return rounded.toLocaleString(undefined, { maximumFractionDigits: d });
+};
+
+const cpkBadge = (cpk: number | null) => {
+  if (cpk === null || !Number.isFinite(cpk)) {
+    return {
+      text: "Sin Cpk",
+      cls: "bg-muted text-muted-foreground border border-border",
+    };
+  }
+  if (cpk >= 1.33) {
+    return {
+      text: "OK (≥1.33)",
+      cls: "bg-green-500/10 text-green-700 border border-green-500/20",
+    };
+  }
+  if (cpk >= 1.0) {
+    return {
+      text: "Riesgo (1.00-1.32)",
+      cls: "bg-yellow-500/10 text-yellow-700 border border-yellow-500/20",
+    };
+  }
+  return {
+    text: "Fuera (<1.00)",
+    cls: "bg-red-500/10 text-red-700 border border-red-500/20",
+  };
+};
 
   // ✅ Helpers: formato, truncado, intervalos dinámicos de ticks
   const formatNumber = (v: any, decimals = 2) => {
@@ -922,6 +1069,158 @@ export default function MachineDetail() {
             </div>
           </div>
         </div>
+
+
+{/* ===============================
+    PANEL: Límites Cp/Cpk (usuario) + resultados de ΔT
+   =============================== */}
+{selectedMachine && (
+  <Card className="bg-card border-border">
+    <CardHeader className="pb-3 border-b border-border">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Gauge className="h-5 w-5 text-indigo-600" />
+            Cp / Cpk de ΔT (Real - Target)
+          </CardTitle>
+          <CardDescription>
+            Define límites LSL/USL por parámetro para calcular capacidad del proceso en{" "}
+            <strong>{selectedMachine}</strong>.
+          </CardDescription>
+        </div>
+        <Badge variant="secondary" className="font-mono">
+          Máquina: {selectedMachine}
+        </Badge>
+      </div>
+    </CardHeader>
+
+    <CardContent className="pt-4">
+      {cpCpkByParam.length === 0 ? (
+        <div className="text-sm text-muted-foreground">
+          No hay parámetros para calcular Cp/Cpk en esta máquina.
+        </div>
+      ) : (
+        <ScrollArea className="h-[320px] w-full pr-4">
+          <div className="space-y-3">
+            {cpCpkByParam.map((row) => {
+              const badge = cpkBadge(row.cpk);
+              return (
+                <div
+                  key={row.name}
+                  className="rounded-lg border border-border p-3 bg-background/50"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-foreground truncate">
+                          {row.name}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          ΔT ({row.unit || "u"})
+                        </Badge>
+                        <span className={`px-2 py-1 rounded-md text-xs ${badge.cls}`}>
+                          {badge.text}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs text-muted-foreground">
+                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                          n:{" "}
+                          <strong className="text-foreground">
+                            {row.n}
+                          </strong>
+                        </div>
+                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                          μ:{" "}
+                          <strong className="text-foreground">
+                            {formatNum(row.mean, 3)}
+                          </strong>
+                        </div>
+                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                          σ:{" "}
+                          <strong className="text-foreground">
+                            {formatNum(row.sigma, 3)}
+                          </strong>
+                        </div>
+                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                          Cp:{" "}
+                          <strong className="text-foreground">
+                            {formatNum(row.cp, 2)}
+                          </strong>
+                        </div>
+                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                          Cpk:{" "}
+                          <strong className="text-foreground">
+                            {formatNum(row.cpk, 2)}
+                          </strong>
+                        </div>
+                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                          Spec:{" "}
+                          <strong className="text-foreground">
+                            {row.lsl === null || row.usl === null
+                              ? "—"
+                              : `${row.lsl} / ${row.usl}`}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Inputs LSL/USL */}
+                    <div className="grid grid-cols-2 gap-2 lg:w-[260px]">
+                      <div>
+                        <label className="text-xs text-muted-foreground">
+                          LSL
+                        </label>
+                        <Input
+                          value={specLimits[row.name]?.lsl ?? ""}
+                          onChange={(e) =>
+                            updateSpec(row.name, "lsl", e.target.value)
+                          }
+                          placeholder="Ej: -0.5"
+                          inputMode="decimal"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground">
+                          USL
+                        </label>
+                        <Input
+                          value={specLimits[row.name]?.usl ?? ""}
+                          onChange={(e) =>
+                            updateSpec(row.name, "usl", e.target.value)
+                          }
+                          placeholder="Ej: 0.5"
+                          inputMode="decimal"
+                        />
+                      </div>
+
+                      <div className="col-span-2 flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8"
+                          onClick={() => clearSpec(row.name)}
+                        >
+                          Limpiar límites
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!row.hasSpec && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      💡 Agrega LSL y USL válidos (USL &gt; LSL) para calcular Cp/Cpk.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      )}
+    </CardContent>
+  </Card>
+)}
 
         {/* ✅ FULL-WIDTH: PARÁMETROS DE PROCESO */}
         {parametersData.length > 0 && (

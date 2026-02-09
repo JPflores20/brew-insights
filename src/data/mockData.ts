@@ -164,3 +164,123 @@ export function getShiftStats(data: BatchRecord[]) {
     avgIdle: stats.count > 0 ? Math.round(stats.totalIdle / stats.count) : 0,
   }));
 }
+
+
+// ===============================
+//  CAPACIDAD DE PROCESO: Cp / Cpk (UTILIDADES)
+//  Nota: Requiere límites de especificación (LSL/USL).
+// ===============================
+
+export interface ProcessCapabilityResult {
+  n: number;
+  mean: number;
+  sigma: number;
+  lsl: number;
+  usl: number;
+  cp: number | null;
+  cpk: number | null;
+}
+
+function _mean(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+// Desviación estándar muestral (n-1)
+function _stdDevSample(values: number[]): number {
+  const n = values.length;
+  if (n < 2) return 0;
+  const m = _mean(values);
+  const varSum = values.reduce((acc, x) => acc + Math.pow(x - m, 2), 0);
+  return Math.sqrt(varSum / (n - 1));
+}
+
+export function calculateCpCpk(
+  values: number[],
+  lsl: number,
+  usl: number
+): ProcessCapabilityResult {
+  const n = values.length;
+  const m = _mean(values);
+  const s = _stdDevSample(values);
+
+  if (n < 2 || s <= 0 || !isFinite(s) || !isFinite(lsl) || !isFinite(usl) || usl <= lsl) {
+    return { n, mean: m, sigma: s, lsl, usl, cp: null, cpk: null };
+  }
+
+  const cp = (usl - lsl) / (6 * s);
+  const cpu = (usl - m) / (3 * s);
+  const cpl = (m - lsl) / (3 * s);
+  const cpk = Math.min(cpu, cpl);
+
+  return { n, mean: m, sigma: s, lsl, usl, cp, cpk };
+}
+
+/**
+ * Cp/Cpk por nombre de parámetro usando deltaTemp = value - target.
+ * specMap: límites por parámetro (aplican al delta).
+ *
+ * Ejemplo:
+ * { "Temperatura Mash": { lsl: -0.5, usl: 0.5 } }
+ */
+export function getCpCpkForTemperatureDeltaByParameter(
+  data: BatchRecord[],
+  specMap: Record<string, { lsl: number; usl: number }>,
+  options?: {
+    machine?: string;
+    stepName?: string;
+    parameterName?: string;
+  }
+) {
+  const { machine, stepName, parameterName } = options || {};
+
+  const allParams: BatchParameter[] = data
+    .filter((r) => (machine ? r.TEILANL_GRUPO === machine : true))
+    .flatMap((r) => r.parameters || [])
+    .filter((p) => (stepName ? p.stepName === stepName : true))
+    .filter((p) => (parameterName ? p.name === parameterName : true));
+
+  const groups = new Map<string, BatchParameter[]>();
+  allParams.forEach((p) => {
+    if (!groups.has(p.name)) groups.set(p.name, []);
+    groups.get(p.name)!.push(p);
+  });
+
+  const results = Array.from(groups.entries()).map(([pname, items]) => {
+    const spec = specMap[pname];
+    const deltas = items
+      .map((p) => Number(p.value) - Number(p.target))
+      .filter((v) => Number.isFinite(v));
+
+    if (!spec) {
+      return {
+        parameter: pname,
+        unit: items[0]?.unit || "",
+        n: deltas.length,
+        mean: _mean(deltas),
+        sigma: _stdDevSample(deltas),
+        lsl: null as number | null,
+        usl: null as number | null,
+        cp: null as number | null,
+        cpk: null as number | null,
+        missingSpec: true,
+      };
+    }
+
+    const cap = calculateCpCpk(deltas, spec.lsl, spec.usl);
+    return {
+      parameter: pname,
+      unit: items[0]?.unit || "",
+      ...cap,
+      missingSpec: false,
+    };
+  });
+
+  return results.sort((a: any, b: any) => {
+    if (a.missingSpec && !b.missingSpec) return 1;
+    if (!a.missingSpec && b.missingSpec) return -1;
+    const ac = a.cpk ?? -999;
+    const bc = b.cpk ?? -999;
+    return ac - bc;
+  });
+}
