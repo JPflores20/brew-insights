@@ -1,4 +1,3 @@
-// Nueva interfaz para los pasos individuales (GOP)
 export interface BatchStep {
   stepName: string;
   stepNr: string;
@@ -8,10 +7,18 @@ export interface BatchStep {
   endTime: string;
 }
 
+// --- NUEVA INTERFAZ PARA MATERIALES ---
+export interface BatchMaterial {
+  name: string;
+  totalReal: number;
+  totalExpected: number;
+  unit: string;
+}
+
 export interface BatchRecord {
   CHARG_NR: string;
   TEILANL_GRUPO: string;
-  productName: string; // <-- NUEVO CAMPO
+  productName: string;
   real_total_min: number;
   esperado_total_min: number;
   delta_total_min: number;
@@ -19,10 +26,11 @@ export interface BatchRecord {
   max_gap_min: number;
   timestamp: string;
   steps: BatchStep[];
+  materials: BatchMaterial[]; // <-- Campo nuevo
   alerts: string[];
 }
 
-// --- HELPERS BÁSICOS ---
+// --- HELPERS (Se mantienen igual) ---
 
 export function getUniqueBatchIds(data: BatchRecord[]): string[] {
   return Array.from(new Set(data.map(d => d.CHARG_NR))).sort();
@@ -39,8 +47,6 @@ export function getBatchById(data: BatchRecord[], batchId: string): BatchRecord[
 export function getMachineData(data: BatchRecord[], machineName: string): BatchRecord[] {
   return data.filter(d => d.TEILANL_GRUPO === machineName);
 }
-
-// --- ESTADÍSTICAS ---
 
 export function getAveragesByMachine(data: BatchRecord[]) {
   const groups = getUniqueMachineGroups(data);

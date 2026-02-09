@@ -1,8 +1,7 @@
 import * as XLSX from 'xlsx';
-import { BatchRecord, BatchStep } from '@/data/mockData';
+import { BatchRecord, BatchStep, BatchMaterial } from '@/data/mockData';
 
 // --- FUNCIONES DE LIMPIEZA ---
-
 function normalizeText(s: any): string {
   if (!s) return "";
   let str = String(s).trim();
@@ -50,7 +49,6 @@ function buildDate(row: any, prefix: string): Date | null {
 }
 
 // --- PROCESADOR PRINCIPAL ---
-
 export async function processExcelFile(file: File): Promise<BatchRecord[]> {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data, { type: 'array' });
@@ -66,28 +64,44 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     const iwMin = (parseFloat(row.IW_ZEIT) || 0) / 60;
     const start = buildDate(row, "SZ");
     const end = buildDate(row, "EZ");
-    
-    // Capturamos el nombre y número del paso
     const gopName = String(row.GOP_NAME || "").trim();
     const gopNr = String(row.GOP_NR || "").trim();
-    
-    // Capturamos el producto (Columna P es REZEPT o PRODUCT)
     const productName = String(row.REZEPT || row.PRODUCT || "").trim();
+
+    // --- NUEVO: EXTRACCIÓN DE MATERIALES (DFMs) ---
+    const rowMaterials: { name: string, val: number, exp: number, unit: string }[] = [];
+    
+    for (let i = 1; i <= 24; i++) {
+        const name = row[`NAME_DFM${i}`];
+        const val = parseFloat(row[`IW_DFM${i}`]); 
+        const exp = parseFloat(row[`SW_DFM${i}`]); 
+        const unit = row[`DIM_DFM${i}`]; 
+
+        if (name && (val > 0 || exp > 0)) {
+            rowMaterials.push({ 
+                name: String(name).trim(), 
+                val: val || 0, 
+                exp: exp || 0, 
+                unit: String(unit || "").trim() 
+            });
+        }
+    }
 
     return {
       CHARG_NR: chargNr,
       TEILANL_GRUPO: teilGroup(teilanl),
       GOP_NAME: gopName,
       GOP_NR: gopNr,
-      productName, // <-- Guardamos el producto
+      productName,
       start,
       end,
       swMin,
       iwMin,
+      materials: rowMaterials 
     };
   }).filter(e => e.CHARG_NR && e.TEILANL_GRUPO !== "SIN_TEILANL");
 
-  // 2. Agrupar eventos por Lote + Grupo
+  // 2. Agrupar eventos
   const groupedEvents = new Map<string, any[]>();
   events.forEach(evt => {
     const key = `${evt.CHARG_NR}|${evt.TEILANL_GRUPO}`;
@@ -97,7 +111,6 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
 
   // 3. Procesar cada grupo
   return Array.from(groupedEvents.values()).map(group => {
-    // Ordenar cronológicamente
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
 
     let real_total = 0;
@@ -107,6 +120,9 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     
     const steps: BatchStep[] = [];
     const alerts: string[] = [];
+    
+    // --- NUEVO: CONSOLIDACIÓN DE MATERIALES ---
+    const materialsMap = new Map<string, BatchMaterial>();
 
     let lastEnd = group[0].end ? group[0].end.getTime() : (group[0].start?.getTime() || 0);
     let waitCounter = 0;
@@ -115,19 +131,15 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
 
-      // DETECCIÓN DE HUECOS (TIEMPOS MUERTOS)
       if (index > 0 && evt.start) {
         const currentStart = evt.start.getTime();
-        
         if (currentStart > lastEnd) {
           const gapMs = currentStart - lastEnd;
           const gapMin = gapMs / 60000;
-          
           if (gapMin > 0) {
              total_idle += gapMin;
              if (gapMin > max_gap) max_gap = gapMin;
              waitCounter++;
-
              steps.push({
                stepName: `⏳ Espera ${waitCounter}`,
                stepNr: "", 
@@ -136,13 +148,25 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
                startTime: new Date(lastEnd).toISOString(),
                endTime: evt.start.toISOString()
              });
-             
-             if (gapMin > 15) {
-                alerts.push(`Espera de ${Math.round(gapMin)} min detectada antes de ${evt.GOP_NAME}`);
-             }
+             if (gapMin > 15) alerts.push(`Espera de ${Math.round(gapMin)} min detectada antes de ${evt.GOP_NAME}`);
           }
         }
       }
+
+      evt.materials.forEach((mat: any) => {
+          const key = `${mat.name}_${mat.unit}`;
+          if (!materialsMap.has(key)) {
+              materialsMap.set(key, { 
+                  name: mat.name, 
+                  totalReal: 0, 
+                  totalExpected: 0, 
+                  unit: mat.unit 
+              });
+          }
+          const existing = materialsMap.get(key)!;
+          existing.totalReal += mat.val;
+          existing.totalExpected += mat.exp;
+      });
 
       steps.push({
         stepName: evt.GOP_NAME || `Paso ${index + 1}`,
@@ -161,7 +185,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
     return {
       CHARG_NR: group[0].CHARG_NR,
       TEILANL_GRUPO: group[0].TEILANL_GRUPO,
-      productName: group[0].productName || "Desconocido", // <-- Asignamos el producto al registro final
+      productName: group[0].productName || "Desconocido",
       real_total_min: Math.round(real_total * 100) / 100,
       esperado_total_min: Math.round(esperado_total * 100) / 100,
       delta_total_min: Math.round((real_total - esperado_total) * 100) / 100,
@@ -169,6 +193,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       max_gap_min: Math.round(max_gap * 100) / 100,
       timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString(),
       steps: steps,
+      materials: Array.from(materialsMap.values()), 
       alerts: alerts
     };
   });

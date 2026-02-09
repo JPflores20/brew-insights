@@ -37,7 +37,9 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
-  Timer, // Icono para retardos
+  Timer,
+  Droplets,
+  Scale
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -52,13 +54,12 @@ import remarkGfm from "remark-gfm";
 export default function MachineDetail() {
   const { data } = useData();
 
-  // --- ESTADOS PARA GEMINI ---
+  // --- ESTADOS ---
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   
   const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
 
-  // Mapa de productos
   const batchProductMap = useMemo(() => {
     const map = new Map<string, string>();
     data.forEach((d) => {
@@ -80,11 +81,11 @@ export default function MachineDetail() {
     setAiAnalysis(null);
   }, [selectedBatchId, selectedMachine]);
 
-  // --- 1. DETECCIÓN DE PROBLEMAS (Esperas + Retrasos) ---
+  // --- DETECCIÓN DE PROBLEMAS (Top Issues) ---
   const problematicBatches = useMemo(() => {
     const issues: any[] = [];
     data.forEach((record) => {
-      // Detectamos si hay Gap grande O si hay Retraso (Delta) grande
+      // Problema si hay Gap > 5min O Retraso > 5min
       const hasGap = record.idle_wall_minus_sumsteps_min > 5;
       const hasDelay = record.delta_total_min > 5;
 
@@ -95,17 +96,18 @@ export default function MachineDetail() {
           machine: record.TEILANL_GRUPO,
           totalWait: record.idle_wall_minus_sumsteps_min,
           totalDelay: record.delta_total_min,
-          isDelay: !hasGap && hasDelay, // Flag para identificar el tipo principal
+          isDelay: !hasGap && hasDelay, // Priorizamos Gap como causa si existe
           timestamp: record.timestamp,
         });
       }
     });
-    // Ordenamos por magnitud del problema
+    // Ordenamos por magnitud
     return issues.sort((a, b) => 
         Math.max(b.totalWait, b.totalDelay) - Math.max(a.totalWait, a.totalDelay)
     );
   }, [data]);
 
+  // --- SELECTORES INTELIGENTES ---
   useEffect(() => {
     if (allBatches.length > 0) {
       if (!selectedBatchId || !allBatches.includes(selectedBatchId)) {
@@ -139,15 +141,15 @@ export default function MachineDetail() {
   );
 
   const stepsData = selectedRecord?.steps || [];
+  const materialsData = selectedRecord?.materials || [];
 
-  // --- 2. REPORTE UNIFICADO (AnomaliesReport) ---
-  // Reemplaza a gapsReport para incluir también pasos lentos
+  // --- REPORTE DE ANOMALÍAS (GAPS + RETRASOS) ---
   const anomaliesReport = useMemo(() => {
     if (!stepsData.length) return [];
     return stepsData
       .map((step, index) => {
         const isGap = step.stepName.includes("Espera");
-        // Un paso es lento si dura más de lo esperado (con 1 min de tolerancia)
+        // Paso lento = dura más de lo esperado (+1 min de tolerancia)
         const isSlow = !isGap && step.expectedDurationMin > 0 && step.durationMin > (step.expectedDurationMin + 1);
 
         if (!isGap && !isSlow) return null;
@@ -158,11 +160,11 @@ export default function MachineDetail() {
         
         return {
           id: index,
-          type: isGap ? 'gap' : 'delay', // 'gap' (rojo) o 'delay' (naranja)
+          type: isGap ? 'gap' : 'delay',
           name: step.stepName,
-          duration: step.durationMin, // Lo que duró realmente
+          duration: step.durationMin,
           expected: step.expectedDurationMin,
-          delta: isSlow ? Math.round((step.durationMin - step.expectedDurationMin)*100)/100 : 0, // Cuánto extra tardó
+          delta: isSlow ? Math.round((step.durationMin - step.expectedDurationMin)*100)/100 : 0,
           startTime: new Date(step.startTime).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -172,7 +174,6 @@ export default function MachineDetail() {
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null)
-      // Ordenar por impacto (duración del gap o magnitud del retraso)
       .sort((a, b) => {
           const impactA = a.type === 'gap' ? a.duration : a.delta;
           const impactB = b.type === 'gap' ? b.duration : b.delta;
@@ -180,7 +181,6 @@ export default function MachineDetail() {
       });
   }, [stepsData]);
 
-  // Métricas para la tarjeta AI
   const totalImpactMinutes = useMemo(() => {
     return anomaliesReport.reduce((acc, g) => {
         const impact = g.type === 'gap' ? g.duration : g.delta;
@@ -254,7 +254,7 @@ export default function MachineDetail() {
           </p>
         </div>
 
-        {/* --- PANEL DE SUGERENCIAS --- */}
+        {/* --- 1. PANEL DE SUGERENCIAS --- */}
         {problematicBatches.length > 0 && (
           <Card className="bg-card border-border border-l-4 border-l-orange-500">
             <CardHeader className="pb-3">
@@ -291,7 +291,6 @@ export default function MachineDetail() {
                         <div className="text-[10px] text-muted-foreground mb-1 font-medium">
                           {issue.product}
                         </div>
-                        {/* Mostramos distintamente si es espera o retraso */}
                         <p className={issue.isDelay ? "text-xs text-orange-500 font-medium flex items-center gap-1" : "text-xs text-red-500 font-medium flex items-center gap-1"}>
                           {issue.isDelay ? <Timer className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
                           {issue.isDelay 
@@ -316,7 +315,7 @@ export default function MachineDetail() {
           </Card>
         )}
 
-        {/* --- SELECTORES --- */}
+        {/* --- 2. SELECTORES --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="pb-2 pt-4">
@@ -382,7 +381,7 @@ export default function MachineDetail() {
           </Card>
         </div>
 
-        {/* --- KPI CARDS --- */}
+        {/* --- 3. TARJETAS KPI --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
@@ -417,8 +416,10 @@ export default function MachineDetail() {
           </Card>
         </div>
 
+        {/* --- 4. GRID PRINCIPAL (Gráfica + Información) --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* GRÁFICA */}
+          
+          {/* GRÁFICA DE PASOS (Ocupa 2/3 de ancho) */}
           <div className="lg:col-span-2 space-y-6">
             {selectedRecord && stepsData.length > 0 ? (
               <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-full">
@@ -468,25 +469,12 @@ export default function MachineDetail() {
                         }}
                         cursor={{ fill: "transparent" }}
                       />
-                      {/* LEYENDA MEJORADA */}
                       <Legend
                         wrapperStyle={{ paddingTop: "10px" }}
                         payload={[
-                          {
-                            value: "Duración Real (min)",
-                            type: "rect",
-                            color: "hsl(var(--primary))",
-                          },
-                          {
-                            value: "Espera / Gap (min)",
-                            type: "rect",
-                            color: "#ef4444",
-                          },
-                          {
-                            value: "Duración Esperada (min)",
-                            type: "rect",
-                            color: "#fbbf24",
-                          },
+                          { value: "Duración Real (min)", type: "rect", color: "hsl(var(--primary))" },
+                          { value: "Espera / Gap (min)", type: "rect", color: "#ef4444" },
+                          { value: "Duración Esperada (min)", type: "rect", color: "#fbbf24" },
                         ]}
                       />
                       <Bar
@@ -530,23 +518,61 @@ export default function MachineDetail() {
             )}
           </div>
 
-          {/* COLUMNA DERECHA: GEMINI AI + REPORTE */}
+          {/* COLUMNA DERECHA (1/3 ancho) */}
           <div className="lg:col-span-1 flex flex-col gap-4">
             
-            {/* TARJETA GEMINI */}
+            {/* NUEVO: TARJETA DE CONSUMO DE MATERIALES */}
+            {materialsData.length > 0 && (
+                <Card className="bg-card border-border shadow-sm">
+                    <CardHeader className="pb-3 border-b border-border">
+                        <div className="flex items-center gap-2">
+                            <Scale className="h-5 w-5 text-green-600" />
+                            <CardTitle className="text-lg">Consumo de Materiales</CardTitle>
+                        </div>
+                        <CardDescription>Ingredientes registrados en este lote</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <ScrollArea className="h-[250px] w-full p-4">
+                            <div className="space-y-3">
+                                {materialsData.map((mat, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                                                <Droplets className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-foreground">{mat.name}</p>
+                                                <p className="text-xs text-muted-foreground font-mono">Unidad: {mat.unit}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-bold text-foreground">
+                                                {mat.totalReal.toLocaleString()}
+                                            </p>
+                                            {mat.totalExpected > 0 && (
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    Meta: {mat.totalExpected.toLocaleString()}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* TARJETA DE INTELIGENCIA ARTIFICIAL (GEMINI) */}
             {anomaliesReport.length > 0 && (
               <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-indigo-500/10 dark:via-purple-500/5 dark:to-fuchsia-500/10" />
-                <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-indigo-500/15 blur-3xl" />
-                <div className="pointer-events-none absolute -bottom-28 -left-28 h-64 w-64 rounded-full bg-fuchsia-500/15 blur-3xl" />
-
                 <CardHeader className="relative pb-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/40">
                         <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
                       </div>
-
                       <div className="space-y-0.5">
                         <CardTitle className="text-base font-semibold leading-none">
                           Gemini Insights
@@ -556,30 +582,18 @@ export default function MachineDetail() {
                         </CardDescription>
                       </div>
                     </div>
-
                     <Badge className="bg-indigo-600/10 text-indigo-700 border border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-800/40">
                       AI
                     </Badge>
                   </div>
-
-                  {/* Chips Resumen */}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge variant="secondary" className="gap-1.5">
                       <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
                       {anomaliesReport.length} problemas
                     </Badge>
-
                     <Badge variant="secondary" className="gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-blue-500" />
                       {Math.round(totalImpactMinutes * 10) / 10} min impactados
-                    </Badge>
-
-                    <Badge
-                      variant="outline"
-                      className="font-mono truncate max-w-[170px]"
-                      title={selectedMachine}
-                    >
-                      {selectedMachine}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -591,41 +605,7 @@ export default function MachineDetail() {
                         <p className="text-sm text-muted-foreground">
                           Analizaré tanto <span className="font-medium text-foreground">paradas (gaps)</span> como <span className="font-medium text-foreground">pasos lentos</span>.
                         </p>
-
-                        <div className="mt-3 space-y-2">
-                          <p className="text-xs text-muted-foreground">
-                            Top problemas detectados:
-                          </p>
-                          <div className="space-y-2">
-                            {anomaliesReport.slice(0, 3).map((item) => (
-                              <div
-                                key={item.id}
-                                className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-background px-3 py-2"
-                                title={item.type === 'gap' ? "Máquina detenida" : "Paso más lento de lo normal"}
-                              >
-                                <div className="min-w-0">
-                                  <p className="text-xs font-medium truncate flex items-center gap-1.5">
-                                    {/* Indicador visual de tipo */}
-                                    {item.type === 'gap' ? (
-                                        <span className="w-2 h-2 rounded-full bg-red-500" />
-                                    ) : (
-                                        <span className="w-2 h-2 rounded-full bg-orange-400" />
-                                    )}
-                                    {item.name}
-                                  </p>
-                                  <p className="text-[11px] text-muted-foreground truncate">
-                                    {item.type === 'delay' ? `Esp: ${item.expected}m` : `${item.prevStep} →`}
-                                  </p>
-                                </div>
-                                <span className={item.type === 'gap' ? "shrink-0 text-xs font-mono font-semibold text-red-500" : "shrink-0 text-xs font-mono font-semibold text-orange-500"}>
-                                  {item.type === 'gap' ? item.duration : `+${item.delta}`} min
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
                       </div>
-
                       <Button
                         onClick={handleConsultAI}
                         disabled={isAnalyzing}
@@ -634,7 +614,7 @@ export default function MachineDetail() {
                         {isAnalyzing ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Analizando con Gemini…
+                            Analizando...
                           </>
                         ) : (
                           <>
@@ -647,84 +627,28 @@ export default function MachineDetail() {
                   ) : (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <Badge className="bg-green-500/10 text-green-700 border border-green-500/20 dark:bg-green-500/10 dark:text-green-200 dark:border-green-500/20">
+                        <Badge className="bg-green-500/10 text-green-700 border border-green-500/20">
                           Respuesta generada
                         </Badge>
-
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8"
-                            onClick={handleConsultAI}
-                            disabled={isAnalyzing}
-                          >
-                            {isAnalyzing ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Re-analizando…
-                              </>
-                            ) : (
-                              "Re-analizar"
-                            )}
-                          </Button>
-
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8"
-                            onClick={() => setAiAnalysis(null)}
-                          >
-                            Limpiar
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8"
+                          onClick={() => setAiAnalysis(null)}
+                        >
+                          Limpiar
+                        </Button>
                       </div>
-
                       <ScrollArea className="h-[290px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
                         <div className="prose prose-sm dark:prose-invert max-w-none">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              p: ({ children }) => (
-                                <p className="mb-2 leading-relaxed text-foreground/90">
-                                  {children}
-                                </p>
-                              ),
-                              ul: ({ children }) => (
-                                <ul className="list-disc pl-4 mb-2 space-y-1">
-                                  {children}
-                                </ul>
-                              ),
-                              ol: ({ children }) => (
-                                <ol className="list-decimal pl-4 mb-2 space-y-1">
-                                  {children}
-                                </ol>
-                              ),
-                              li: ({ children }) => (
-                                <li className="text-foreground/80">
-                                  {children}
-                                </li>
-                              ),
-                              strong: ({ children }) => (
-                                <span className="font-bold text-indigo-500 dark:text-indigo-400">
-                                  {children}
-                                </span>
-                              ),
-                              h1: ({ children }) => (
-                                <h1 className="text-lg font-bold mb-2 mt-4 text-foreground">
-                                  {children}
-                                </h1>
-                              ),
-                              h2: ({ children }) => (
-                                <h2 className="text-base font-bold mb-2 mt-3 text-foreground">
-                                  {children}
-                                </h2>
-                              ),
-                              blockquote: ({ children }) => (
-                                <blockquote className="border-l-2 border-indigo-500 pl-4 italic text-muted-foreground my-2">
-                                  {children}
-                                </blockquote>
-                              ),
+                              p: ({ children }) => <p className="mb-2 leading-relaxed text-foreground/90">{children}</p>,
+                              ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                              li: ({ children }) => <li className="text-foreground/80">{children}</li>,
+                              strong: ({ children }) => <span className="font-bold text-indigo-500 dark:text-indigo-400">{children}</span>,
                             }}
                           >
                             {aiAnalysis}
@@ -737,7 +661,7 @@ export default function MachineDetail() {
               </Card>
             )}
 
-            {/* LISTA DE DETALLES (GAPS Y DELAYS) */}
+            {/* LISTA DETALLADA DE ANOMALÍAS (GAPS Y RETRASOS) */}
             <Card className="bg-card border-border flex-1 flex flex-col">
               <CardHeader className="pb-3 border-b border-border">
                 <div className="flex items-center gap-2 text-foreground">
@@ -795,32 +719,6 @@ export default function MachineDetail() {
                               <Clock className="h-3 w-3" />
                               <span>Inicio: {item.startTime}</span>
                             </div>
-
-                            <div className="mt-2 pt-2 border-t border-border/10 flex flex-col gap-1">
-                              <div className="flex items-center justify-between">
-                                <span className="opacity-70">Después de:</span>
-                                <span
-                                  className="font-medium text-foreground truncate max-w-[120px]"
-                                  title={item.prevStep}
-                                >
-                                  {item.prevStep}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-center my-1 opacity-20">
-                                <ArrowRight className="h-3 w-3 rotate-90" />
-                              </div>
-
-                              <div className="flex items-center justify-between">
-                                <span className="opacity-70">Antes de:</span>
-                                <span
-                                  className="font-medium text-foreground truncate max-w-[120px]"
-                                  title={item.nextStep}
-                                >
-                                  {item.nextStep}
-                                </span>
-                              </div>
-                            </div>
                           </div>
                         </div>
                       ))}
@@ -830,10 +728,6 @@ export default function MachineDetail() {
                   <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-green-500 mb-3 opacity-20" />
                     <p className="text-sm">Todo correcto</p>
-                    <p className="text-xs mt-1">
-                      Selecciona un lote con problemas de la lista superior para
-                      ver detalles aquí.
-                    </p>
                   </div>
                 )}
               </CardContent>
@@ -841,7 +735,7 @@ export default function MachineDetail() {
           </div>
         </div>
 
-        {/* HISTÓRICO */}
+        {/* --- 5. GRÁFICO HISTÓRICO --- */}
         {machineHistoryData.length > 0 && (
           <Card className="bg-card border-border h-[400px] p-6 opacity-90 hover:opacity-100 transition-opacity">
             <CardTitle className="mb-6 text-lg font-semibold flex items-center justify-between">
@@ -865,16 +759,8 @@ export default function MachineDetail() {
                       x2="0"
                       y2="1"
                     >
-                      <stop
-                        offset="5%"
-                        stopColor="#8884d8"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="#8884d8"
-                        stopOpacity={0}
-                      />
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
 
