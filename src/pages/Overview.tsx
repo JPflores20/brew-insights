@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // <--- Importar navegación
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { EfficiencyChart } from "@/components/dashboard/EfficiencyChart";
@@ -10,7 +9,7 @@ import {
   Clock, 
   Upload, 
   FileSpreadsheet, 
-  Beer, 
+  Beer, // Mantenemos el icono para el texto final
   Info, 
   AlertTriangle 
 } from "lucide-react";
@@ -25,23 +24,62 @@ import {
   getMachineWithHighestIdleTime
 } from "@/data/mockData";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 export default function Overview() {
   const { data, setData } = useData(); 
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  // 1. Nuevo estado para controlar el porcentaje de llenado (0-100)
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const { toast } = useToast();
-  const navigate = useNavigate(); // <--- Hook de navegación
+  const navigate = useNavigate();
+
+  // Función para limpiar el intervalo del simulador
+  const clearProgressInterval = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  };
 
   const processFile = async (file: File) => {
     setLoading(true);
+    setUploadProgress(0);
+
+    // 2. Iniciar simulación de progreso
+    // Incrementa rápidamente al principio, luego más lento hasta el 90%
+    progressIntervalRef.current = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          // Si llega al 90% y aún no termina el proceso real, se queda ahí "esperando"
+          return 90 + Math.random() * 2; // Pequeña variación para que parezca vivo
+        }
+        // Incremento rápido inicial
+        const increment = Math.random() * 15;
+        return Math.min(prev + increment, 90);
+      });
+    }, 300);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // El procesamiento real (puede tardar unos segundos)
       const processedData = await processExcelFile(file);
+      
+      // 3. Proceso terminado: Llenar al 100%
+      clearProgressInterval();
+      setUploadProgress(100);
+
+      // Pequeña pausa visual para disfrutar la cerveza llena antes de mostrar el dashboard
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       setData(processedData); 
       toast({
-        title: "¡Cocimiento completado!",
-        description: `Se procesaron ${processedData.length} registros exitosamente.`,
+        title: "¡Tanque lleno!",
+        description: `Se han procesado ${processedData.length} registros correctamente.`,
+        // Usamos un color dorado para el toast de éxito
+        className: "bg-amber-500 text-white border-none",
       });
     } catch (error) {
       console.error(error);
@@ -51,9 +89,16 @@ export default function Overview() {
         description: "El archivo no es válido o no tiene el formato esperado.",
       });
     } finally {
+      clearProgressInterval();
       setLoading(false);
+      setUploadProgress(0);
     }
   };
+
+  // Limpieza al desmontar el componente por si acaso
+  useEffect(() => {
+    return () => clearProgressInterval();
+  }, []);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -82,22 +127,16 @@ export default function Overview() {
     } else {
       toast({
         variant: "destructive",
-        title: "Ingrediente incorrecto",
+        title: "Archivo incorrecto",
         description: "Por favor arrastra un archivo Excel (.xlsx o .xls).",
       });
     }
   };
 
-  // --- LÓGICA DE NAVEGACIÓN ---
   const highestIdle = getMachineWithHighestIdleTime(data);
-
   const handleNavigateToDetail = () => {
     if (highestIdle.machine !== "N/A") {
-      // Guardamos la máquina en el localStorage que usa MachineDetail.tsx
-      // Usamos JSON.stringify porque el hook useLocalStorage espera formato JSON
       window.localStorage.setItem("detail-machine-selection-v2", JSON.stringify(highestIdle.machine));
-      
-      // Navegamos a la página de detalle
       navigate("/machine");
     }
   };
@@ -105,45 +144,94 @@ export default function Overview() {
   if (data.length === 0) {
     return (
       <DashboardLayout>
+        {/* Contenedor principal de la zona de carga */}
         <div 
           className={cn(
-            "flex h-[70vh] flex-col items-center justify-center space-y-6 text-center animate-in fade-in zoom-in duration-500 rounded-xl border-2 border-dashed transition-all",
-            isDragging ? "border-primary bg-primary/5 scale-[1.02]" : "border-border",
-            loading ? "border-none bg-transparent" : ""
+            "relative flex h-[70vh] flex-col items-center justify-center space-y-6 text-center rounded-xl transition-all overflow-hidden",
+            // Si está cargando, quitamos bordes y fondo para que se vea la animación completa
+            loading ? "" : "border-2 border-dashed",
+            !loading && isDragging ? "border-amber-500 bg-amber-500/5 scale-[1.02]" : "border-border",
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
           {loading ? (
-            <div className="flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-700">
-              <div className="relative">
-                <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full animate-pulse" />
-                <Beer className="h-24 w-24 text-yellow-500 animate-bounce relative z-10" strokeWidth={1.5} />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground animate-pulse">Fermentando datos...</h2>
-                <p className="text-muted-foreground">Procesando los tiempos de tus lotes</p>
-              </div>
+            /* --- 4. NUEVA ANIMACIÓN DE CERVEZA LLENANDO LA PANTALLA --- */
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
+               
+               {/* Contenedor del Líquido y Espuma (ocupa todo el espacio disponible) */}
+               <div className="absolute inset-x-0 bottom-0 h-full w-full overflow-hidden rounded-xl">
+                 
+                 {/* CAPA DE LÍQUIDO (Cerveza Ámbar) */}
+                 <div 
+                   className="absolute bottom-0 w-full bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 transition-all duration-300 ease-out"
+                   // Usamos estilo en línea para controlar la altura dinámicamente
+                   style={{ height: `${uploadProgress}%` }}
+                 >
+                    {/* Burbujas decorativas dentro del líquido */}
+                    <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:20px_20px] animate-pulse"></div>
+                 </div>
+
+                 {/* CAPA DE ESPUMA (Blanca, encima del líquido) */}
+                 <div 
+                   className="absolute w-full h-12 bg-white/90 backdrop-blur-md transition-all duration-300 ease-out flex items-end overflow-hidden shadow-sm"
+                   // La espuma sube junto con el líquido
+                   style={{ bottom: `${uploadProgress}%`, opacity: uploadProgress > 0 ? 1 : 0 }}
+                 >
+                    {/* Efecto "ola" en la parte superior de la espuma */}
+                   <div className="w-[200%] h-full bg-[radial-gradient(circle,white_60%,transparent_65%)] bg-[length:30px_60px] relative -top-4 animate-[spin_4s_linear_infinite] opacity-70"></div>
+                   <div className="w-[200%] h-full bg-[radial-gradient(circle,white_60%,transparent_65%)] bg-[length:40px_50px] relative -top-2 -left-10 animate-[spin_3s_linear_reverse_infinite]"></div>
+                 </div>
+               </div>
+
+               {/* TEXTO E ICONO SUPERPUESTOS (Siempre visibles encima del líquido) */}
+               <div className="relative z-10 flex flex-col items-center space-y-4 p-8 rounded-2xl bg-background/20 backdrop-blur-md border border-white/20 shadow-2xl animate-in fade-in zoom-in duration-500">
+                 <div className="relative">
+                    {/* Icono de Beer que brilla y rebota al final */}
+                   <Beer className={cn(
+                     "h-20 w-20 text-amber-100 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]",
+                     uploadProgress >= 100 ? "animate-bounce" : "animate-pulse"
+                   )} strokeWidth={1.5} />
+                 </div>
+                 <div className="space-y-1">
+                   <h2 className="text-3xl font-bold text-white drop-shadow-md">
+                     {uploadProgress < 100 ? "Llenando el tanque..." : "¡Salud! Datos listos."}
+                   </h2>
+                   <p className="text-xl text-white/90 font-mono font-bold drop-shadow-sm">
+                     {Math.round(uploadProgress)}%
+                   </p>
+                 </div>
+               </div>
+
             </div>
           ) : (
+            /* --- ESTADO NORMAL (DRAG & DROP) --- */
             <>
               <div className={cn(
                 "rounded-full p-6 transition-transform duration-300",
-                isDragging ? "bg-primary/20 scale-110" : "bg-primary/10"
+                isDragging ? "bg-amber-500/20 scale-110" : "bg-primary/10"
               )}>
-                <FileSpreadsheet className="h-16 w-16 text-primary" />
+                {/* Cambiamos el icono a Beer si se arrastra para dar feedback temático */}
+                {isDragging ? (
+                    <Beer className="h-16 w-16 text-amber-500 animate-bounce" />
+                ) : (
+                    <FileSpreadsheet className="h-16 w-16 text-primary" />
+                )}
               </div>
               
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Cargar Datos de Producción</h1>
                 <p className="text-muted-foreground max-w-lg mx-auto">
-                  {isDragging ? "¡Suelta el archivo para comenzar!" : "Arrastra tu archivo Excel aquí o haz clic para seleccionarlo."}
+                  {isDragging ? "¡Suelta para empezar el cocimiento!" : "Arrastra tu archivo Excel aquí o haz clic para seleccionarlo."}
                 </p>
               </div>
               
               <div className="flex flex-col items-center gap-4">
-                <Button size="lg" className="relative cursor-pointer hover:scale-105 transition-transform shadow-lg">
+                <Button size="lg" className={cn(
+                    "relative cursor-pointer hover:scale-105 transition-transform shadow-lg",
+                    isDragging ? "bg-amber-500 hover:bg-amber-600" : ""
+                )}>
                   <Upload className="mr-2 h-5 w-5" />
                   Seleccionar Archivo Excel
                   <input 
@@ -181,14 +269,13 @@ export default function Overview() {
         <KPICard title="Total Lotes" value={totalBatches} subtitle="Cargados" icon={Boxes} variant="success" />
         <KPICard title="Desviación Promedio" value={`${avgDeviation > 0 ? '+' : ''}${avgDeviation}%`} subtitle="Vs Esperado" icon={TrendingUp} variant={avgDeviation > 10 ? "danger" : "success"} />
         
-        {/* --- KPI CLICABLE --- */}
         <KPICard 
           title="Mayor Tiempo Muerto" 
           value={`${highestIdle.idleTime} min`} 
           subtitle={`Equipo: ${highestIdle.machine}`} 
           icon={Clock} 
           variant="warning"
-          onClick={handleNavigateToDetail} // <--- Evento Click
+          onClick={handleNavigateToDetail}
         />
       </div>
 
