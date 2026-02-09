@@ -38,10 +38,10 @@ import {
   Sparkles,
   Loader2,
   Timer,
-  Droplets, 
-  Scale,    
-  Gauge,    
-  Thermometer 
+  Droplets,
+  Scale,
+  Gauge,
+  Thermometer,
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -58,7 +58,7 @@ export default function MachineDetail() {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  
+
   const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
 
   const batchProductMap = useMemo(() => {
@@ -100,8 +100,10 @@ export default function MachineDetail() {
         });
       }
     });
-    return issues.sort((a, b) => 
-        Math.max(b.totalWait, b.totalDelay) - Math.max(a.totalWait, a.totalDelay)
+    return issues.sort(
+      (a, b) =>
+        Math.max(b.totalWait, b.totalDelay) -
+        Math.max(a.totalWait, a.totalDelay)
     );
   }, [data]);
 
@@ -133,8 +135,7 @@ export default function MachineDetail() {
   }, [availableMachinesForBatch, selectedMachine, setSelectedMachine]);
 
   const selectedRecord = data.find(
-    (d) =>
-      d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
+    (d) => d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
   );
 
   const stepsData = selectedRecord?.steps || [];
@@ -146,21 +147,27 @@ export default function MachineDetail() {
     return stepsData
       .map((step, index) => {
         const isGap = step.stepName.includes("Espera");
-        const isSlow = !isGap && step.expectedDurationMin > 0 && step.durationMin > (step.expectedDurationMin + 1);
+        const isSlow =
+          !isGap &&
+          step.expectedDurationMin > 0 &&
+          step.durationMin > step.expectedDurationMin + 1;
 
         if (!isGap && !isSlow) return null;
 
         const prevStep = index > 0 ? stepsData[index - 1].stepName : "Inicio";
         const nextStep =
           index < stepsData.length - 1 ? stepsData[index + 1].stepName : "Fin";
-        
+
         return {
           id: index,
-          type: isGap ? 'gap' : 'delay',
+          type: isGap ? "gap" : "delay",
           name: step.stepName,
           duration: step.durationMin,
           expected: step.expectedDurationMin,
-          delta: isSlow ? Math.round((step.durationMin - step.expectedDurationMin)*100)/100 : 0,
+          delta: isSlow
+            ? Math.round((step.durationMin - step.expectedDurationMin) * 100) /
+              100
+            : 0,
           startTime: new Date(step.startTime).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -171,16 +178,16 @@ export default function MachineDetail() {
       })
       .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => {
-          const impactA = a.type === 'gap' ? a.duration : a.delta;
-          const impactB = b.type === 'gap' ? b.duration : b.delta;
-          return impactB - impactA;
+        const impactA = a.type === "gap" ? a.duration : a.delta;
+        const impactB = b.type === "gap" ? b.duration : b.delta;
+        return impactB - impactA;
       });
   }, [stepsData]);
 
   const totalImpactMinutes = useMemo(() => {
     return anomaliesReport.reduce((acc, g) => {
-        const impact = g.type === 'gap' ? g.duration : g.delta;
-        return acc + impact;
+      const impact = g.type === "gap" ? g.duration : g.delta;
+      return acc + impact;
     }, 0);
   }, [anomaliesReport]);
 
@@ -226,6 +233,83 @@ export default function MachineDetail() {
     setIsAnalyzing(false);
   };
 
+  // ✅ ESTILO UNIFICADO PARA TOOLTIP (para que no se vea blanco)
+  const themedTooltipContentStyle: React.CSSProperties = {
+    backgroundColor: "hsl(var(--popover))",
+    borderColor: "hsl(var(--border))",
+    borderRadius: "8px",
+    color: "hsl(var(--popover-foreground))",
+    fontSize: "14px",
+  };
+
+  const themedTooltipLabelStyle: React.CSSProperties = {
+    color: "hsl(var(--popover-foreground))",
+  };
+
+  const themedTooltipItemStyle: React.CSSProperties = {
+    color: "hsl(var(--popover-foreground))",
+  };
+
+  // ✅ Helpers: formato, truncado, intervalos dinámicos de ticks
+  const formatNumber = (v: any, decimals = 2) => {
+    const num = typeof v === "number" ? v : Number(v);
+    if (Number.isNaN(num)) return String(v);
+    const rounded = Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    return rounded.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    });
+  };
+
+  const truncateLabel = (v: any, max = 18) => {
+    const s = String(v ?? "");
+    return s.length > max ? s.slice(0, max - 1) + "…" : s;
+  };
+
+  const materialTickInterval = useMemo(() => {
+    const n = materialsData.length;
+    if (n <= 10) return 0;
+    if (n <= 20) return 1;
+    if (n <= 30) return 2;
+    return Math.ceil(n / 10);
+  }, [materialsData.length]);
+
+  const paramTickInterval = useMemo(() => {
+    const n = parametersData.length;
+    if (n <= 10) return 0;
+    if (n <= 20) return 1;
+    if (n <= 30) return 2;
+    return Math.ceil(n / 10);
+  }, [parametersData.length]);
+
+  const getParamUnit = (payload: any) => {
+    const unit =
+      payload?.unit ??
+      payload?.units ??
+      payload?.uom ??
+      payload?.UOM ??
+      payload?.unidad ??
+      payload?.unidades;
+
+    if (unit) return ` ${unit}`;
+
+    const pname =
+      payload?.parameterName ??
+      payload?.paramName ??
+      payload?.parameter ??
+      payload?.name ??
+      payload?.tag;
+
+    if (typeof pname === "string") {
+      if (/temp|temper/i.test(pname)) return " °C";
+      if (/pres|press|presi/i.test(pname)) return " bar";
+      if (/flow|caudal/i.test(pname)) return " l/min";
+      if (/ph/i.test(pname)) return " pH";
+      if (/rpm/i.test(pname)) return " rpm";
+    }
+    return "";
+  };
+
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -233,7 +317,9 @@ export default function MachineDetail() {
           <div className="text-center text-muted-foreground">
             <Clock className="mx-auto h-12 w-12 opacity-50 mb-4" />
             <h2 className="text-xl font-semibold">Sin Datos</h2>
-            <p>Por favor carga un archivo Excel en la pestaña "Resumen" primero.</p>
+            <p>
+              Por favor carga un archivo Excel en la pestaña "Resumen" primero.
+            </p>
           </div>
         </div>
       </DashboardLayout>
@@ -242,12 +328,26 @@ export default function MachineDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Detalle de Lote y Pasos</h1>
-          <p className="text-muted-foreground">
-            Selecciona un lote o revisa las sugerencias automáticas
-          </p>
+      <div className="space-y-6 animate-in fade-in duration-500 pb-8">
+        {/* --- HEADER --- */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Detalle de Lote y Pasos
+            </h1>
+            <p className="text-muted-foreground">
+              Selecciona un lote o revisa las sugerencias automáticas
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="font-mono">
+              {selectedBatchId || "—"}
+            </Badge>
+            <Badge variant="secondary" className="font-mono">
+              {selectedMachine || "—"}
+            </Badge>
+          </div>
         </div>
 
         {/* --- PANEL DE SUGERENCIAS --- */}
@@ -261,47 +361,58 @@ export default function MachineDetail() {
                 </CardTitle>
               </div>
               <CardDescription>
-                Se han encontrado {problematicBatches.length} registros con ineficiencias.
+                Se han encontrado {problematicBatches.length} registros con
+                ineficiencias.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[150px] w-full pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <ScrollArea className="h-[170px] w-full pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                   {problematicBatches.map((issue, idx) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between p-3 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="secondary" className="font-mono">
                             {issue.batch}
                           </Badge>
                           <span
-                            className="text-xs text-muted-foreground truncate max-w-[100px]"
+                            className="text-xs text-muted-foreground truncate max-w-[160px]"
                             title={issue.machine}
                           >
                             {issue.machine}
                           </span>
                         </div>
-                        <div className="text-[10px] text-muted-foreground mb-1 font-medium">
+                        <div className="text-[10px] text-muted-foreground mb-1 font-medium truncate">
                           {issue.product}
                         </div>
-                        <p className={issue.isDelay ? "text-xs text-orange-500 font-medium flex items-center gap-1" : "text-xs text-red-500 font-medium flex items-center gap-1"}>
-                          {issue.isDelay ? <Timer className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                          {issue.isDelay 
-                            ? `Retraso: +${issue.totalDelay} min` 
-                            : `Espera: ${issue.totalWait} min`
+                        <p
+                          className={
+                            issue.isDelay
+                              ? "text-xs text-orange-500 font-medium flex items-center gap-1"
+                              : "text-xs text-red-500 font-medium flex items-center gap-1"
                           }
+                        >
+                          {issue.isDelay ? (
+                            <Timer className="h-3 w-3" />
+                          ) : (
+                            <Clock className="h-3 w-3" />
+                          )}
+                          {issue.isDelay
+                            ? `Retraso: +${issue.totalDelay} min`
+                            : `Espera: ${issue.totalWait} min`}
                         </p>
                       </div>
+
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-xs ml-2"
+                        className="h-8 text-xs ml-3 shrink-0"
                         onClick={() => loadSuggestion(issue.batch, issue.machine)}
                       >
-                        Analizar
+                        Analizar <ArrowRight className="ml-2 h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ))}
@@ -311,8 +422,8 @@ export default function MachineDetail() {
           </Card>
         )}
 
-        {/* --- SELECTORES --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* --- CONTROLES + KPIs --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -323,10 +434,7 @@ export default function MachineDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Select
-                value={selectedBatchId}
-                onValueChange={setSelectedBatchId}
-              >
+              <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Buscar lote..." />
                 </SelectTrigger>
@@ -375,10 +483,7 @@ export default function MachineDetail() {
               </Select>
             </CardContent>
           </Card>
-        </div>
 
-        {/* --- KPI CARDS --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
               <div>
@@ -412,29 +517,26 @@ export default function MachineDetail() {
           </Card>
         </div>
 
-        {/* --- ESTRUCTURA PRINCIPAL --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* --- COLUMNA IZQUIERDA (Gráficas Apiladas) --- */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* 1. GRÁFICA DE SECUENCIA */}
+        {/* --- LAYOUT PRINCIPAL --- */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          {/* --- CONTENIDO (izquierda) --- */}
+          <div className="xl:col-span-8 space-y-6">
+            {/* 1) GRÁFICA DE SECUENCIA */}
             {selectedRecord && stepsData.length > 0 ? (
-              <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-[500px]">
-                {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
+              <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-[520px]">
                 <div className="flex items-center gap-2 mb-6">
                   <ListFilter className="h-5 w-5 text-primary" />
-                  <div>
-                    <CardTitle className="text-lg font-semibold">
+                  <div className="min-w-0">
+                    <CardTitle className="text-lg font-semibold truncate">
                       Secuencia de Pasos ({selectedBatchId} - {selectedMachine})
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate">
                       {selectedRecord.productName}
                     </p>
                   </div>
                 </div>
 
-                <div className="h-[400px] w-full">
+                <div className="h-[420px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={stepsData}
@@ -471,27 +573,54 @@ export default function MachineDetail() {
                       <Legend
                         wrapperStyle={{ paddingTop: "10px" }}
                         payload={[
-                          { value: "Duración Real (min)", type: "rect", color: "hsl(var(--primary))" },
-                          { value: "Espera / Gap (min)", type: "rect", color: "#ef4444" },
-                          { value: "Duración Esperada (min)", type: "rect", color: "#fbbf24" },
+                          {
+                            value: "Duración Real (min)",
+                            type: "rect",
+                            color: "hsl(var(--primary))",
+                          },
+                          {
+                            value: "Espera / Gap (min)",
+                            type: "rect",
+                            color: "#ef4444",
+                          },
+                          {
+                            value: "Duración Esperada (min)",
+                            type: "rect",
+                            color: "#fbbf24",
+                          },
                         ]}
                       />
-                      <Bar dataKey="durationMin" name="Duración Real (min)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20}>
+                      <Bar
+                        dataKey="durationMin"
+                        name="Duración Real (min)"
+                        fill="hsl(var(--primary))"
+                        radius={[0, 4, 4, 0]}
+                        barSize={20}
+                      >
                         {stepsData.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={entry.stepName.includes("Espera") ? "#ef4444" : "hsl(var(--primary))"}
+                            fill={
+                              entry.stepName.includes("Espera")
+                                ? "#ef4444"
+                                : "hsl(var(--primary))"
+                            }
                           />
                         ))}
                       </Bar>
-                      <Bar dataKey="expectedDurationMin" name="Duración Esperada (min)" fill="#fbbf24" radius={[0, 4, 4, 0]} barSize={10} />
+                      <Bar
+                        dataKey="expectedDurationMin"
+                        name="Duración Esperada (min)"
+                        fill="#fbbf24"
+                        radius={[0, 4, 4, 0]}
+                        barSize={10}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </Card>
             ) : (
-              <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500 h-[500px]">
-                {/* --- DIMENSIÓN: ALTO FIJO DE 500px (Placeholder) --- */}
+              <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500 h-[520px]">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
                   <p className="text-sm font-medium">
@@ -501,261 +630,370 @@ export default function MachineDetail() {
               </Card>
             )}
 
-            {/* 2. GRÁFICA DE MATERIALES */}
+            {/* 2) CONSUMO DE MATERIALES */}
             {materialsData.length > 0 && (
-                <Card className="bg-card border-border shadow-sm h-[500px] flex flex-col">
-                    {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
-                    <CardHeader className="pb-3 border-b border-border">
-                        <div className="flex items-center gap-2">
-                            <Scale className="h-5 w-5 text-green-600" />
-                            <CardTitle className="text-lg">Consumo de Materiales</CardTitle>
-                        </div>
-                        <CardDescription>Real vs Esperado (Acumulado)</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1">
-                        <div className="h-[400px] w-full p-4">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={materialsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
-                                        </linearGradient>
-                                        <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                                    <XAxis dataKey="name" tick={{fontSize: 12}} interval={0} angle={-30} textAnchor="end" height={80} />
-                                    <YAxis tick={{fontSize: 12}} />
-                                    <Tooltip contentStyle={{ fontSize: '14px' }} />
-                                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                                    <Area type="monotone" dataKey="totalExpected" stroke="#94a3b8" fillOpacity={1} fill="url(#colorExp)" name="Meta (kg/hl)" />
-                                    <Area type="monotone" dataKey="totalReal" stroke="#16a34a" fillOpacity={0.6} fill="url(#colorReal)" name="Real (kg/hl)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+              <Card className="bg-card border-border shadow-sm h-[500px] flex flex-col">
+                <CardHeader className="pb-3 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-green-600" />
+                    <CardTitle className="text-lg">Consumo de Materiales</CardTitle>
+                  </div>
+                  <CardDescription>Real vs Esperado (Acumulado)</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0 flex-1">
+                  <div className="h-[400px] w-full p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={materialsData}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
 
-            {/* 3. GRÁFICA DE PARÁMETROS */}
-            {parametersData.length > 0 && (
-                <Card className="bg-card border-border shadow-sm h-[500px] flex flex-col">
-                    {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
-                    <CardHeader className="pb-3 border-b border-border">
-                        <div className="flex items-center gap-2">
-                            <Gauge className="h-5 w-5 text-blue-600" />
-                            <CardTitle className="text-lg">Parámetros de Proceso</CardTitle>
-                        </div>
-                        <CardDescription>Variación de Temperatura/Presión por Paso</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1">
-                        <div className="h-[400px] w-full p-4">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={parametersData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                                    <XAxis dataKey="stepName" tick={{fontSize: 12}} interval={0} angle={-30} textAnchor="end" height={80} />
-                                    <YAxis tick={{fontSize: 12}} />
-                                    <Tooltip contentStyle={{ fontSize: '14px' }} />
-                                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                                    <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorParam)" name="Valor Registrado" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
 
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 12 }}
+                          interval={materialTickInterval}
+                          minTickGap={12}
+                          angle={-20}
+                          textAnchor="end"
+                          height={90}
+                          tickFormatter={(v) => truncateLabel(v, 18)}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+
+                        {/* ✅ TOOLTIP bonito + valores con unidad */}
+                        <Tooltip
+                          contentStyle={themedTooltipContentStyle}
+                          labelStyle={themedTooltipLabelStyle}
+                          itemStyle={themedTooltipItemStyle}
+                          cursor={{ fill: "transparent" }}
+                          labelFormatter={(label) => String(label)}
+                          formatter={(value: any, name: any) => {
+                            return [`${formatNumber(value, 2)} kg/hl`, name];
+                          }}
+                        />
+
+                        <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                        <Area
+                          type="monotone"
+                          dataKey="totalExpected"
+                          stroke="#94a3b8"
+                          fillOpacity={1}
+                          fill="url(#colorExp)"
+                          name="Meta"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="totalReal"
+                          stroke="#16a34a"
+                          fillOpacity={0.6}
+                          fill="url(#colorReal)"
+                          name="Real"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          {/* --- COLUMNA DERECHA (Panel de Insights) --- */}
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            
-            {/* TARJETA GEMINI */}
-            {anomaliesReport.length > 0 && (
-              <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-indigo-500/10 dark:via-purple-500/5 dark:to-fuchsia-500/10" />
-                <CardHeader className="relative pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/40">
-                        <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+          {/* --- PANEL INSIGHTS (derecha) --- */}
+          <div className="xl:col-span-4">
+            <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
+              {/* TARJETA GEMINI */}
+              {anomaliesReport.length > 0 && (
+                <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-indigo-500/10 dark:via-purple-500/5 dark:to-fuchsia-500/10" />
+                  <CardHeader className="relative pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/40">
+                          <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <CardTitle className="text-base font-semibold leading-none">
+                            Gemini Insights
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            Diagnóstico de ineficiencias.
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <CardTitle className="text-base font-semibold leading-none">
-                          Gemini Insights
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          Diagnóstico de ineficiencias.
-                        </CardDescription>
-                      </div>
+                      <Badge className="bg-indigo-600/10 text-indigo-700 border border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-800/40">
+                        AI
+                      </Badge>
                     </div>
-                    <Badge className="bg-indigo-600/10 text-indigo-700 border border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-800/40">
-                      AI
-                    </Badge>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="gap-1.5">
-                      <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
-                      {anomaliesReport.length} problemas
-                    </Badge>
-                    <Badge variant="secondary" className="gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-blue-500" />
-                      {Math.round(totalImpactMinutes * 10) / 10} min impactados
-                    </Badge>
-                  </div>
-                </CardHeader>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="gap-1.5">
+                        <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+                        {anomaliesReport.length} problemas
+                      </Badge>
+                      <Badge variant="secondary" className="gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-blue-500" />
+                        {Math.round(totalImpactMinutes * 10) / 10} min impactados
+                      </Badge>
+                    </div>
+                  </CardHeader>
 
-                <CardContent className="relative pt-0">
-                  {!aiAnalysis ? (
-                    <div className="space-y-4">
-                      <div className="rounded-lg border border-border/60 bg-background/60 p-3">
-                        <p className="text-sm text-muted-foreground">
-                          Analizaré tanto <span className="font-medium text-foreground">paradas (gaps)</span> como <span className="font-medium text-foreground">pasos lentos</span>.
-                        </p>
-                      </div>
-                      <Button
-                        onClick={handleConsultAI}
-                        disabled={isAnalyzing}
-                        className="w-full text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 hover:from-indigo-700 hover:via-purple-700 hover:to-fuchsia-700 shadow-sm"
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Analizando...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            Consultar a Gemini
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <Badge className="bg-green-500/10 text-green-700 border border-green-500/20">
-                          Respuesta generada
-                        </Badge>
+                  <CardContent className="relative pt-0">
+                    {!aiAnalysis ? (
+                      <div className="space-y-4">
+                        <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                          <p className="text-sm text-muted-foreground">
+                            Analizaré tanto{" "}
+                            <span className="font-medium text-foreground">
+                              paradas (gaps)
+                            </span>{" "}
+                            como{" "}
+                            <span className="font-medium text-foreground">
+                              pasos lentos
+                            </span>
+                            .
+                          </p>
+                        </div>
                         <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8"
-                          onClick={() => setAiAnalysis(null)}
+                          onClick={handleConsultAI}
+                          disabled={isAnalyzing}
+                          className="w-full text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 hover:from-indigo-700 hover:via-purple-700 hover:to-fuchsia-700 shadow-sm"
                         >
-                          Limpiar
+                          {isAnalyzing ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Analizando...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              Consultar a Gemini{" "}
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </>
+                          )}
                         </Button>
                       </div>
-                      <ScrollArea className="h-[400px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              p: ({ children }) => <p className="mb-2 leading-relaxed text-foreground/90">{children}</p>,
-                              ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
-                              ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
-                              li: ({ children }) => <li className="text-foreground/80">{children}</li>,
-                              strong: ({ children }) => <span className="font-bold text-indigo-500 dark:text-indigo-400">{children}</span>,
-                            }}
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge className="bg-green-500/10 text-green-700 border border-green-500/20">
+                            Respuesta generada
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8"
+                            onClick={() => setAiAnalysis(null)}
                           >
-                            {aiAnalysis}
-                          </ReactMarkdown>
+                            Limpiar
+                          </Button>
                         </div>
-                      </ScrollArea>
+                        <ScrollArea className="h-[360px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
+                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                p: ({ children }) => (
+                                  <p className="mb-2 leading-relaxed text-foreground/90">
+                                    {children}
+                                  </p>
+                                ),
+                                ul: ({ children }) => (
+                                  <ul className="list-disc pl-4 mb-2 space-y-1">
+                                    {children}
+                                  </ul>
+                                ),
+                                ol: ({ children }) => (
+                                  <ol className="list-decimal pl-4 mb-2 space-y-1">
+                                    {children}
+                                  </ol>
+                                ),
+                                li: ({ children }) => (
+                                  <li className="text-foreground/80">{children}</li>
+                                ),
+                                strong: ({ children }) => (
+                                  <span className="font-bold text-indigo-500 dark:text-indigo-400">
+                                    {children}
+                                  </span>
+                                ),
+                              }}
+                            >
+                              {aiAnalysis}
+                            </ReactMarkdown>
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* LISTA DETALLADA DE ANOMALÍAS */}
+              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)]">
+                <CardHeader className="pb-3 border-b border-border">
+                  <div className="flex items-center gap-2 text-foreground">
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                    <CardTitle className="text-lg">Detalle de Ineficiencias</CardTitle>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {anomaliesReport.length > 0
+                      ? `Lista de ${anomaliesReport.length} anomalías encontradas`
+                      : "Sin ineficiencias detectadas"}
+                  </p>
+                </CardHeader>
+
+                <CardContent className="flex-1 p-0">
+                  {anomaliesReport.length > 0 ? (
+                    <ScrollArea className="h-full w-full p-4">
+                      <div className="space-y-4">
+                        {anomaliesReport.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`p-3 rounded-lg border text-sm animate-in fade-in slide-in-from-right-4 duration-500 ${
+                              item.type === "gap"
+                                ? "bg-red-500/10 border-red-500/20"
+                                : "bg-orange-500/10 border-orange-500/20"
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  item.type === "gap"
+                                    ? "text-red-500 border-red-500/30 bg-red-500/5 font-bold"
+                                    : "text-orange-600 border-orange-500/30 bg-orange-500/5 font-bold"
+                                }
+                              >
+                                {item.type === "gap" ? "PARADA / GAP" : "PASO LENTO"}
+                              </Badge>
+                              <span
+                                className={`font-mono font-bold ${
+                                  item.type === "gap" ? "text-red-500" : "text-orange-600"
+                                }`}
+                              >
+                                {item.type === "gap"
+                                  ? `${item.duration} min`
+                                  : `+${item.delta} min`}
+                              </span>
+                            </div>
+
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <p className="font-medium text-foreground text-sm mb-1">
+                                {item.name}
+                              </p>
+
+                              {item.type === "delay" && (
+                                <div className="flex justify-between text-xs px-2 py-1 bg-background/50 rounded border border-border/50 mb-2">
+                                  <span>
+                                    Real: <strong>{item.duration}m</strong>
+                                  </span>
+                                  <span>
+                                    Esperado: <strong>{item.expected}m</strong>
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="flex items-center gap-1 opacity-80">
+                                <Clock className="h-3 w-3" />
+                                <span>Inicio: {item.startTime}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
+                      <CheckCircle2 className="h-12 w-12 text-green-500 mb-3 opacity-20" />
+                      <p className="text-sm">Todo correcto</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            )}
-
-            {/* LISTA DETALLADA DE ANOMALÍAS */}
-            {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
-            <Card className="bg-card border-border flex flex-col h-[500px]">
-              <CardHeader className="pb-3 border-b border-border">
-                <div className="flex items-center gap-2 text-foreground">
-                  <AlertCircle className="h-5 w-5 text-orange-500" />
-                  <CardTitle className="text-lg">Detalle de Ineficiencias</CardTitle>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {anomaliesReport.length > 0
-                    ? `Lista de ${anomaliesReport.length} anomalías encontradas`
-                    : "Sin ineficiencias detectadas"}
-                </p>
-              </CardHeader>
-
-              <CardContent className="flex-1 p-0">
-                {anomaliesReport.length > 0 ? (
-                  /* --- SCROLLAREA OCUPA TODO EL ESPACIO RESTANTE DEL CARD --- */
-                  <ScrollArea className="h-full w-full p-4">
-                    <div className="space-y-4">
-                      {anomaliesReport.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`p-3 rounded-lg border text-sm animate-in fade-in slide-in-from-right-4 duration-500 ${
-                              item.type === 'gap' 
-                              ? 'bg-red-500/10 border-red-500/20' 
-                              : 'bg-orange-500/10 border-orange-500/20'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <Badge
-                              variant="outline"
-                              className={item.type === 'gap' 
-                                ? "text-red-500 border-red-500/30 bg-red-500/5 font-bold" 
-                                : "text-orange-600 border-orange-500/30 bg-orange-500/5 font-bold"
-                              }
-                            >
-                              {item.type === 'gap' ? 'PARADA / GAP' : 'PASO LENTO'}
-                            </Badge>
-                            <span className={`font-mono font-bold ${item.type === 'gap' ? 'text-red-500' : 'text-orange-600'}`}>
-                              {item.type === 'gap' ? `${item.duration} min` : `+${item.delta} min`}
-                            </span>
-                          </div>
-
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <p className="font-medium text-foreground text-sm mb-1">
-                                {item.name}
-                            </p>
-                            
-                            {item.type === 'delay' && (
-                                <div className="flex justify-between text-xs px-2 py-1 bg-background/50 rounded border border-border/50 mb-2">
-                                    <span>Real: <strong>{item.duration}m</strong></span>
-                                    <span>Esperado: <strong>{item.expected}m</strong></span>
-                                </div>
-                            )}
-
-                            <div className="flex items-center gap-1 opacity-80">
-                              <Clock className="h-3 w-3" />
-                              <span>Inicio: {item.startTime}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
-                    <CheckCircle2 className="h-12 w-12 text-green-500 mb-3 opacity-20" />
-                    <p className="text-sm">Todo correcto</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            </div>
           </div>
         </div>
 
-        {/* --- 5. GRÁFICO HISTÓRICO (SE MANTIENE) --- */}
+        {/* ✅ FULL-WIDTH: PARÁMETROS DE PROCESO */}
+        {parametersData.length > 0 && (
+          <Card className="bg-card border-border shadow-sm w-full flex flex-col">
+            <CardHeader className="pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-blue-600" />
+                <Thermometer className="h-5 w-5 text-sky-600 opacity-70" />
+                <CardTitle className="text-lg">Parámetros de Proceso</CardTitle>
+              </div>
+              <CardDescription>Variación de Temperatura/Presión por Paso</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[420px] w-full p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={parametersData}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+
+                    <XAxis
+                      dataKey="stepName"
+                      tick={{ fontSize: 12 }}
+                      interval={paramTickInterval}
+                      minTickGap={12}
+                      angle={-20}
+                      textAnchor="end"
+                      height={90}
+                      tickFormatter={(v) => truncateLabel(v, 22)}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+
+                    {/* ✅ TOOLTIP bonito + unidad automática */}
+                    <Tooltip
+                      contentStyle={themedTooltipContentStyle}
+                      labelStyle={themedTooltipLabelStyle}
+                      itemStyle={themedTooltipItemStyle}
+                      cursor={{ fill: "transparent" }}
+                      labelFormatter={(label) => String(label)}
+                      formatter={(value: any, name: any, props: any) => {
+                        const unit = getParamUnit(props?.payload);
+                        return [`${formatNumber(value, 2)}${unit}`, name];
+                      }}
+                    />
+
+                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#3b82f6"
+                      fillOpacity={1}
+                      fill="url(#colorParam)"
+                      name="Valor Registrado"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ✅ FULL-WIDTH: TENDENCIA HISTÓRICA */}
         {machineHistoryData.length > 0 && (
-          <Card className="bg-card border-border h-[400px] p-6 opacity-90 hover:opacity-100 transition-opacity">
+          <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
             <CardTitle className="mb-6 text-lg font-semibold flex items-center justify-between">
               <span>Tendencia Histórica</span>
               <span className="text-sm font-normal text-muted-foreground">
@@ -763,30 +1001,20 @@ export default function MachineDetail() {
               </span>
             </CardTitle>
 
-            <div className="h-[300px] w-full">
+            <div className="h-[340px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={machineHistoryData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient
-                      id="colorRealTime"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
+                    <linearGradient id="colorRealTime" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
                       <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
 
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    opacity={0.2}
-                    vertical={false}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
                   <XAxis
                     dataKey="batchId"
                     tick={{
