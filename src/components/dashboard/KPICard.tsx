@@ -10,6 +10,7 @@ interface KPICardProps {
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
   variant?: "default" | "success" | "warning" | "danger";
+  onClick?: () => void; // <--- Nuevo prop opcional
 }
 
 export function KPICard({ 
@@ -19,7 +20,8 @@ export function KPICard({
   icon: Icon,
   trend,
   trendValue,
-  variant = "default" 
+  variant = "default",
+  onClick // <--- Recibimos la función
 }: KPICardProps) {
   const iconColors = {
     default: "text-muted-foreground",
@@ -35,7 +37,14 @@ export function KPICard({
   };
 
   return (
-    <Card className="bg-card border-border">
+    <Card 
+      // Agregamos clases para feedback visual (cursor y hover) si hay onClick
+      className={cn(
+        "bg-card border-border transition-all duration-200",
+        onClick && "cursor-pointer hover:bg-accent/50 hover:border-primary/50 active:scale-[0.99]"
+      )}
+      onClick={onClick}
+    >
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">

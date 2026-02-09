@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // <--- Importar navegación
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { EfficiencyChart } from "@/components/dashboard/EfficiencyChart";
@@ -14,7 +15,7 @@ import {
   AlertTriangle 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Importamos componentes de Card
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { processExcelFile } from "@/utils/excelProcessor";
 import { useData } from "@/context/DataContext"; 
@@ -30,13 +31,12 @@ export default function Overview() {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate(); // <--- Hook de navegación
 
   const processFile = async (file: File) => {
     setLoading(true);
     try {
-      // Pequeño delay para apreciar la animación
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const processedData = await processExcelFile(file);
       setData(processedData); 
       toast({
@@ -85,6 +85,20 @@ export default function Overview() {
         title: "Ingrediente incorrecto",
         description: "Por favor arrastra un archivo Excel (.xlsx o .xls).",
       });
+    }
+  };
+
+  // --- LÓGICA DE NAVEGACIÓN ---
+  const highestIdle = getMachineWithHighestIdleTime(data);
+
+  const handleNavigateToDetail = () => {
+    if (highestIdle.machine !== "N/A") {
+      // Guardamos la máquina en el localStorage que usa MachineDetail.tsx
+      // Usamos JSON.stringify porque el hook useLocalStorage espera formato JSON
+      window.localStorage.setItem("detail-machine-selection-v2", JSON.stringify(highestIdle.machine));
+      
+      // Navegamos a la página de detalle
+      navigate("/machine");
     }
   };
 
@@ -152,7 +166,6 @@ export default function Overview() {
 
   const totalBatches = getTotalBatches(data);
   const avgDeviation = getAverageCycleDeviation(data);
-  const highestIdle = getMachineWithHighestIdleTime(data);
 
   return (
     <DashboardLayout>
@@ -167,7 +180,16 @@ export default function Overview() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <KPICard title="Total Lotes" value={totalBatches} subtitle="Cargados" icon={Boxes} variant="success" />
         <KPICard title="Desviación Promedio" value={`${avgDeviation > 0 ? '+' : ''}${avgDeviation}%`} subtitle="Vs Esperado" icon={TrendingUp} variant={avgDeviation > 10 ? "danger" : "success"} />
-        <KPICard title="Mayor Tiempo Muerto" value={`${highestIdle.idleTime} min`} subtitle={`Equipo: ${highestIdle.machine}`} icon={Clock} variant="warning" />
+        
+        {/* --- KPI CLICABLE --- */}
+        <KPICard 
+          title="Mayor Tiempo Muerto" 
+          value={`${highestIdle.idleTime} min`} 
+          subtitle={`Equipo: ${highestIdle.machine}`} 
+          icon={Clock} 
+          variant="warning"
+          onClick={handleNavigateToDetail} // <--- Evento Click
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -175,7 +197,6 @@ export default function Overview() {
         <div className="lg:col-span-1"><AlertsWidget data={data} /></div>
       </div>
 
-      {/* --- NUEVA SECCIÓN: GLOSARIO DE INDICADORES --- */}
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
@@ -187,7 +208,6 @@ export default function Overview() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           
-          {/* Definición de RETRASO */}
           <div className="flex gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
             <div className="mt-1">
               <div className="p-2 rounded-full bg-chart-delay/10">
@@ -208,7 +228,6 @@ export default function Overview() {
             </div>
           </div>
 
-          {/* Definición de TIEMPO MUERTO */}
           <div className="flex gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
             <div className="mt-1">
               <div className="p-2 rounded-full bg-orange-500/10">

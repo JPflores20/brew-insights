@@ -37,6 +37,7 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
+  Timer, // Icono para retardos
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -54,15 +55,14 @@ export default function MachineDetail() {
   // --- ESTADOS PARA GEMINI ---
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  // ---------------------------
-
+  
   const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
 
-  // Mapa auxiliar para obtener nombre de producto rápido
+  // Mapa de productos
   const batchProductMap = useMemo(() => {
     const map = new Map<string, string>();
-    data.forEach(d => {
-        if(d.productName) map.set(d.CHARG_NR, d.productName);
+    data.forEach((d) => {
+      if (d.productName) map.set(d.CHARG_NR, d.productName);
     });
     return map;
   }, [data]);
@@ -76,36 +76,34 @@ export default function MachineDetail() {
     ""
   );
 
-  // Limpiar análisis al cambiar de lote/máquina
   useEffect(() => {
     setAiAnalysis(null);
   }, [selectedBatchId, selectedMachine]);
 
-  // --- LÓGICA DE DETECCION GLOBAL DE PROBLEMAS ---
+  // --- 1. DETECCIÓN DE PROBLEMAS (Esperas + Retrasos) ---
   const problematicBatches = useMemo(() => {
     const issues: any[] = [];
     data.forEach((record) => {
-      const waitSteps = record.steps
-        ? record.steps.filter((s) => s.stepName.includes("Espera"))
-        : [];
-      if (waitSteps.length > 0) {
-        const totalWaitTime = waitSteps.reduce(
-          (acc, step) => acc + step.durationMin,
-          0
-        );
-        if (totalWaitTime > 1) {
-          issues.push({
-            batch: record.CHARG_NR,
-            product: record.productName, // Añadido para mostrar en sugerencias si quisieras
-            machine: record.TEILANL_GRUPO,
-            totalWait: Math.round(totalWaitTime * 100) / 100,
-            waitCount: waitSteps.length,
-            timestamp: record.timestamp,
-          });
-        }
+      // Detectamos si hay Gap grande O si hay Retraso (Delta) grande
+      const hasGap = record.idle_wall_minus_sumsteps_min > 5;
+      const hasDelay = record.delta_total_min > 5;
+
+      if (hasGap || hasDelay) {
+        issues.push({
+          batch: record.CHARG_NR,
+          product: record.productName,
+          machine: record.TEILANL_GRUPO,
+          totalWait: record.idle_wall_minus_sumsteps_min,
+          totalDelay: record.delta_total_min,
+          isDelay: !hasGap && hasDelay, // Flag para identificar el tipo principal
+          timestamp: record.timestamp,
+        });
       }
     });
-    return issues.sort((a, b) => b.totalWait - a.totalWait);
+    // Ordenamos por magnitud del problema
+    return issues.sort((a, b) => 
+        Math.max(b.totalWait, b.totalDelay) - Math.max(a.totalWait, a.totalDelay)
+    );
   }, [data]);
 
   useEffect(() => {
@@ -136,23 +134,35 @@ export default function MachineDetail() {
   }, [availableMachinesForBatch, selectedMachine, setSelectedMachine]);
 
   const selectedRecord = data.find(
-    (d) => d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
+    (d) =>
+      d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
   );
 
   const stepsData = selectedRecord?.steps || [];
 
-  const gapsReport = useMemo(() => {
+  // --- 2. REPORTE UNIFICADO (AnomaliesReport) ---
+  // Reemplaza a gapsReport para incluir también pasos lentos
+  const anomaliesReport = useMemo(() => {
     if (!stepsData.length) return [];
     return stepsData
       .map((step, index) => {
-        if (!step.stepName.includes("Espera")) return null;
+        const isGap = step.stepName.includes("Espera");
+        // Un paso es lento si dura más de lo esperado (con 1 min de tolerancia)
+        const isSlow = !isGap && step.expectedDurationMin > 0 && step.durationMin > (step.expectedDurationMin + 1);
+
+        if (!isGap && !isSlow) return null;
+
         const prevStep = index > 0 ? stepsData[index - 1].stepName : "Inicio";
         const nextStep =
           index < stepsData.length - 1 ? stepsData[index + 1].stepName : "Fin";
+        
         return {
           id: index,
+          type: isGap ? 'gap' : 'delay', // 'gap' (rojo) o 'delay' (naranja)
           name: step.stepName,
-          duration: step.durationMin,
+          duration: step.durationMin, // Lo que duró realmente
+          expected: step.expectedDurationMin,
+          delta: isSlow ? Math.round((step.durationMin - step.expectedDurationMin)*100)/100 : 0, // Cuánto extra tardó
           startTime: new Date(step.startTime).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -161,29 +171,22 @@ export default function MachineDetail() {
           nextStep,
         };
       })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      // Ordenar por impacto (duración del gap o magnitud del retraso)
+      .sort((a, b) => {
+          const impactA = a.type === 'gap' ? a.duration : a.delta;
+          const impactB = b.type === 'gap' ? b.duration : b.delta;
+          return impactB - impactA;
+      });
   }, [stepsData]);
 
-  // métricas para que la tarjeta de Gemini sea más informativa
-  const totalGapMinutes = useMemo(() => {
-    return gapsReport.reduce((acc, g) => {
-      const d =
-        typeof g.duration === "number" ? g.duration : Number(g.duration) || 0;
-      return acc + d;
+  // Métricas para la tarjeta AI
+  const totalImpactMinutes = useMemo(() => {
+    return anomaliesReport.reduce((acc, g) => {
+        const impact = g.type === 'gap' ? g.duration : g.delta;
+        return acc + impact;
     }, 0);
-  }, [gapsReport]);
-
-  const topGaps = useMemo(() => {
-    return [...gapsReport]
-      .sort((a, b) => {
-        const da =
-          typeof a.duration === "number" ? a.duration : Number(a.duration) || 0;
-        const db =
-          typeof b.duration === "number" ? b.duration : Number(b.duration) || 0;
-        return db - da;
-      })
-      .slice(0, 3);
-  }, [gapsReport]);
+  }, [anomaliesReport]);
 
   const machineHistoryData = useMemo(() => {
     if (!selectedMachine) return [];
@@ -211,9 +214,8 @@ export default function MachineDetail() {
     window.scrollTo({ top: 400, behavior: "smooth" });
   };
 
-  // --- FUNCIÓN PARA LLAMAR A GEMINI ---
   const handleConsultAI = async () => {
-    if (gapsReport.length === 0) return;
+    if (anomaliesReport.length === 0) return;
 
     setIsAnalyzing(true);
     setAiAnalysis(null);
@@ -221,7 +223,7 @@ export default function MachineDetail() {
     const result = await analyzeProcessGaps(
       selectedBatchId,
       selectedMachine,
-      gapsReport
+      anomaliesReport
     );
 
     setAiAnalysis(result);
@@ -252,6 +254,7 @@ export default function MachineDetail() {
           </p>
         </div>
 
+        {/* --- PANEL DE SUGERENCIAS --- */}
         {problematicBatches.length > 0 && (
           <Card className="bg-card border-border border-l-4 border-l-orange-500">
             <CardHeader className="pb-3">
@@ -262,8 +265,7 @@ export default function MachineDetail() {
                 </CardTitle>
               </div>
               <CardDescription>
-                Se han encontrado {problematicBatches.length} registros con
-                tiempos muertos significativos.
+                Se han encontrado {problematicBatches.length} registros con ineficiencias (Esperas o Retrasos).
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -287,13 +289,15 @@ export default function MachineDetail() {
                           </span>
                         </div>
                         <div className="text-[10px] text-muted-foreground mb-1 font-medium">
-                            {/* Mostramos el producto en la sugerencia también */}
-                            {issue.product}
+                          {issue.product}
                         </div>
-                        <p className="text-xs text-red-500 font-medium flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          Perdido: {issue.totalWait} min ({issue.waitCount}{" "}
-                          esperas)
+                        {/* Mostramos distintamente si es espera o retraso */}
+                        <p className={issue.isDelay ? "text-xs text-orange-500 font-medium flex items-center gap-1" : "text-xs text-red-500 font-medium flex items-center gap-1"}>
+                          {issue.isDelay ? <Timer className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                          {issue.isDelay 
+                            ? `Retraso: +${issue.totalDelay} min` 
+                            : `Espera: ${issue.totalWait} min`
+                          }
                         </p>
                       </div>
                       <Button
@@ -312,6 +316,7 @@ export default function MachineDetail() {
           </Card>
         )}
 
+        {/* --- SELECTORES --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardHeader className="pb-2 pt-4">
@@ -377,6 +382,7 @@ export default function MachineDetail() {
           </Card>
         </div>
 
+        {/* --- KPI CARDS --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
@@ -412,7 +418,7 @@ export default function MachineDetail() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* GRÁFICA (Ocupa 2 espacios) */}
+          {/* GRÁFICA */}
           <div className="lg:col-span-2 space-y-6">
             {selectedRecord && stepsData.length > 0 ? (
               <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-full">
@@ -423,7 +429,7 @@ export default function MachineDetail() {
                       Secuencia de Pasos ({selectedBatchId} - {selectedMachine})
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        {selectedRecord.productName} {/* Muestra el producto aquí también */}
+                      {selectedRecord.productName}
                     </p>
                   </div>
                 </div>
@@ -462,7 +468,27 @@ export default function MachineDetail() {
                         }}
                         cursor={{ fill: "transparent" }}
                       />
-                      <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                      {/* LEYENDA MEJORADA */}
+                      <Legend
+                        wrapperStyle={{ paddingTop: "10px" }}
+                        payload={[
+                          {
+                            value: "Duración Real (min)",
+                            type: "rect",
+                            color: "hsl(var(--primary))",
+                          },
+                          {
+                            value: "Espera / Gap (min)",
+                            type: "rect",
+                            color: "#ef4444",
+                          },
+                          {
+                            value: "Duración Esperada (min)",
+                            type: "rect",
+                            color: "#fbbf24",
+                          },
+                        ]}
+                      />
                       <Bar
                         dataKey="durationMin"
                         name="Duración Real (min)"
@@ -506,10 +532,10 @@ export default function MachineDetail() {
 
           {/* COLUMNA DERECHA: GEMINI AI + REPORTE */}
           <div className="lg:col-span-1 flex flex-col gap-4">
-            {/* ✅ TARJETA GEMINI MEJORADA CON MARKDOWN */}
-            {gapsReport.length > 0 && (
+            
+            {/* TARJETA GEMINI */}
+            {anomaliesReport.length > 0 && (
               <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
-                {/* Fondo con gradiente + glow */}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-indigo-500/10 dark:via-purple-500/5 dark:to-fuchsia-500/10" />
                 <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-indigo-500/15 blur-3xl" />
                 <div className="pointer-events-none absolute -bottom-28 -left-28 h-64 w-64 rounded-full bg-fuchsia-500/15 blur-3xl" />
@@ -526,7 +552,7 @@ export default function MachineDetail() {
                           Gemini Insights
                         </CardTitle>
                         <CardDescription className="text-xs">
-                          Diagnóstico y recomendaciones para reducir esperas.
+                          Diagnóstico de ineficiencias.
                         </CardDescription>
                       </div>
                     </div>
@@ -536,16 +562,16 @@ export default function MachineDetail() {
                     </Badge>
                   </div>
 
-                  {/* Chips de contexto */}
+                  {/* Chips Resumen */}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge variant="secondary" className="gap-1.5">
-                      <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-                      {gapsReport.length} esperas
+                      <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+                      {anomaliesReport.length} problemas
                     </Badge>
 
                     <Badge variant="secondary" className="gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-blue-500" />
-                      {Math.round(totalGapMinutes * 10) / 10} min
+                      {Math.round(totalImpactMinutes * 10) / 10} min impactados
                     </Badge>
 
                     <Badge
@@ -563,48 +589,39 @@ export default function MachineDetail() {
                     <div className="space-y-4">
                       <div className="rounded-lg border border-border/60 bg-background/60 p-3">
                         <p className="text-sm text-muted-foreground">
-                          Puedo identificar{" "}
-                          <span className="font-medium text-foreground">
-                            causas probables
-                          </span>{" "}
-                          de las esperas y proponer{" "}
-                          <span className="font-medium text-foreground">
-                            acciones concretas
-                          </span>{" "}
-                          (operación, setup, secuencia, coordinación).
+                          Analizaré tanto <span className="font-medium text-foreground">paradas (gaps)</span> como <span className="font-medium text-foreground">pasos lentos</span>.
                         </p>
 
-                        {/* Preview top esperas */}
                         <div className="mt-3 space-y-2">
                           <p className="text-xs text-muted-foreground">
-                            Top esperas:
+                            Top problemas detectados:
                           </p>
                           <div className="space-y-2">
-                            {topGaps.length ? (
-                              topGaps.map((gap) => (
-                                <div
-                                  key={gap.id}
-                                  className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-background px-3 py-2"
-                                  title={`${gap.prevStep} -> ${gap.nextStep}`}
-                                >
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-medium truncate">
-                                      {gap.name}
-                                    </p>
-                                    <p className="text-[11px] text-muted-foreground truncate">
-                                      {gap.prevStep} → {gap.nextStep}
-                                    </p>
-                                  </div>
-                                  <span className="shrink-0 text-xs font-mono font-semibold text-red-500">
-                                    {gap.duration} min
-                                  </span>
+                            {anomaliesReport.slice(0, 3).map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-background px-3 py-2"
+                                title={item.type === 'gap' ? "Máquina detenida" : "Paso más lento de lo normal"}
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-xs font-medium truncate flex items-center gap-1.5">
+                                    {/* Indicador visual de tipo */}
+                                    {item.type === 'gap' ? (
+                                        <span className="w-2 h-2 rounded-full bg-red-500" />
+                                    ) : (
+                                        <span className="w-2 h-2 rounded-full bg-orange-400" />
+                                    )}
+                                    {item.name}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground truncate">
+                                    {item.type === 'delay' ? `Esp: ${item.expected}m` : `${item.prevStep} →`}
+                                  </p>
                                 </div>
-                              ))
-                            ) : (
-                              <p className="text-xs text-muted-foreground">
-                                Sin detalle para previsualizar.
-                              </p>
-                            )}
+                                <span className={item.type === 'gap' ? "shrink-0 text-xs font-mono font-semibold text-red-500" : "shrink-0 text-xs font-mono font-semibold text-orange-500"}>
+                                  {item.type === 'gap' ? item.duration : `+${item.delta}`} min
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -626,15 +643,9 @@ export default function MachineDetail() {
                           </>
                         )}
                       </Button>
-
-                      <p className="text-[11px] text-muted-foreground text-center">
-                        Se envía el lote, equipo y el reporte de esperas (sin
-                        datos personales).
-                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {/* Barra de acciones */}
                       <div className="flex items-center justify-between gap-2">
                         <Badge className="bg-green-500/10 text-green-700 border border-green-500/20 dark:bg-green-500/10 dark:text-green-200 dark:border-green-500/20">
                           Respuesta generada
@@ -669,7 +680,6 @@ export default function MachineDetail() {
                         </div>
                       </div>
 
-                      {/* Contenedor de respuesta renderizado con MARKDOWN */}
                       <ScrollArea className="h-[290px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
                         <div className="prose prose-sm dark:prose-invert max-w-none">
                           <ReactMarkdown
@@ -710,11 +720,6 @@ export default function MachineDetail() {
                                   {children}
                                 </h2>
                               ),
-                              h3: ({ children }) => (
-                                <h3 className="text-sm font-bold mb-1 mt-2 text-foreground">
-                                  {children}
-                                </h3>
-                              ),
                               blockquote: ({ children }) => (
                                 <blockquote className="border-l-2 border-indigo-500 pl-4 italic text-muted-foreground my-2">
                                   {children}
@@ -726,79 +731,79 @@ export default function MachineDetail() {
                           </ReactMarkdown>
                         </div>
                       </ScrollArea>
-
-                      <div className="rounded-lg border border-border/60 bg-background/60 p-3">
-                        <p className="text-xs text-muted-foreground">
-                          Tip: si algo no cuadra, revisa primero{" "}
-                          <span className="font-medium text-foreground">
-                            setup/cambio de formato
-                          </span>
-                          ,{" "}
-                          <span className="font-medium text-foreground">
-                            interbloqueos
-                          </span>{" "}
-                          y{" "}
-                          <span className="font-medium text-foreground">
-                            coordinación con la operación anterior/siguiente
-                          </span>
-                          .
-                        </p>
-                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
             )}
 
-            {/* REPORTE DE ANOMALÍAS ORIGINAL */}
+            {/* LISTA DE DETALLES (GAPS Y DELAYS) */}
             <Card className="bg-card border-border flex-1 flex flex-col">
               <CardHeader className="pb-3 border-b border-border">
-                <div className="flex items-center gap-2 text-red-500">
-                  <AlertCircle className="h-5 w-5" />
-                  <CardTitle className="text-lg">Detalle de Esperas</CardTitle>
+                <div className="flex items-center gap-2 text-foreground">
+                  <AlertCircle className="h-5 w-5 text-orange-500" />
+                  <CardTitle className="text-lg">Detalle de Ineficiencias</CardTitle>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {gapsReport.length > 0
-                    ? `Lista de esperas encontradas en el lote ${selectedBatchId}`
-                    : "No hay esperas en este lote específico"}
+                  {anomaliesReport.length > 0
+                    ? `Lista de ${anomaliesReport.length} anomalías encontradas`
+                    : "Sin ineficiencias detectadas"}
                 </p>
               </CardHeader>
 
               <CardContent className="flex-1 p-0">
-                {gapsReport.length > 0 ? (
+                {anomaliesReport.length > 0 ? (
                   <ScrollArea className="h-[300px] w-full p-4">
                     <div className="space-y-4">
-                      {gapsReport.map((gap) => (
+                      {anomaliesReport.map((item) => (
                         <div
-                          key={gap.id}
-                          className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm animate-in fade-in slide-in-from-right-4 duration-500"
+                          key={item.id}
+                          className={`p-3 rounded-lg border text-sm animate-in fade-in slide-in-from-right-4 duration-500 ${
+                              item.type === 'gap' 
+                              ? 'bg-red-500/10 border-red-500/20' 
+                              : 'bg-orange-500/10 border-orange-500/20'
+                          }`}
                         >
                           <div className="flex justify-between items-start mb-2">
                             <Badge
                               variant="outline"
-                              className="text-red-500 border-red-500/30 bg-red-500/5 font-bold"
+                              className={item.type === 'gap' 
+                                ? "text-red-500 border-red-500/30 bg-red-500/5 font-bold" 
+                                : "text-orange-600 border-orange-500/30 bg-orange-500/5 font-bold"
+                              }
                             >
-                              {gap.name}
+                              {item.type === 'gap' ? 'PARADA / GAP' : 'PASO LENTO'}
                             </Badge>
-                            <span className="font-mono font-bold text-red-500">
-                              {gap.duration} min
+                            <span className={`font-mono font-bold ${item.type === 'gap' ? 'text-red-500' : 'text-orange-600'}`}>
+                              {item.type === 'gap' ? `${item.duration} min` : `+${item.delta} min`}
                             </span>
                           </div>
 
                           <div className="text-xs text-muted-foreground space-y-1">
-                            <div className="flex items-center gap-1">
+                            <p className="font-medium text-foreground text-sm mb-1">
+                                {item.name}
+                            </p>
+                            
+                            {item.type === 'delay' && (
+                                <div className="flex justify-between text-xs px-2 py-1 bg-background/50 rounded border border-border/50 mb-2">
+                                    <span>Real: <strong>{item.duration}m</strong></span>
+                                    <span>Esperado: <strong>{item.expected}m</strong></span>
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-1 opacity-80">
                               <Clock className="h-3 w-3" />
-                              <span>Inicio: {gap.startTime}</span>
+                              <span>Inicio: {item.startTime}</span>
                             </div>
 
-                            <div className="mt-2 pt-2 border-t border-red-500/10 flex flex-col gap-1">
+                            <div className="mt-2 pt-2 border-t border-border/10 flex flex-col gap-1">
                               <div className="flex items-center justify-between">
                                 <span className="opacity-70">Después de:</span>
                                 <span
                                   className="font-medium text-foreground truncate max-w-[120px]"
-                                  title={gap.prevStep}
+                                  title={item.prevStep}
                                 >
-                                  {gap.prevStep}
+                                  {item.prevStep}
                                 </span>
                               </div>
 
@@ -810,9 +815,9 @@ export default function MachineDetail() {
                                 <span className="opacity-70">Antes de:</span>
                                 <span
                                   className="font-medium text-foreground truncate max-w-[120px]"
-                                  title={gap.nextStep}
+                                  title={item.nextStep}
                                 >
-                                  {gap.nextStep}
+                                  {item.nextStep}
                                 </span>
                               </div>
                             </div>
@@ -823,9 +828,7 @@ export default function MachineDetail() {
                   </ScrollArea>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground p-6 text-center">
-                    <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center mb-3">
-                      <CheckCircle2 className="h-6 w-6 text-green-500" />
-                    </div>
+                    <CheckCircle2 className="h-12 w-12 text-green-500 mb-3 opacity-20" />
                     <p className="text-sm">Todo correcto</p>
                     <p className="text-xs mt-1">
                       Selecciona un lote con problemas de la lista superior para
