@@ -4,13 +4,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Clock } from "lucide-react";
 import { getDelayAlerts, BatchRecord } from "@/data/mockData";
 
-// Definimos que este componente espera recibir "data"
 interface AlertsWidgetProps {
   data: BatchRecord[];
 }
 
 export function AlertsWidget({ data }: AlertsWidgetProps) {
-  // Pasamos la data recibida a la función auxiliar
   const alerts = getDelayAlerts(data, 30);
 
   return (
@@ -42,9 +40,15 @@ export function AlertsWidget({ data }: AlertsWidgetProps) {
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-mono font-semibold text-foreground">
-                        {alert.CHARG_NR}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono font-semibold text-foreground">
+                          {alert.CHARG_NR}
+                        </p>
+                        {/* Mostramos el producto aquí */}
+                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                          {alert.productName || "N/A"}
+                        </span>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {alert.TEILANL_GRUPO}
                       </p>

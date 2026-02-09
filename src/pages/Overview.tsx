@@ -3,8 +3,18 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { EfficiencyChart } from "@/components/dashboard/EfficiencyChart";
 import { AlertsWidget } from "@/components/dashboard/AlertsWidget";
-import { Boxes, TrendingUp, Clock, Upload, FileSpreadsheet, Beer } from "lucide-react"; // <--- Agregamos Beer
+import { 
+  Boxes, 
+  TrendingUp, 
+  Clock, 
+  Upload, 
+  FileSpreadsheet, 
+  Beer, 
+  Info, 
+  AlertTriangle 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Importamos componentes de Card
 import { useToast } from "@/hooks/use-toast";
 import { processExcelFile } from "@/utils/excelProcessor";
 import { useData } from "@/context/DataContext"; 
@@ -24,7 +34,7 @@ export default function Overview() {
   const processFile = async (file: File) => {
     setLoading(true);
     try {
-      // Pequeño delay artificial para que se aprecie la animación (opcional)
+      // Pequeño delay para apreciar la animación
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const processedData = await processExcelFile(file);
@@ -53,7 +63,7 @@ export default function Overview() {
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!loading) setIsDragging(true); // Bloquear drag si está cargando
+    if (!loading) setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
@@ -85,19 +95,16 @@ export default function Overview() {
           className={cn(
             "flex h-[70vh] flex-col items-center justify-center space-y-6 text-center animate-in fade-in zoom-in duration-500 rounded-xl border-2 border-dashed transition-all",
             isDragging ? "border-primary bg-primary/5 scale-[1.02]" : "border-border",
-            loading ? "border-none bg-transparent" : "" // Quitar bordes al cargar
+            loading ? "border-none bg-transparent" : ""
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
           {loading ? (
-            /* --- ANIMACIÓN DE CERVEZA --- */
             <div className="flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-700">
               <div className="relative">
-                {/* Fondo o brillo */}
                 <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full animate-pulse" />
-                {/* Icono animado */}
                 <Beer className="h-24 w-24 text-yellow-500 animate-bounce relative z-10" strokeWidth={1.5} />
               </div>
               <div className="space-y-2">
@@ -106,7 +113,6 @@ export default function Overview() {
               </div>
             </div>
           ) : (
-            /* --- ESTADO NORMAL (DRAG & DROP) --- */
             <>
               <div className={cn(
                 "rounded-full p-6 transition-transform duration-300",
@@ -153,7 +159,7 @@ export default function Overview() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Tablero General</h1>
-          <p className="text-muted-foreground">Monitor de eficiencia</p>
+          <p className="text-muted-foreground">Monitor de eficiencia y métricas clave</p>
         </div>
         <Button variant="outline" onClick={() => setData([])}>Cargar otro archivo</Button>
       </div>
@@ -164,10 +170,67 @@ export default function Overview() {
         <KPICard title="Mayor Tiempo Muerto" value={`${highestIdle.idleTime} min`} subtitle={`Equipo: ${highestIdle.machine}`} icon={Clock} variant="warning" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-2"><EfficiencyChart data={data} /></div>
         <div className="lg:col-span-1"><AlertsWidget data={data} /></div>
       </div>
+
+      {/* --- NUEVA SECCIÓN: GLOSARIO DE INDICADORES --- */}
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-full">
+              <Info className="h-4 w-4 text-primary" />
+            </div>
+            <CardTitle className="text-lg">Glosario de Indicadores</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          
+          {/* Definición de RETRASO */}
+          <div className="flex gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+            <div className="mt-1">
+              <div className="p-2 rounded-full bg-chart-delay/10">
+                <Clock className="h-5 w-5 text-chart-delay" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                Retraso (Delay)
+                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-chart-delay/10 text-chart-delay">Ineficiencia Interna</span>
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                Mide la lentitud <strong>dentro</strong> de los pasos del proceso. Ocurre cuando la máquina tarda más de lo estipulado en la receta.
+              </p>
+              <p className="text-xs text-muted-foreground mt-2 font-mono bg-background/50 inline-block px-2 py-1 rounded border border-border">
+                Cálculo: Tiempo Real - Tiempo Esperado
+              </p>
+            </div>
+          </div>
+
+          {/* Definición de TIEMPO MUERTO */}
+          <div className="flex gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+            <div className="mt-1">
+              <div className="p-2 rounded-full bg-orange-500/10">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                Tiempo Muerto (Idle Time)
+                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500">Ineficiencia Externa</span>
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                Mide la ineficiencia <strong>entre</strong> pasos. Es la suma de los "huecos" (gaps) donde la máquina estuvo detenida esperando entre el fin de un paso y el inicio del siguiente.
+              </p>
+              <p className="text-xs text-muted-foreground mt-2 font-mono bg-background/50 inline-block px-2 py-1 rounded border border-border">
+                Cálculo: Suma de Gaps (Inicio<sub>n</sub> - Fin<sub>n-1</sub>)
+              </p>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
     </DashboardLayout>
   );
 }
