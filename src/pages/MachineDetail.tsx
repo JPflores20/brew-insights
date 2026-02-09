@@ -38,10 +38,10 @@ import {
   Sparkles,
   Loader2,
   Timer,
-  Droplets, // Icono Materiales
-  Scale,    // Icono Peso/Volumen
-  Gauge,    // Icono Parámetros
-  Thermometer // Icono Temperatura
+  Droplets, 
+  Scale,    
+  Gauge,    
+  Thermometer 
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -56,7 +56,6 @@ import remarkGfm from "remark-gfm";
 export default function MachineDetail() {
   const { data } = useData();
 
-  // --- ESTADOS ---
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   
@@ -140,7 +139,7 @@ export default function MachineDetail() {
 
   const stepsData = selectedRecord?.steps || [];
   const materialsData = selectedRecord?.materials || [];
-  const parametersData = selectedRecord?.parameters || []; // <--- NUEVO
+  const parametersData = selectedRecord?.parameters || [];
 
   const anomaliesReport = useMemo(() => {
     if (!stepsData.length) return [];
@@ -413,11 +412,16 @@ export default function MachineDetail() {
           </Card>
         </div>
 
+        {/* --- ESTRUCTURA PRINCIPAL --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* GRÁFICA (Ocupa 2/3 de ancho) */}
+          
+          {/* --- COLUMNA IZQUIERDA (Gráficas Apiladas) --- */}
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* 1. GRÁFICA DE SECUENCIA */}
             {selectedRecord && stepsData.length > 0 ? (
-              <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-full">
+              <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-[500px]">
+                {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
                 <div className="flex items-center gap-2 mb-6">
                   <ListFilter className="h-5 w-5 text-primary" />
                   <div>
@@ -430,7 +434,7 @@ export default function MachineDetail() {
                   </div>
                 </div>
 
-                <div className="h-[500px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={stepsData}
@@ -486,7 +490,8 @@ export default function MachineDetail() {
                 </div>
               </Card>
             ) : (
-              <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500">
+              <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500 h-[500px]">
+                {/* --- DIMENSIÓN: ALTO FIJO DE 500px (Placeholder) --- */}
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
                   <p className="text-sm font-medium">
@@ -495,92 +500,85 @@ export default function MachineDetail() {
                 </div>
               </Card>
             )}
-          </div>
 
-          {/* COLUMNA DERECHA (1/3 ancho) */}
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            
-            {/* NUEVO: TARJETA DE CONSUMO DE MATERIALES */}
+            {/* 2. GRÁFICA DE MATERIALES */}
             {materialsData.length > 0 && (
-                <Card className="bg-card border-border shadow-sm">
+                <Card className="bg-card border-border shadow-sm h-[500px] flex flex-col">
+                    {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
                     <CardHeader className="pb-3 border-b border-border">
                         <div className="flex items-center gap-2">
                             <Scale className="h-5 w-5 text-green-600" />
                             <CardTitle className="text-lg">Consumo de Materiales</CardTitle>
                         </div>
-                        <CardDescription>Ingredientes registrados en este lote</CardDescription>
+                        <CardDescription>Real vs Esperado (Acumulado)</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-0">
-                        <ScrollArea className="h-[200px] w-full p-4">
-                            <div className="space-y-3">
-                                {materialsData.map((mat, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
-                                                <Droplets className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-foreground">{mat.name}</p>
-                                                <p className="text-xs text-muted-foreground font-mono">Unidad: {mat.unit}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-bold text-foreground">
-                                                {mat.totalReal.toLocaleString()}
-                                            </p>
-                                            {mat.totalExpected > 0 && (
-                                                <p className="text-[10px] text-muted-foreground">
-                                                    Meta: {mat.totalExpected.toLocaleString()}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </ScrollArea>
+                    <CardContent className="p-0 flex-1">
+                        <div className="h-[400px] w-full p-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={materialsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
+                                        </linearGradient>
+                                        <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                                    <XAxis dataKey="name" tick={{fontSize: 12}} interval={0} angle={-30} textAnchor="end" height={80} />
+                                    <YAxis tick={{fontSize: 12}} />
+                                    <Tooltip contentStyle={{ fontSize: '14px' }} />
+                                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                                    <Area type="monotone" dataKey="totalExpected" stroke="#94a3b8" fillOpacity={1} fill="url(#colorExp)" name="Meta (kg/hl)" />
+                                    <Area type="monotone" dataKey="totalReal" stroke="#16a34a" fillOpacity={0.6} fill="url(#colorReal)" name="Real (kg/hl)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </CardContent>
                 </Card>
             )}
 
-            {/* NUEVO: TARJETA DE PARÁMETROS DE PROCESO */}
+            {/* 3. GRÁFICA DE PARÁMETROS */}
             {parametersData.length > 0 && (
-                <Card className="bg-card border-border shadow-sm">
+                <Card className="bg-card border-border shadow-sm h-[500px] flex flex-col">
+                    {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
                     <CardHeader className="pb-3 border-b border-border">
                         <div className="flex items-center gap-2">
                             <Gauge className="h-5 w-5 text-blue-600" />
-                            <CardTitle className="text-lg">Parámetros</CardTitle>
+                            <CardTitle className="text-lg">Parámetros de Proceso</CardTitle>
                         </div>
-                        <CardDescription>Variables (Temp, Presión)</CardDescription>
+                        <CardDescription>Variación de Temperatura/Presión por Paso</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-0">
-                        <ScrollArea className="h-[200px] w-full p-4">
-                            <div className="space-y-3">
-                                {parametersData.map((param, idx) => (
-                                    <div key={idx} className="p-3 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <p className="text-xs text-muted-foreground font-mono uppercase truncate max-w-[150px]">{param.stepName}</p>
-                                            <Badge variant="outline" className="text-[10px] h-5">{param.unit}</Badge>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Thermometer className="h-4 w-4 text-blue-500" />
-                                                <span className="text-sm font-medium">{param.name}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-foreground">{param.value}</span>
-                                                {param.target > 0 && (
-                                                    <span className="text-xs text-muted-foreground ml-2">/ {param.target}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </ScrollArea>
+                    <CardContent className="p-0 flex-1">
+                        <div className="h-[400px] w-full p-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={parametersData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                                    <XAxis dataKey="stepName" tick={{fontSize: 12}} interval={0} angle={-30} textAnchor="end" height={80} />
+                                    <YAxis tick={{fontSize: 12}} />
+                                    <Tooltip contentStyle={{ fontSize: '14px' }} />
+                                    <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                                    <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorParam)" name="Valor Registrado" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </CardContent>
                 </Card>
             )}
 
+          </div>
+
+          {/* --- COLUMNA DERECHA (Panel de Insights) --- */}
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            
             {/* TARJETA GEMINI */}
             {anomaliesReport.length > 0 && (
               <Card className="relative overflow-hidden border border-indigo-200/70 dark:border-indigo-800/50 bg-background shadow-sm">
@@ -657,7 +655,7 @@ export default function MachineDetail() {
                           Limpiar
                         </Button>
                       </div>
-                      <ScrollArea className="h-[290px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
+                      <ScrollArea className="h-[400px] w-full rounded-lg border border-border/70 bg-background/70 p-4">
                         <div className="prose prose-sm dark:prose-invert max-w-none">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -680,7 +678,8 @@ export default function MachineDetail() {
             )}
 
             {/* LISTA DETALLADA DE ANOMALÍAS */}
-            <Card className="bg-card border-border flex-1 flex flex-col">
+            {/* --- DIMENSIÓN: ALTO FIJO DE 500px --- */}
+            <Card className="bg-card border-border flex flex-col h-[500px]">
               <CardHeader className="pb-3 border-b border-border">
                 <div className="flex items-center gap-2 text-foreground">
                   <AlertCircle className="h-5 w-5 text-orange-500" />
@@ -695,7 +694,8 @@ export default function MachineDetail() {
 
               <CardContent className="flex-1 p-0">
                 {anomaliesReport.length > 0 ? (
-                  <ScrollArea className="h-[300px] w-full p-4">
+                  /* --- SCROLLAREA OCUPA TODO EL ESPACIO RESTANTE DEL CARD --- */
+                  <ScrollArea className="h-full w-full p-4">
                     <div className="space-y-4">
                       {anomaliesReport.map((item) => (
                         <div
@@ -743,7 +743,7 @@ export default function MachineDetail() {
                     </div>
                   </ScrollArea>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground p-6 text-center">
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-green-500 mb-3 opacity-20" />
                     <p className="text-sm">Todo correcto</p>
                   </div>
@@ -753,7 +753,7 @@ export default function MachineDetail() {
           </div>
         </div>
 
-        {/* --- 5. GRÁFICO HISTÓRICO --- */}
+        {/* --- 5. GRÁFICO HISTÓRICO (SE MANTIENE) --- */}
         {machineHistoryData.length > 0 && (
           <Card className="bg-card border-border h-[400px] p-6 opacity-90 hover:opacity-100 transition-opacity">
             <CardTitle className="mb-6 text-lg font-semibold flex items-center justify-between">
