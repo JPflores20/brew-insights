@@ -1,73 +1,68 @@
-# Welcome to your Lovable project
+# Brew Insights 🍺
 
-## Project info
+**Brew Insights** is an industrial data analytics platform designed to visualize, compare, and optimize batch production processes. The application allows data ingestion via Excel files, offering interactive dashboards for cycle time analysis, machine efficiency, and process deviations.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Built with **React**, **Vite**, and **TypeScript**, utilizing **Shadcn UI** for a modern interface.
 
-## How can I edit this code?
+## 🚀 Key Features
 
-There are several ways of editing your application.
+* **Data Ingestion**: Local processing of Excel files (`.xlsx`) to generate instant reports.
+* **Cycle Analysis**: Visualization of Real vs. Ideal times using area charts and interactive Gantt charts.
+* **Machine Detail**: Step-by-step breakdown of each piece of equipment, detection of idle times (Gaps), and material consumption.
+* **Batch Comparison**: Tools to compare performance between different production batches.
+* **Process Capability (Cpk)**: Statistical calculation of process capability for critical variables (Temperature, Pressure, etc.).
+* **AI Insights**: Automated analysis to generate diagnostics on inefficiencies and downtimes.
+* **Responsive Design**: Adaptive interface with light/dark mode support.
 
-**Use Lovable**
+## 🛠️ Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+**Core:**
+* [React 18](https://react.dev/) - UI Library.
+* [Vite](https://vitejs.dev/) - Development environment and bundler.
+* [TypeScript](https://www.typescriptlang.org/) - Static typing.
+* [Bun](https://bun.sh/) - Package manager and runtime.
 
-Changes made via Lovable will be committed automatically to this repo.
+**UI & Styles:**
+* [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework.
+* [Shadcn UI](https://ui.shadcn.com/) - Reusable components based on Radix UI.
+* [Lucide React](https://lucide.dev/) - Iconography.
 
-**Use your preferred IDE**
+**Data & Charts:**
+* [Recharts](https://recharts.org/) - Charting library for React.
+* [TanStack Query](https://tanstack.com/query) - Asynchronous state management.
+* [XLSX](https://docs.sheetjs.com/) - Excel file parsing.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Utilities:**
+* [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) - Form handling and validation.
+* [Date-fns](https://date-fns.org/) - Date manipulation.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📦 Installation and Setup
 
-Follow these steps:
+### Prerequisites
+Ensure you have Node.js (v18+) or Bun installed.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/your-username/brew-insights.git](https://github.com/your-username/brew-insights.git)
+    cd brew-insights
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2.  **Install dependencies:**
+    Recommended using Bun if available, or npm:
+    ```bash
+    # Using Bun
+    bun install
 
-# Step 3: Install the necessary dependencies.
-npm i
+    # Or using npm
+    npm install
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## ▶️ Running the App
+
+### Development
+To start the local development server:
+
+```bash
+bun dev
+# or
 npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

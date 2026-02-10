@@ -1,3 +1,7 @@
+{
+type: uploaded file
+fileName: jpflores20/brew-insights/brew-insights-7f7ecd001226788c230dd52a13aab79b08c1c6da/src/pages/MachineDetail.tsx
+fullContent:
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
@@ -40,7 +44,7 @@ import {
   Gauge,
   Thermometer,
   Package,
-  Filter
+  Filter,
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
@@ -54,7 +58,25 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function MachineDetail() {
   const { data } = useData();
 
-  const allBatches = useMemo(() => getUniqueBatchIds(data), [data]);
+  // --- 1. LÓGICA DE RECETAS (NUEVO) ---
+  const uniqueRecipes = useMemo(() => {
+    const recipes = new Set(data.map(d => d.productName).filter(Boolean));
+    return Array.from(recipes).sort();
+  }, [data]);
+
+  const [selectedRecipe, setSelectedRecipe] = useLocalStorage<string>(
+    "detail-recipe-selection",
+    "ALL"
+  );
+
+  // --- 2. FILTRADO DE LOTES SEGÚN RECETA ---
+  const filteredBatches = useMemo(() => {
+    let filtered = data;
+    if (selectedRecipe && selectedRecipe !== "ALL") {
+      filtered = filtered.filter(d => d.productName === selectedRecipe);
+    }
+    return getUniqueBatchIds(filtered);
+  }, [data, selectedRecipe]);
 
   const batchProductMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -101,13 +123,16 @@ export default function MachineDetail() {
     );
   }, [data]);
 
+  // Selección automática de lote cuando cambia la lista filtrada
   useEffect(() => {
-    if (allBatches.length > 0) {
-      if (!selectedBatchId || !allBatches.includes(selectedBatchId)) {
-        setSelectedBatchId(allBatches[0]);
+    if (filteredBatches.length > 0) {
+      if (!selectedBatchId || !filteredBatches.includes(selectedBatchId)) {
+        setSelectedBatchId(filteredBatches[0]);
       }
+    } else {
+        setSelectedBatchId("");
     }
-  }, [allBatches, selectedBatchId, setSelectedBatchId]);
+  }, [filteredBatches, selectedBatchId, setSelectedBatchId]);
 
   const availableMachinesForBatch = useMemo(() => {
     if (!selectedBatchId) return [];
@@ -141,13 +166,11 @@ export default function MachineDetail() {
 
     return parametersData.filter((p) => {
       const u = (p.unit || "").toLowerCase();
-      // Detectar si es una variable de proceso típica (Temperatura, Presión, Flujo, Velocidad, etc.)
       const isProcessVar = /°c|bar|mbar|pa|rpm|hz|%|hl\/h|m3\/h|l\/min|a|v|kw/.test(u);
       
       if (paramFilter === "process") {
         return isProcessVar;
       } else {
-        // "materials": Todo lo que NO es proceso (sacos, kg, pzas, sin unidad, etc.)
         return !isProcessVar;
       }
     });
@@ -223,12 +246,16 @@ export default function MachineDetail() {
     : 0;
 
   const loadSuggestion = (batch: string, machine: string) => {
+    const record = data.find(d => d.CHARG_NR === batch);
+    if (record && selectedRecipe !== "ALL" && record.productName !== selectedRecipe) {
+        setSelectedRecipe("ALL");
+    }
+    
     setSelectedBatchId(batch);
     setSelectedMachine(machine);
     window.scrollTo({ top: 400, behavior: "smooth" });
   };
 
-  // ✅ ESTILO UNIFICADO PARA TOOLTIP
   const themedTooltipContentStyle: CSSProperties = {
     backgroundColor: "hsl(var(--popover))",
     borderColor: "hsl(var(--border))",
@@ -552,13 +579,42 @@ export default function MachineDetail() {
           </Card>
         )}
 
-        {/* --- CONTROLES + KPIs --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* --- CONTROLES + KPIs (GRID ACTUALIZADO PARA 5 ITEMS) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+          
+          {/* 1. SELECCIONAR RECETA (NUEVO) */}
           <Card className="bg-card border-border">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
                   1
+                </span>
+                Filtrar Receta
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas las recetas</SelectItem>
+                  {uniqueRecipes.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* 2. SELECCIONAR LOTE */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                  2
                 </span>
                 Seleccionar Lote
               </CardTitle>
@@ -569,7 +625,7 @@ export default function MachineDetail() {
                   <SelectValue placeholder="Buscar lote..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {allBatches.map((batch) => (
+                  {filteredBatches.map((batch) => (
                     <SelectItem key={batch} value={batch}>
                       {batch} - {batchProductMap.get(batch) || "Sin producto"}
                     </SelectItem>
@@ -579,11 +635,12 @@ export default function MachineDetail() {
             </CardContent>
           </Card>
 
+          {/* 3. VER EN EQUIPO */}
           <Card className="bg-card border-border">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
-                  2
+                  3
                 </span>
                 Ver en Equipo
               </CardTitle>
@@ -614,34 +671,36 @@ export default function MachineDetail() {
             </CardContent>
           </Card>
 
+          {/* 4. KPI GAP */}
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Mayor Gap en este Lote
+                  Mayor Gap
                 </p>
                 <p className="text-3xl font-bold mt-2 text-chart-delay">
-                  {currentGap} min
+                  {currentGap} m
                 </p>
               </div>
-              <div className="p-4 rounded-full bg-chart-delay/10">
-                <AlertTriangle className="h-8 w-8 text-chart-delay" />
+              <div className="p-3 rounded-full bg-chart-delay/10">
+                <AlertTriangle className="h-6 w-6 text-chart-delay" />
               </div>
             </CardContent>
           </Card>
 
+          {/* 5. KPI TIEMPO MUERTO */}
           <Card className="bg-card border-border">
             <CardContent className="pt-6 flex justify-between items-center">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Tiempo Muerto Total
+                  T. Muerto
                 </p>
                 <p className="text-3xl font-bold mt-2 text-blue-500">
-                  {currentIdle} min
+                  {currentIdle} m
                 </p>
               </div>
-              <div className="p-4 rounded-full bg-blue-500/10">
-                <Clock className="h-8 w-8 text-blue-500" />
+              <div className="p-3 rounded-full bg-blue-500/10">
+                <Clock className="h-6 w-6 text-blue-500" />
               </div>
             </CardContent>
           </Card>
@@ -765,8 +824,9 @@ export default function MachineDetail() {
           <div className="xl:col-span-4">
             <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
               {/* LISTA DETALLADA DE ANOMALÍAS */}
-              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)]">
-                <CardHeader className="pb-3 border-b border-border">
+              {/* CORRECCIÓN: overflow-hidden y min-h-0 para evitar desborde */}
+              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)] overflow-hidden">
+                <CardHeader className="pb-3 border-b border-border shrink-0">
                   <div className="flex items-center gap-2 text-foreground">
                     <AlertCircle className="h-5 w-5 text-orange-500" />
                     <CardTitle className="text-lg">Detalle de Ineficiencias</CardTitle>
@@ -778,10 +838,10 @@ export default function MachineDetail() {
                   </p>
                 </CardHeader>
 
-                <CardContent className="flex-1 p-0">
+                <CardContent className="flex-1 min-h-0 p-0">
                   {anomaliesReport.length > 0 ? (
-                    <ScrollArea className="h-full w-full p-4">
-                      <div className="space-y-4">
+                    <ScrollArea className="h-full w-full">
+                      <div className="p-4 space-y-4">
                         {anomaliesReport.map((item) => (
                           <div
                             key={item.id}
@@ -1165,4 +1225,6 @@ export default function MachineDetail() {
       </div>
     </DashboardLayout>
   );
+}
+
 }
