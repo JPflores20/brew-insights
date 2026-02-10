@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -8,10 +8,12 @@ import {
   Beer,
   Menu,
   X,
-  Timer // <--- IMPORTAR ICONO NUEVO
+  Timer,
+  LogOut 
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth"; 
+import { auth } from "@/lib/firebase";   
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -36,7 +38,6 @@ const navItems = [
     icon: Cog,
     description: "Detalle por equipo"
   },
-  // --- NUEVO ITEM ---
   { 
     path: "/cycles", 
     label: "Ciclos & Gantt", 
@@ -49,11 +50,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
-        {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-6 border-b border-sidebar-border">
           <Beer className="h-8 w-8 text-primary" />
           <div>
@@ -62,10 +70,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+                             (item.path === "/comparison" && location.pathname === "/batch-comparison") ||
+                             (item.path === "/machine" && location.pathname === "/machine-detail") ||
+                             (item.path === "/cycles" && location.pathname === "/cycle-analysis");
             return (
               <Link
                 key={item.path}
@@ -87,8 +97,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border">
+        <div className="p-4 border-t border-sidebar-border space-y-4">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Cerrar Sesión
+          </Button>
+          
           <p className="text-xs text-muted-foreground text-center">
             v1.0.0 • Producción
           </p>
@@ -114,7 +132,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
           <div 
-            className="absolute top-16 left-0 right-0 bg-sidebar border-b border-sidebar-border p-4 space-y-2"
+            className="absolute top-16 left-0 right-0 bg-sidebar border-b border-sidebar-border p-4 space-y-2 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {navItems.map((item) => {
@@ -136,6 +154,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Link>
               );
             })}
+            <div className="pt-2 mt-2 border-t border-sidebar-border">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Cerrar Sesión
+              </Button>
+            </div>
           </div>
         </div>
       )}
