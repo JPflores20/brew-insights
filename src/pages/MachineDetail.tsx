@@ -759,7 +759,7 @@ export default function MachineDetail() {
                                 {
                                   value: "Duración Esperada (min)",
                                   type: "rect",
-                                  color: "#fbbf24",
+                                  color: "#3b82f6", // COLOR AZUL
                                 },
                               ]}
                             />
@@ -784,7 +784,7 @@ export default function MachineDetail() {
                             <Bar
                               dataKey="expectedDurationMin"
                               name="Duración Esperada (min)"
-                              fill="#fbbf24"
+                              fill="#3b82f6" // COLOR AZUL
                               radius={[0, 4, 4, 0]}
                               barSize={10}
                             />
@@ -1151,7 +1151,7 @@ export default function MachineDetail() {
                           <Bar
                             dataKey="expectedDurationMin"
                             name="Duración Esperada (min)"
-                            fill="#fbbf24"
+                            fill="#3b82f6" // COLOR AZUL
                             radius={[0, 4, 4, 0]}
                             barSize={12}
                           />

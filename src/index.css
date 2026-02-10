@@ -111,3 +111,127 @@
     @apply bg-background text-foreground;
   }
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BrewCycle Analytics - Industrial Dark Theme
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Fondo muy oscuro (Azul noche profundo) */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 98%;
+
+    /* CAMBIO PRINCIPAL: Naranja Industrial (Antes Verde) */
+    --primary: 30 90% 50%;
+    --primary-foreground: 222 47% 11%; /* Texto oscuro sobre el naranja para contraste */
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Acento también naranja */
+    --accent: 30 90% 50%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    
+    /* Anillo de foco naranja */
+    --ring: 30 90% 50%;
+
+    --radius: 0.5rem;
+
+    /* Semantic colors for charts */
+    /* Expected ahora es verde para diferenciar del naranja de la marca */
+    --chart-expected: 142 70% 50%; 
+    /* Real ahora es el Naranja de la marca */
+    --chart-real: 30 90% 50%;
+    --chart-delay: 350 89% 60%;
+    --chart-idle: 217 91% 60%;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 215 20% 65%;
+    
+    /* Sidebar activa en naranja */
+    --sidebar-primary: 30 90% 50%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 30 90% 50%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 98%;
+
+    /* CAMBIO PRINCIPAL: Naranja Industrial */
+    --primary: 30 90% 50%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 30 90% 50%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 62% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 30 90% 50%;
+
+    /* Chart colors */
+    --chart-expected: 142 70% 50%; /* Verde para meta/esperado */
+    --chart-real: 30 90% 50%;      /* Naranja para valor real */
+    --chart-delay: 350 89% 60%;
+    --chart-idle: 217 91% 60%;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 30 90% 50%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 30 90% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

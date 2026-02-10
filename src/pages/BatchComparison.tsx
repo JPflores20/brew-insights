@@ -12,7 +12,6 @@ export default function BatchComparison() {
   const { data } = useData();
   const batchIds = getUniqueBatchIds(data);
   
-  // Mapa auxiliar para obtener nombre de producto rápido (Igual que en MachineDetail)
   const batchProductMap = useMemo(() => {
     const map = new Map<string, string>();
     data.forEach(d => {
@@ -21,11 +20,9 @@ export default function BatchComparison() {
     return map;
   }, [data]);
 
-  // Estados persistentes para la selección
   const [batchA, setBatchA] = useLocalStorage<string>("batch-comparison-a", "");
   const [batchB, setBatchB] = useLocalStorage<string>("batch-comparison-b", "");
 
-  // Lógica inteligente para inicializar
   useEffect(() => {
     if (batchIds.length >= 2) {
       if (!batchA || !batchIds.includes(batchA)) {
@@ -50,14 +47,12 @@ export default function BatchComparison() {
   const batchAData = getBatchById(data, batchA);
   const batchBData = getBatchById(data, batchB);
 
-  // 1. FILTRADO: Solo mostramos máquinas que tengan datos en alguno de los dos lotes
   const relevantMachines = useMemo(() => {
     const machinesA = batchAData.map(d => d.TEILANL_GRUPO);
     const machinesB = batchBData.map(d => d.TEILANL_GRUPO);
     return Array.from(new Set([...machinesA, ...machinesB])).sort();
   }, [batchAData, batchBData]);
 
-  // Preparar datos para gráfica
   const comparisonData = relevantMachines.map(machineName => {
     const recordA = batchAData.find(d => d.TEILANL_GRUPO === machineName);
     const recordB = batchBData.find(d => d.TEILANL_GRUPO === machineName);
@@ -113,16 +108,14 @@ export default function BatchComparison() {
         {batchA && batchB && (
           <Card className="bg-card border-border">
             <CardContent className="pt-6">
-              {/* Aumentamos un poco la altura para dar espacio a los textos rotados */}
               <div className="h-[500px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart 
                     data={comparisonData} 
-                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }} // Aumentamos margen inferior (bottom)
+                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     
-                    {/* Rotación de textos en eje X */}
                     <XAxis 
                         dataKey="machine" 
                         tick={{ 
@@ -130,10 +123,10 @@ export default function BatchComparison() {
                             fontSize: 12 
                         }} 
                         axisLine={{ stroke: 'hsl(var(--border))' }}
-                        interval={0} // Muestra todas las etiquetas
-                        angle={-45}  // Rota el texto 45 grados
-                        textAnchor="end" // Alinea el final del texto con la marca
-                        height={80} // Altura extra para que quepan
+                        interval={0}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
                     />
                     
                     <YAxis 
@@ -146,15 +139,17 @@ export default function BatchComparison() {
                         cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
                     />
                     <Legend wrapperStyle={{ paddingTop: '20px' }}/>
+                    {/* BARRA LOTE A: Color Primario (Naranja) */}
                     <Bar 
                       dataKey={batchA} 
                       fill="hsl(var(--primary))" 
                       name={`Lote ${batchA} (${batchProductMap.get(batchA) || ''})`} 
                       radius={[4, 4, 0, 0]} 
                     />
+                    {/* BARRA LOTE B: Color Azul para contraste */}
                     <Bar 
                       dataKey={batchB} 
-                      fill="hsl(var(--chart-real))" 
+                      fill="#3b82f6" 
                       name={`Lote ${batchB} (${batchProductMap.get(batchB) || ''})`} 
                       radius={[4, 4, 0, 0]} 
                     />
