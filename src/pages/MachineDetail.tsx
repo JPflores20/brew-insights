@@ -1,7 +1,3 @@
-{
-type: uploaded file
-fileName: jpflores20/brew-insights/brew-insights-7f7ecd001226788c230dd52a13aab79b08c1c6da/src/pages/MachineDetail.tsx
-fullContent:
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
@@ -60,10 +56,12 @@ export default function MachineDetail() {
 
   // --- 1. LÓGICA DE RECETAS (NUEVO) ---
   const uniqueRecipes = useMemo(() => {
+    // Obtenemos recetas únicas de los datos
     const recipes = new Set(data.map(d => d.productName).filter(Boolean));
     return Array.from(recipes).sort();
   }, [data]);
 
+  // Estado persistente para la receta seleccionada
   const [selectedRecipe, setSelectedRecipe] = useLocalStorage<string>(
     "detail-recipe-selection",
     "ALL"
@@ -72,6 +70,7 @@ export default function MachineDetail() {
   // --- 2. FILTRADO DE LOTES SEGÚN RECETA ---
   const filteredBatches = useMemo(() => {
     let filtered = data;
+    // Si hay una receta seleccionada y no es "ALL", filtramos
     if (selectedRecipe && selectedRecipe !== "ALL") {
       filtered = filtered.filter(d => d.productName === selectedRecipe);
     }
@@ -130,6 +129,7 @@ export default function MachineDetail() {
         setSelectedBatchId(filteredBatches[0]);
       }
     } else {
+        // Si no hay lotes para esa receta, limpiar selección
         setSelectedBatchId("");
     }
   }, [filteredBatches, selectedBatchId, setSelectedBatchId]);
@@ -166,11 +166,13 @@ export default function MachineDetail() {
 
     return parametersData.filter((p) => {
       const u = (p.unit || "").toLowerCase();
+      // Detectar si es una variable de proceso típica (Temperatura, Presión, Flujo, Velocidad, etc.)
       const isProcessVar = /°c|bar|mbar|pa|rpm|hz|%|hl\/h|m3\/h|l\/min|a|v|kw/.test(u);
       
       if (paramFilter === "process") {
         return isProcessVar;
       } else {
+        // "materials": Todo lo que NO es proceso (sacos, kg, pzas, sin unidad, etc.)
         return !isProcessVar;
       }
     });
@@ -246,6 +248,7 @@ export default function MachineDetail() {
     : 0;
 
   const loadSuggestion = (batch: string, machine: string) => {
+    // Al cargar sugerencia, verificamos si la receta es compatible. Si no, ponemos "ALL"
     const record = data.find(d => d.CHARG_NR === batch);
     if (record && selectedRecipe !== "ALL" && record.productName !== selectedRecipe) {
         setSelectedRecipe("ALL");
@@ -256,6 +259,7 @@ export default function MachineDetail() {
     window.scrollTo({ top: 400, behavior: "smooth" });
   };
 
+  // ✅ ESTILO UNIFICADO PARA TOOLTIP
   const themedTooltipContentStyle: CSSProperties = {
     backgroundColor: "hsl(var(--popover))",
     borderColor: "hsl(var(--border))",
@@ -824,9 +828,8 @@ export default function MachineDetail() {
           <div className="xl:col-span-4">
             <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
               {/* LISTA DETALLADA DE ANOMALÍAS */}
-              {/* CORRECCIÓN: overflow-hidden y min-h-0 para evitar desborde */}
-              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)] overflow-hidden">
-                <CardHeader className="pb-3 border-b border-border shrink-0">
+              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)]">
+                <CardHeader className="pb-3 border-b border-border">
                   <div className="flex items-center gap-2 text-foreground">
                     <AlertCircle className="h-5 w-5 text-orange-500" />
                     <CardTitle className="text-lg">Detalle de Ineficiencias</CardTitle>
@@ -838,10 +841,10 @@ export default function MachineDetail() {
                   </p>
                 </CardHeader>
 
-                <CardContent className="flex-1 min-h-0 p-0">
+                <CardContent className="flex-1 p-0">
                   {anomaliesReport.length > 0 ? (
-                    <ScrollArea className="h-full w-full">
-                      <div className="p-4 space-y-4">
+                    <ScrollArea className="h-full w-full p-4">
+                      <div className="space-y-4">
                         {anomaliesReport.map((item) => (
                           <div
                             key={item.id}
@@ -1225,6 +1228,4 @@ export default function MachineDetail() {
       </div>
     </DashboardLayout>
   );
-}
-
 }
