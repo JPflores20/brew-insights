@@ -36,7 +36,6 @@ import {
   Search,
   CheckCircle2,
   Timer,
-  Scale,
   Gauge,
   Thermometer,
   Package,
@@ -157,7 +156,33 @@ export default function MachineDetail() {
     (d) => d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
   );
 
-  const stepsData = selectedRecord?.steps || [];
+  // ========================================================================
+  //  MODIFICACIÓN: Agrupar pasos continuos idénticos en un solo bloque
+  // ========================================================================
+  const stepsData = useMemo(() => {
+    if (!selectedRecord?.steps) return [];
+
+    const source = selectedRecord.steps;
+    // Creamos un array vacío tipado igual que 'source'
+    const merged: typeof source = [];
+
+    for (const step of source) {
+      const last = merged[merged.length - 1];
+
+      // Si el paso actual tiene el mismo nombre que el anterior (ej: "calentar" seguido de "calentar")
+      // sumamos sus duraciones en lugar de crear un nuevo bloque.
+      if (last && last.stepName === step.stepName) {
+        last.durationMin += step.durationMin;
+        last.expectedDurationMin += step.expectedDurationMin;
+        // El startTime se mantiene el del primero (inicio del grupo)
+      } else {
+        // Si es diferente (o el primero), creamos una copia nueva para no mutar el original
+        merged.push({ ...step });
+      }
+    }
+    return merged;
+  }, [selectedRecord]);
+
   const parametersData = selectedRecord?.parameters || [];
 
   // --- LÓGICA DE FILTRADO DE PARÁMETROS ---
@@ -219,13 +244,6 @@ export default function MachineDetail() {
         return impactB - impactA;
       });
   }, [stepsData]);
-
-  const totalImpactMinutes = useMemo(() => {
-    return anomaliesReport.reduce((acc, g) => {
-      const impact = g.type === "gap" ? g.duration : g.delta;
-      return acc + impact;
-    }, 0);
-  }, [anomaliesReport]);
 
   const machineHistoryData = useMemo(() => {
     if (!selectedMachine) return [];
@@ -828,7 +846,7 @@ export default function MachineDetail() {
           <div className="xl:col-span-4">
             <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
               {/* LISTA DETALLADA DE ANOMALÍAS */}
-              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)]">
+              <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)] overflow-hidden">
                 <CardHeader className="pb-3 border-b border-border">
                   <div className="flex items-center gap-2 text-foreground">
                     <AlertCircle className="h-5 w-5 text-orange-500" />
@@ -841,7 +859,7 @@ export default function MachineDetail() {
                   </p>
                 </CardHeader>
 
-                <CardContent className="flex-1 p-0">
+                <CardContent className="flex-1 p-0 min-h-0">
                   {anomaliesReport.length > 0 ? (
                     <ScrollArea className="h-full w-full p-4">
                       <div className="space-y-4">
