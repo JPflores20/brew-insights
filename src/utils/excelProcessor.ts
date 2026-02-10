@@ -174,14 +174,15 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
           existing.totalExpected += mat.exp;
       });
 
-      // Listar parámetros
+      // Listar parámetros CON TIMESTAMP
       evt.parameters.forEach((param: any) => {
           parametersList.push({
               name: param.name,
               value: param.val,
               target: param.target,
               unit: param.unit,
-              stepName: evt.GOP_NAME
+              stepName: evt.GOP_NAME,
+              timestamp: evt.start ? evt.start.toISOString() : undefined // <--- AQUI GUARDAMOS EL TIEMPO
           });
       });
 
@@ -209,7 +210,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
       idle_wall_minus_sumsteps_min: Math.round(total_idle * 100) / 100,
       max_gap_min: Math.round(max_gap * 100) / 100,
       timestamp: group[0].start ? group[0].start.toISOString() : new Date().toISOString(),
-      startHour: group[0].startHour, // Pasamos la hora de inicio
+      startHour: group[0].startHour, 
       steps: steps,
       materials: Array.from(materialsMap.values()),
       parameters: parametersList,

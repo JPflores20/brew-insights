@@ -24,6 +24,7 @@ export interface BatchParameter {
   target: number;
   unit: string;
   stepName: string;
+  timestamp?: string; // <--- NUEVO CAMPO: Hora exacta del registro
 }
 
 export interface BatchRecord {
@@ -61,7 +62,7 @@ export function getMachineData(data: BatchRecord[], machineName: string): BatchR
   return data.filter(d => d.TEILANL_GRUPO === machineName);
 }
 
-// --- ESTADÍSTICAS POR MÁQUINA (Esta es la que faltaba) ---
+// --- ESTADÍSTICAS POR MÁQUINA ---
 
 export function getAveragesByMachine(data: BatchRecord[]) {
   const groups = getUniqueMachineGroups(data);
@@ -165,10 +166,8 @@ export function getShiftStats(data: BatchRecord[]) {
   }));
 }
 
-
 // ===============================
 //  CAPACIDAD DE PROCESO: Cp / Cpk (UTILIDADES)
-//  Nota: Requiere límites de especificación (LSL/USL).
 // ===============================
 
 export interface ProcessCapabilityResult {
@@ -186,7 +185,6 @@ function _mean(values: number[]): number {
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-// Desviación estándar muestral (n-1)
 function _stdDevSample(values: number[]): number {
   const n = values.length;
   if (n < 2) return 0;
@@ -216,13 +214,6 @@ export function calculateCpCpk(
   return { n, mean: m, sigma: s, lsl, usl, cp, cpk };
 }
 
-/**
- * Cp/Cpk por nombre de parámetro usando deltaTemp = value - target.
- * specMap: límites por parámetro (aplican al delta).
- *
- * Ejemplo:
- * { "Temperatura Mash": { lsl: -0.5, usl: 0.5 } }
- */
 export function getCpCpkForTemperatureDeltaByParameter(
   data: BatchRecord[],
   specMap: Record<string, { lsl: number; usl: number }>,
