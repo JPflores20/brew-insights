@@ -44,7 +44,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
-import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
+import { getUniqueBatchIds, getMachineData, getUniqueMachineGroups } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -283,6 +283,101 @@ export default function MachineDetail() {
         isCurrent: record.CHARG_NR === selectedBatchId,
       }));
   }, [data, selectedMachine, selectedBatchId]);
+
+  // --- LOGICA DE TEMPERATURAS (AÑADIDO Y MEJORADO) ---
+  
+  // Estados locales para la gráfica de tendencias (para permitir filtrado independiente)
+  const [trendMachine, setTrendMachine] = useState<string>("");
+  const [trendRecipe, setTrendRecipe] = useState<string>("ALL");
+
+  // Inicializar/Sincronizar con la selección principal cuando esta cambia, 
+  // pero solo si el usuario no ha 'desviado' la selección (opcional, aquí forzamos sync inicial)
+  useEffect(() => {
+      if (selectedMachine) setTrendMachine(selectedMachine);
+  }, [selectedMachine]);
+
+  useEffect(() => {
+      if (selectedRecipe) setTrendRecipe(selectedRecipe);
+  }, [selectedRecipe]);
+
+  // Máquinas disponibles (Solo aquellas que tienen registros de temperatura Y coinciden con la receta del filtro)
+  const machinesWithTemps = useMemo(() => {
+    const machines = new Set<string>();
+
+    // Filtrar primero por receta si aplica
+    let filteredRecords = data;
+    if (trendRecipe && trendRecipe !== 'ALL') {
+        filteredRecords = data.filter(d => d.productName === trendRecipe);
+    }
+
+    filteredRecords.forEach(record => {
+      if (record.parameters) {
+        const hasTemp = record.parameters.some(p => {
+           const u = (p.unit || "").toLowerCase();
+           return u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp');
+        });
+        if (hasTemp) {
+          machines.add(record.TEILANL_GRUPO);
+        }
+      }
+    });
+    return Array.from(machines).sort();
+  }, [data, trendRecipe]);
+
+  // Params disponibles para la máquina de la TENDENCIA (no la seleccionada globalmente)
+  const availableTempParams = useMemo(() => {
+    if (!trendMachine) return [];
+    const allParams = data
+      .filter((d) => d.TEILANL_GRUPO === trendMachine)
+      .flatMap((d) => d.parameters || []);
+    
+    const temps = new Set<string>();
+    allParams.forEach(p => {
+        const u = (p.unit || "").toLowerCase();
+        if (u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp')) {
+            temps.add(p.name);
+        }
+    });
+    return Array.from(temps).sort();
+  }, [data, trendMachine]);
+
+  const [selectedTempParam, setSelectedTempParam] = useState<string>("");
+
+  // Seleccionar param por defecto cuando cambian los disponibles
+  useEffect(() => {
+      if (availableTempParams.length > 0) {
+          // Intentar mantener el mismo param si existe en la nueva máquina
+          if (!selectedTempParam || !availableTempParams.includes(selectedTempParam)) {
+              setSelectedTempParam(availableTempParams[0]);
+          }
+      } else {
+          setSelectedTempParam("");
+      }
+  }, [availableTempParams, selectedTempParam]);
+
+  const tempTrendData = useMemo(() => {
+      if (!trendMachine || !selectedTempParam) return [];
+      
+      let records = getMachineData(data, trendMachine);
+
+      // FILTRADO POR RECETA (LOCAL)
+      if (trendRecipe && trendRecipe !== 'ALL') {
+          records = records.filter(d => d.productName === trendRecipe);
+      }
+      
+      return records
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+        .map(record => {
+            const param = record.parameters?.find(p => p.name === selectedTempParam);
+            return {
+                batchId: record.CHARG_NR,
+                value: param ? Number(param.value) : null,
+                date: new Date(record.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
+                isCurrent: record.CHARG_NR === selectedBatchId // Resaltar el lote actual si coincide
+            };
+        })
+        .filter((d): d is { batchId: string; value: number; date: string; isCurrent: boolean } => d.value !== null && Number.isFinite(d.value));
+  }, [data, trendMachine, trendRecipe, selectedTempParam, selectedBatchId]);
 
   const currentGap = selectedRecord ? selectedRecord.max_gap_min : 0;
   const currentIdle = selectedRecord
@@ -1074,6 +1169,92 @@ export default function MachineDetail() {
                     </div>
                   </Card>
                 )}
+
+                {/* Tendencia de Temperaturas (NUEVO) */}
+                {tempTrendData.length > 0 || (trendMachine && availableTempParams.length > 0) ? (
+                  <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
+                    <CardHeader className="px-0 pt-0 pb-6">
+                      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                            <Thermometer className="h-5 w-5 text-red-500" />
+                            Tendencia de Temperaturas
+                          </CardTitle>
+                          <CardDescription>
+                            Análisis histórico por equipo y receta
+                          </CardDescription>
+                        </div>
+                        
+                        {/* CONTROLES DE FILTRADO EN LA GRÁFICA */}
+                        <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
+                           {/* Selector de Receta (Local) */}
+                           <Select value={trendRecipe} onValueChange={setTrendRecipe}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                              <SelectValue placeholder="Receta" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ALL">Todas las recetas</SelectItem>
+                              {uniqueRecipes.map(r => (
+                                <SelectItem key={r} value={r}>{r}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                           {/* Selector de Equipo (Local) */}
+                           <Select value={trendMachine} onValueChange={setTrendMachine}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                              <SelectValue placeholder="Equipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {machinesWithTemps.map(m => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                           {/* Selector de Variable */}
+                           <Select value={selectedTempParam} onValueChange={setSelectedTempParam}>
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                              <SelectValue placeholder="Variable" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableTempParams.map(p => (
+                                <SelectItem key={p} value={p}>{p}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <div className="h-[340px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={tempTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
+                          <XAxis dataKey="batchId" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} />
+                          <YAxis label={{ value: "°C", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} 
+                            labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+                            formatter={(value: any) => [`${value} °C`, selectedTempParam]}
+                            labelFormatter={(label, payload) => {
+                              if (payload && payload.length > 0) {
+                                return `${label} - ${payload[0].payload.date}`;
+                              }
+                              return label;
+                            }}
+                          />
+                          <Area type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorTemp)" name="Temperatura" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                ) : null}
              </div>
           </TabsContent>
 
