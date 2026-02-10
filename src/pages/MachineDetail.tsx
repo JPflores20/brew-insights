@@ -302,15 +302,14 @@ export default function MachineDetail() {
       }));
   }, [data, selectedMachine, selectedBatchId]);
 
-  // --- LOGICA DE TEMPERATURAS (AÑADIDO Y MEJORADO) ---
+  // --- LOGICA DE TEMPERATURAS (ACTUALIZADO PARA DETALLE DE LOTE) ---
   
-  // Estados locales para la gráfica de tendencias (para permitir filtrado independiente)
+  // Estados locales para la gráfica de tendencias
   const [trendMachine, setTrendMachine] = useState<string>("ALL");
   const [trendRecipe, setTrendRecipe] = useState<string>("ALL");
   const [trendBatch, setTrendBatch] = useState<string>("ALL");
 
-  // Inicializar/Sincronizar con la selección principal cuando esta cambia, 
-  // pero solo si el usuario no ha 'desviado' la selección (opcional, aquí forzamos sync inicial)
+  // Sincronizar filtros iniciales
   useEffect(() => {
       if (selectedMachine) setTrendMachine(selectedMachine);
   }, [selectedMachine]);
@@ -320,38 +319,31 @@ export default function MachineDetail() {
   }, [selectedRecipe]);
 
   useEffect(() => {
+      // Resetear lote en tendencia si cambian los filtros superiores
       setTrendBatch("ALL");
   }, [trendRecipe, trendMachine]);
 
-  // Máquinas disponibles (Solo aquellas que tienen registros de temperatura Y coinciden con la receta del filtro)
+  // Máquinas disponibles para filtro
   const machinesWithTemps = useMemo(() => {
     const machines = new Set<string>();
-
-    // Filtrar primero por receta si aplica
     let filteredRecords = data;
     if (trendRecipe && trendRecipe !== 'ALL') {
         filteredRecords = data.filter(d => d.productName === trendRecipe);
     }
-
     filteredRecords.forEach(record => {
-      if (record.parameters) {
-        const hasTemp = record.parameters.some(p => {
+      if (record.parameters && record.parameters.some(p => {
            const u = (p.unit || "").toLowerCase();
            return u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp');
-        });
-        if (hasTemp) {
+      })) {
           machines.add(record.TEILANL_GRUPO);
-        }
       }
     });
     return Array.from(machines).sort();
   }, [data, trendRecipe]);
 
-  
-  // Lotes disponibles para la tendencia (filtrados por receta, equipo y existencia de temperatura)
+  // Lotes disponibles para filtro
   const availableTrendBatches = useMemo(() => {
     const batches = new Set<string>();
-    
     let filteredRecords = data;
     if (trendRecipe && trendRecipe !== 'ALL') {
         filteredRecords = filteredRecords.filter(d => d.productName === trendRecipe);
@@ -359,22 +351,18 @@ export default function MachineDetail() {
     if (trendMachine && trendMachine !== "ALL") {
         filteredRecords = filteredRecords.filter(d => d.TEILANL_GRUPO === trendMachine);
     }
-
     filteredRecords.forEach(record => {
-      if (record.parameters) {
-        const hasTemp = record.parameters.some(p => {
+      if (record.parameters && record.parameters.some(p => {
            const u = (p.unit || "").toLowerCase();
            return u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp');
-        });
-        if (hasTemp) {
+      })) {
           batches.add(record.CHARG_NR);
-        }
       }
     });
     return Array.from(batches).sort();
   }, [data, trendRecipe, trendMachine]);
 
-  // Params disponibles para la máquina de la TENDENCIA (no la seleccionada globalmente)
+  // Variables disponibles (Temp)
   const availableTempParams = useMemo(() => {
     if (!trendMachine) return [];
     const allParams = data
@@ -393,10 +381,8 @@ export default function MachineDetail() {
 
   const [selectedTempParam, setSelectedTempParam] = useState<string>("");
 
-  // Seleccionar param por defecto cuando cambian los disponibles
   useEffect(() => {
       if (availableTempParams.length > 0) {
-          // Intentar mantener el mismo param si existe en la nueva máquina
           if (!selectedTempParam || !availableTempParams.includes(selectedTempParam)) {
               setSelectedTempParam(availableTempParams[0]);
           }
@@ -405,30 +391,56 @@ export default function MachineDetail() {
       }
   }, [availableTempParams, selectedTempParam]);
 
+  // DATOS DE LA GRÁFICA DE TEMPERATURA
   const tempTrendData = useMemo(() => {
-      if (!trendMachine || !selectedTempParam) return [];
+      if (!selectedTempParam) return [];
       
+      // --- MODO 1: DETALLE DE LOTE (Paso a Paso) ---
+      if (trendBatch && trendBatch !== 'ALL') {
+          // Buscar el registro específico del lote
+          let record;
+          if (trendMachine && trendMachine !== "ALL") {
+             record = data.find(d => d.CHARG_NR === trendBatch && d.TEILANL_GRUPO === trendMachine);
+          } else {
+             // Si no hay máquina seleccionada, intentamos buscar cualquiera que tenga el lote
+             record = data.find(d => d.CHARG_NR === trendBatch);
+          }
+
+          if (!record || !record.parameters) return [];
+
+          // Extraer la secuencia de pasos para la variable seleccionada
+          return record.parameters
+            .filter(p => p.name === selectedTempParam)
+            .map((p, index) => ({
+                stepName: p.stepName || `Paso ${index + 1}`,
+                value: Number(p.value),
+                unit: p.unit,
+                // Agregamos propiedades para consistencia con el otro modo, aunque no se usen todas
+                batchId: record?.CHARG_NR,
+                date: record?.timestamp,
+                machine: record?.TEILANL_GRUPO,
+                isCurrent: true 
+            }));
+      }
+
+      // --- MODO 2: HISTÓRICO (Tendencia entre lotes) ---
       let records = (trendMachine === "ALL") ? data : getMachineData(data, trendMachine);
 
-      // FILTRADO POR RECETA (LOCAL)
       if (trendRecipe && trendRecipe !== 'ALL') {
           records = records.filter(d => d.productName === trendRecipe);
-      }
-      // FILTRADO POR LOTE (LOCAL)
-      if (trendBatch && trendBatch !== 'ALL') {
-          records = records.filter(d => d.CHARG_NR === trendBatch);
       }
       
       return records
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
         .map(record => {
+            // En modo histórico solo tomamos el primer valor representativo
             const param = record.parameters?.find(p => p.name === selectedTempParam);
             return {
                 batchId: record.CHARG_NR,
                 value: param ? Number(param.value) : null,
                 date: new Date(record.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
-                machine: record.TEILANL_GRUPO, // Para tooltip
-                isCurrent: record.CHARG_NR === selectedBatchId // Resaltar el lote actual si coincide
+                machine: record.TEILANL_GRUPO,
+                isCurrent: record.CHARG_NR === selectedBatchId
             };
         })
         .filter((d): d is { batchId: string; value: number; date: string; machine: string; isCurrent: boolean } => d.value !== null && Number.isFinite(d.value));
@@ -1081,10 +1093,12 @@ export default function MachineDetail() {
                         <div className="space-y-1">
                           <CardTitle className="text-lg font-semibold flex items-center gap-2">
                             <Thermometer className="h-5 w-5 text-red-500" />
-                            Tendencia de Temperaturas
+                            {trendBatch && trendBatch !== "ALL" ? "Perfil de Temperatura del Lote" : "Tendencia Histórica de Temperaturas"}
                           </CardTitle>
                           <CardDescription>
-                            Análisis histórico por equipo y receta
+                            {trendBatch && trendBatch !== "ALL" 
+                                ? `Visualizando evolución paso a paso del lote ${trendBatch}`
+                                : "Análisis histórico por equipo y receta"}
                           </CardDescription>
                         </div>
                         
@@ -1122,7 +1136,7 @@ export default function MachineDetail() {
                               <SelectValue placeholder="Lote" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="ALL">Todos los lotes</SelectItem>
+                              <SelectItem value="ALL">Todos los lotes (Histórico)</SelectItem>
                               {availableTrendBatches.map(b => (
                                 <SelectItem key={b} value={b}>{b}</SelectItem>
                               ))}
@@ -1153,7 +1167,22 @@ export default function MachineDetail() {
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                          <XAxis dataKey={trendBatch && trendBatch !== "ALL" ? "date" : "batchId"} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} />
+                          
+                          {/* Eje X dinámico: 'stepName' para lote único, 'date'/'batchId' para histórico */}
+                          <XAxis 
+                            dataKey={trendBatch && trendBatch !== "ALL" ? "stepName" : "date"} 
+                            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} 
+                            axisLine={{ stroke: "hsl(var(--border))" }} 
+                            interval={trendBatch && trendBatch !== "ALL" ? 0 : "preserveStartEnd"}
+                            angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
+                            textAnchor={trendBatch && trendBatch !== "ALL" ? "end" : "middle"}
+                            height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
+                            tickFormatter={(val) => {
+                                if (trendBatch && trendBatch !== "ALL") return truncateLabel(val, 15);
+                                return val;
+                            }}
+                          />
+                          
                           <YAxis label={{ value: "°C", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} 
@@ -1162,11 +1191,16 @@ export default function MachineDetail() {
                             labelFormatter={(label, payload) => {
                               if (payload && payload.length > 0) {
                                 const data = payload[0].payload;
-                                let title = `${label} - ${data.date}`;
-                                if (trendMachine === "ALL") {
-                                    title += ` (${data.machine})`;
+                                // Tooltip dinámico según modo
+                                if (trendBatch && trendBatch !== "ALL") {
+                                    return `${data.stepName} (${trendBatch})`;
+                                } else {
+                                    let title = `${label} - ${data.date}`;
+                                    if (trendMachine === "ALL") {
+                                        title += ` (${data.machine})`;
+                                    }
+                                    return title;
                                 }
-                                return title;
                               }
                               return label;
                             }}
