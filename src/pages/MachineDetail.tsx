@@ -52,8 +52,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+
+const CustomDot = (props: any) => {
+  const { cx, cy, index, selectedIndices, stroke } = props;
+  
+  if (selectedIndices && selectedIndices.includes(index)) {
+    return (
+      <circle cx={cx} cy={cy} r={5} fill={stroke} stroke="white" strokeWidth={2} />
+    );
+  }
+  return null;
+};
+
 export default function MachineDetail() {
-  const { data } = useData();
+    const { data } = useData();
+
+  // Estados para selección de puntos en gráficas
+  const [selectedVarIndices, setSelectedVarIndices] = useState<number[]>([]);
+  const [selectedHistoryIndices, setSelectedHistoryIndices] = useState<number[]>([]);
+  const [selectedTempIndices, setSelectedTempIndices] = useState<number[]>([]);
+
 
   // --- 1. LÓGICA DE RECETAS ---
   const uniqueRecipes = useMemo(() => {
@@ -1120,7 +1138,7 @@ export default function MachineDetail() {
                       <div className="h-[420px] w-full p-4">
                         {filteredParameters.length > 0 ? (
                           <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={filteredParameters} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <AreaChart data={filteredParameters} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedVarIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
                               <defs>
                                 <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0.8} />
@@ -1132,7 +1150,7 @@ export default function MachineDetail() {
                               <YAxis tick={{ fontSize: 12 }} />
                               <Tooltip contentStyle={themedTooltipContentStyle} labelStyle={themedTooltipLabelStyle} itemStyle={themedTooltipItemStyle} cursor={{ fill: "transparent" }} labelFormatter={(label) => String(label)} formatter={(value: any, name: any, props: any) => { const unit = getParamUnit(props?.payload); return [`${formatNumber(value, 2)}${unit}`, name]; }} />
                               <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                              <Area type="monotone" dataKey="value" stroke={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} fillOpacity={1} fill="url(#colorParam)" name={paramFilter === 'materials' ? "Cantidad" : "Valor Registrado"} />
+                              <Area type="monotone" dataKey="value" stroke={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} fillOpacity={1} fill="url(#colorParam)" name={paramFilter === 'materials' ? "Cantidad" : "Valor Registrado"} dot={(props) => <CustomDot {...props} selectedIndices={selectedVarIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
                             </AreaChart>
                           </ResponsiveContainer>
                         ) : (
@@ -1152,7 +1170,7 @@ export default function MachineDetail() {
                     </CardTitle>
                     <div className="h-[340px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={machineHistoryData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <AreaChart data={machineHistoryData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedHistoryIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
                           <defs>
                             <linearGradient id="colorRealTime" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
@@ -1163,7 +1181,7 @@ export default function MachineDetail() {
                           <XAxis dataKey="batchId" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} />
                           <YAxis label={{ value: "Minutos", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
                           <Tooltip contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} />
-                          <Area type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} fillOpacity={1} fill="url(#colorRealTime)" name="Tiempo Real" />
+                          <Area type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} fillOpacity={1} fill="url(#colorRealTime)" name="Tiempo Real" dot={(props) => <CustomDot {...props} selectedIndices={selectedHistoryIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -1228,7 +1246,7 @@ export default function MachineDetail() {
                     </CardHeader>
                     <div className="h-[340px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={tempTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <AreaChart data={tempTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedTempIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
                           <defs>
                             <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
@@ -1249,7 +1267,7 @@ export default function MachineDetail() {
                               return label;
                             }}
                           />
-                          <Area type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorTemp)" name="Temperatura" />
+                          <Area type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorTemp)" name="Temperatura" dot={(props) => <CustomDot {...props} selectedIndices={selectedTempIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
