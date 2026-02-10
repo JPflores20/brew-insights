@@ -1046,163 +1046,11 @@ export default function MachineDetail() {
              {/* ELEMENTOS ADICIONALES VISTA MAQUINA (Cp/Cpk, Variables, Historia) */}
              <div className="space-y-6">
                 {/* Cp/Cpk */}
-                {selectedMachine && (
-                  <Card className="bg-card border-border">
-                    <CardHeader className="pb-3 border-b border-border">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Gauge className="h-5 w-5 text-indigo-600" />
-                            Cp / Cpk de ΔT (Real - Target)
-                          </CardTitle>
-                          <CardDescription>
-                            Define límites LSL/USL por parámetro para calcular capacidad del proceso.
-                          </CardDescription>
-                        </div>
-                        <Badge variant="secondary" className="font-mono">
-                          Máquina: {selectedMachine}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-4">
-                      {cpCpkByParam.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">
-                          No hay parámetros para calcular Cp/Cpk en esta máquina.
-                        </div>
-                      ) : (
-                        <ScrollArea className="h-[320px] w-full pr-4">
-                          <div className="space-y-3">
-                            {cpCpkByParam.map((row) => {
-                              const badge = cpkBadge(row.cpk);
-                              return (
-                                <div
-                                  key={row.name}
-                                  className="rounded-lg border border-border p-3 bg-background/50"
-                                >
-                                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-medium text-foreground truncate">
-                                          {row.name}
-                                        </span>
-                                        <Badge variant="outline" className="text-xs">
-                                          ΔT ({row.unit || "u"})
-                                        </Badge>
-                                        <span className={`px-2 py-1 rounded-md text-xs ${badge.cls}`}>
-                                          {badge.text}
-                                        </span>
-                                      </div>
-                                      <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs text-muted-foreground">
-                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                                          n: <strong className="text-foreground">{row.n}</strong>
-                                        </div>
-                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                                          μ: <strong className="text-foreground">{formatNum(row.mean, 3)}</strong>
-                                        </div>
-                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                                          σ: <strong className="text-foreground">{formatNum(row.sigma, 3)}</strong>
-                                        </div>
-                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                                          Cp: <strong className="text-foreground">{formatNum(row.cp, 2)}</strong>
-                                        </div>
-                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                                          Cpk: <strong className="text-foreground">{formatNum(row.cpk, 2)}</strong>
-                                        </div>
-                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
-                                          Spec: <strong className="text-foreground">{row.lsl === null || row.usl === null ? "—" : `${row.lsl} / ${row.usl}`}</strong>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 lg:w-[260px]">
-                                      <div>
-                                        <label className="text-xs text-muted-foreground">LSL</label>
-                                        <Input
-                                          value={specLimits[row.name]?.lsl ?? ""}
-                                          onChange={(e) => updateSpec(row.name, "lsl", e.target.value)}
-                                          placeholder="Ej: -0.5"
-                                          inputMode="decimal"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-xs text-muted-foreground">USL</label>
-                                        <Input
-                                          value={specLimits[row.name]?.usl ?? ""}
-                                          onChange={(e) => updateSpec(row.name, "usl", e.target.value)}
-                                          placeholder="Ej: 0.5"
-                                          inputMode="decimal"
-                                        />
-                                      </div>
-                                      <div className="col-span-2 flex justify-end">
-                                        <Button size="sm" variant="ghost" className="h-8" onClick={() => clearSpec(row.name)}>
-                                          Limpiar límites
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </ScrollArea>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Variables */}
-                {parametersData.length > 0 && (
-                  <Card className="bg-card border-border shadow-sm w-full flex flex-col">
-                    <CardHeader className="pb-3 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Gauge className="h-5 w-5 text-blue-600" />
-                          <Thermometer className="h-5 w-5 text-sky-600 opacity-70" />
-                          <CardTitle className="text-lg">Análisis de Variables</CardTitle>
-                        </div>
-                        <CardDescription>
-                          Visualiza variables de proceso o adiciones de materiales paso a paso.
-                        </CardDescription>
-                      </div>
-                      <Tabs value={paramFilter} onValueChange={(val) => setParamFilter(val as any)} className="w-full sm:w-[320px]">
-                        <TabsList className="grid w-full grid-cols-3">
-                          <TabsTrigger value="all" className="text-xs"><Filter className="h-3 w-3 mr-1" /> Todos</TabsTrigger>
-                          <TabsTrigger value="process" className="text-xs"><Gauge className="h-3 w-3 mr-1" /> Proceso</TabsTrigger>
-                          <TabsTrigger value="materials" className="text-xs"><Package className="h-3 w-3 mr-1" /> Materiales</TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="h-[420px] w-full p-4">
-                        {filteredParameters.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={filteredParameters} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedVarIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
-                              <defs>
-                                <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0.8} />
-                                  <stop offset="95%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                              <XAxis dataKey="stepName" tick={{ fontSize: 12 }} interval={paramTickInterval} minTickGap={12} angle={-20} textAnchor="end" height={90} tickFormatter={(v) => truncateLabel(v, 22)} />
-                              <YAxis tick={{ fontSize: 12 }} />
-                              <Tooltip contentStyle={themedTooltipContentStyle} labelStyle={themedTooltipLabelStyle} itemStyle={themedTooltipItemStyle} cursor={{ fill: "transparent" }} labelFormatter={(label) => String(label)} formatter={(value: any, name: any, props: any) => { const unit = getParamUnit(props?.payload); return [`${formatNumber(value, 2)}${unit}`, name]; }} />
-                              <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                              <Area type="monotone" dataKey="value" stroke={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} fillOpacity={1} fill="url(#colorParam)" name={paramFilter === 'materials' ? "Cantidad" : "Valor Registrado"} dot={(props) => <CustomDot {...props} selectedIndices={selectedVarIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="h-full flex items-center justify-center text-muted-foreground"><p>No hay datos para la categoría seleccionada.</p></div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Historia */}
-                {machineHistoryData.length > 0 && (
+                
+{machineHistoryData.length > 0 && (
                   <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
                     <CardTitle className="mb-6 text-lg font-semibold flex items-center justify-between">
-                      <span>Tendencia Histórica</span>
+                      <span>Tendencia Histórica De Tiempos</span>
                       <span className="text-sm font-normal text-muted-foreground">Comparativa con otros lotes en {selectedMachine}</span>
                     </CardTitle>
                     <div className="h-[340px] w-full">
@@ -1225,7 +1073,7 @@ export default function MachineDetail() {
                   </Card>
                 )}
 
-                {/* Tendencia de Temperaturas (NUEVO) */}
+{/* Tendencia de Temperaturas (NUEVO) */}
                 {tempTrendData.length > 0 || (trendMachine && availableTempParams.length > 0) ? (
                   <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
                     <CardHeader className="px-0 pt-0 pb-6">
@@ -1329,6 +1177,158 @@ export default function MachineDetail() {
                     </div>
                   </Card>
                 ) : null}
+
+{parametersData.length > 0 && (
+                  <Card className="bg-card border-border shadow-sm w-full flex flex-col">
+                    <CardHeader className="pb-3 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Gauge className="h-5 w-5 text-blue-600" />
+                          <Thermometer className="h-5 w-5 text-sky-600 opacity-70" />
+                          <CardTitle className="text-lg">Análisis de Variables</CardTitle>
+                        </div>
+                        <CardDescription>
+                          Visualiza variables de proceso o adiciones de materiales paso a paso.
+                        </CardDescription>
+                      </div>
+                      <Tabs value={paramFilter} onValueChange={(val) => setParamFilter(val as any)} className="w-full sm:w-[320px]">
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="all" className="text-xs"><Filter className="h-3 w-3 mr-1" /> Todos</TabsTrigger>
+                          <TabsTrigger value="process" className="text-xs"><Gauge className="h-3 w-3 mr-1" /> Proceso</TabsTrigger>
+                          <TabsTrigger value="materials" className="text-xs"><Package className="h-3 w-3 mr-1" /> Materiales</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="h-[420px] w-full p-4">
+                        {filteredParameters.length > 0 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={filteredParameters} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedVarIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
+                              <defs>
+                                <linearGradient id="colorParam" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0.8} />
+                                  <stop offset="95%" stopColor={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                              <XAxis dataKey="stepName" tick={{ fontSize: 12 }} interval={paramTickInterval} minTickGap={12} angle={-20} textAnchor="end" height={90} tickFormatter={(v) => truncateLabel(v, 22)} />
+                              <YAxis tick={{ fontSize: 12 }} />
+                              <Tooltip contentStyle={themedTooltipContentStyle} labelStyle={themedTooltipLabelStyle} itemStyle={themedTooltipItemStyle} cursor={{ fill: "transparent" }} labelFormatter={(label) => String(label)} formatter={(value: any, name: any, props: any) => { const unit = getParamUnit(props?.payload); return [`${formatNumber(value, 2)}${unit}`, name]; }} />
+                              <Legend wrapperStyle={{ paddingTop: "10px" }} />
+                              <Area type="monotone" dataKey="value" stroke={paramFilter === 'materials' ? "#16a34a" : "#3b82f6"} fillOpacity={1} fill="url(#colorParam)" name={paramFilter === 'materials' ? "Cantidad" : "Valor Registrado"} dot={(props) => <CustomDot {...props} selectedIndices={selectedVarIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="h-full flex items-center justify-center text-muted-foreground"><p>No hay datos para la categoría seleccionada.</p></div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+{selectedMachine && (
+                  <Card className="bg-card border-border">
+                    <CardHeader className="pb-3 border-b border-border">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Gauge className="h-5 w-5 text-indigo-600" />
+                            Cp / Cpk de ΔT (Real - Target)
+                          </CardTitle>
+                          <CardDescription>
+                            Define límites LSL/USL por parámetro para calcular capacidad del proceso.
+                          </CardDescription>
+                        </div>
+                        <Badge variant="secondary" className="font-mono">
+                          Máquina: {selectedMachine}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      {cpCpkByParam.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">
+                          No hay parámetros para calcular Cp/Cpk en esta máquina.
+                        </div>
+                      ) : (
+                        <ScrollArea className="h-[320px] w-full pr-4">
+                          <div className="space-y-3">
+                            {cpCpkByParam.map((row) => {
+                              const badge = cpkBadge(row.cpk);
+                              return (
+                                <div
+                                  key={row.name}
+                                  className="rounded-lg border border-border p-3 bg-background/50"
+                                >
+                                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-medium text-foreground truncate">
+                                          {row.name}
+                                        </span>
+                                        <Badge variant="outline" className="text-xs">
+                                          ΔT ({row.unit || "u"})
+                                        </Badge>
+                                        <span className={`px-2 py-1 rounded-md text-xs ${badge.cls}`}>
+                                          {badge.text}
+                                        </span>
+                                      </div>
+                                      <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs text-muted-foreground">
+                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                          n: <strong className="text-foreground">{row.n}</strong>
+                                        </div>
+                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                          μ: <strong className="text-foreground">{formatNum(row.mean, 3)}</strong>
+                                        </div>
+                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                          σ: <strong className="text-foreground">{formatNum(row.sigma, 3)}</strong>
+                                        </div>
+                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                          Cp: <strong className="text-foreground">{formatNum(row.cp, 2)}</strong>
+                                        </div>
+                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                          Cpk: <strong className="text-foreground">{formatNum(row.cpk, 2)}</strong>
+                                        </div>
+                                        <div className="rounded border border-border/60 bg-background/60 px-2 py-1">
+                                          Spec: <strong className="text-foreground">{row.lsl === null || row.usl === null ? "—" : `${row.lsl} / ${row.usl}`}</strong>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 lg:w-[260px]">
+                                      <div>
+                                        <label className="text-xs text-muted-foreground">LSL</label>
+                                        <Input
+                                          value={specLimits[row.name]?.lsl ?? ""}
+                                          onChange={(e) => updateSpec(row.name, "lsl", e.target.value)}
+                                          placeholder="Ej: -0.5"
+                                          inputMode="decimal"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-xs text-muted-foreground">USL</label>
+                                        <Input
+                                          value={specLimits[row.name]?.usl ?? ""}
+                                          onChange={(e) => updateSpec(row.name, "usl", e.target.value)}
+                                          placeholder="Ej: 0.5"
+                                          inputMode="decimal"
+                                        />
+                                      </div>
+                                      <div className="col-span-2 flex justify-end">
+                                        <Button size="sm" variant="ghost" className="h-8" onClick={() => clearSpec(row.name)}>
+                                          Limpiar límites
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </ScrollArea>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
              </div>
           </TabsContent>
 
