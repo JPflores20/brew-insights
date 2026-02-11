@@ -1,6 +1,6 @@
 // src/components/layout/DashboardLayout.tsx
 import { ReactNode, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // Agregar useNavigate
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -11,11 +11,13 @@ import {
   X,
   Timer,
   LogOut,
-  ArrowLeft // Nuevo icono
+  ArrowLeft,
+  User // Nuevo icono importado
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth"; 
 import { auth } from "@/lib/firebase";   
+import { useAuth } from "@/context/AuthContext"; // Importamos el hook de autenticación
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -51,8 +53,9 @@ const navItems = [
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
-  const navigate = useNavigate(); // Hook para navegación
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth(); // Obtenemos el usuario actual del contexto
 
   const handleLogout = async () => {
     try {
@@ -61,6 +64,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       console.error("Error al cerrar sesión:", error);
     }
   };
+
+  // Componente reutilizable para la tarjeta de usuario
+  const UserProfileCard = () => (
+    user ? (
+      <div className="flex items-center gap-3 px-3 py-2 mb-3 rounded-lg bg-sidebar-accent/50 border border-sidebar-border/50">
+        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+          <User className="h-4 w-4" />
+        </div>
+        <div className="overflow-hidden">
+          <p className="text-sm font-medium truncate text-sidebar-foreground">
+            {user.displayName || "Usuario"}
+          </p>
+          <p className="text-xs text-muted-foreground truncate" title={user.email || ""}>
+            {user.email}
+          </p>
+        </div>
+      </div>
+    ) : null
+  );
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -113,7 +135,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border space-y-4">
+        <div className="p-4 border-t border-sidebar-border space-y-2">
+          {/* Mostrar usuario activo aquí */}
+          <UserProfileCard />
+
           <Button 
             variant="ghost" 
             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
@@ -123,7 +148,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             Cerrar Sesión
           </Button>
           
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center pt-2">
             v1.1.0 • Producción
           </p>
         </div>
@@ -182,7 +207,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Link>
               );
             })}
-            <div className="pt-2 mt-2 border-t border-sidebar-border">
+            <div className="pt-2 mt-2 border-t border-sidebar-border space-y-2">
+              {/* Mostrar usuario activo en móvil también */}
+              <UserProfileCard />
+              
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
