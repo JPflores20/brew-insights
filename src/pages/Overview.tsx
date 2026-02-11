@@ -143,7 +143,7 @@ export default function Overview() {
   const pieData = useMemo(() => {
     return recipeStats.map(stat => ({
       name: stat.name,
-      value: stat.batchCount
+      value: stat.batchCount // Usamos batchCount (lotes únicos)
     })).sort((a, b) => b.value - a.value);
   }, [recipeStats]);
 
@@ -166,8 +166,8 @@ export default function Overview() {
           cy="50%"
           labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
           label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-          outerRadius={expanded ? 200 : 110} 
-          innerRadius={expanded ? 100 : 60} // Estilo dona
+          outerRadius={expanded ? 200 : 130} // Aumentado ligeramente para aprovechar el nuevo espacio
+          innerRadius={expanded ? 100 : 70}  // Aumentado ligeramente
           paddingAngle={2}
           dataKey="value"
           nameKey="name"
@@ -356,7 +356,8 @@ export default function Overview() {
           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1.5 rounded-md shadow-sm border border-border">
              <Maximize2 className="w-4 h-4 text-muted-foreground" />
           </div>
-          <EfficiencyChart data={data} />
+          {/* AJUSTE: Altura aumentada a 450px para igualar la tarjeta de distribución */}
+          <EfficiencyChart data={data} className="h-[450px]" />
         </div>
 
         {/* Gráfico de Pastel: Distribución de Productos (Clickeable) */}
@@ -375,7 +376,8 @@ export default function Overview() {
             <CardDescription>Volumen de producción por tipo de cerveza</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex items-center justify-center p-2">
-            <div className="h-[350px] w-full">
+            {/* AJUSTE: Altura aumentada a 450px para evitar desbordamiento */}
+            <div className="h-[450px] w-full">
               {pieData.length > 0 ? (
                 <ProductPieChart />
               ) : (
