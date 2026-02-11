@@ -12,10 +12,10 @@ import {
   Beer, 
   Info, 
   AlertTriangle,
-  // --- NUEVOS ICONOS ---
   Factory, 
   Sun,
-  Moon
+  Moon,
+  PieChart as PieChartIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,28 +26,36 @@ import {
   getTotalBatches, 
   getAverageCycleDeviation, 
   getMachineWithHighestIdleTime,
-  // --- NUEVAS FUNCIONES DE MOCKDATA (Asegúrate de tenerlas en mockData.ts) ---
   getRecipeStats, 
   getShiftStats
 } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-// --- NUEVOS IMPORTES PARA GRÁFICAS ---
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Legend,
+  PieChart, 
+  Pie, 
+  Cell 
+} from "recharts";
 
 export default function Overview() {
   const { data, setData } = useData(); 
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   
-  // --- LÓGICA ORIGINAL DE ESTADO (Mantenida) ---
   const [uploadProgress, setUploadProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // --- LÓGICA DE ANIMACIÓN Y CARGA (Mantenida intacta) ---
   const clearProgressInterval = () => {
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
@@ -59,7 +67,6 @@ export default function Overview() {
     setLoading(true);
     setUploadProgress(0);
 
-    // Simulación de llenado (Lógica original)
     progressIntervalRef.current = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev >= 90) {
@@ -73,11 +80,9 @@ export default function Overview() {
     try {
       const processedData = await processExcelFile(file);
       
-      // Finalización (Lógica original)
       clearProgressInterval();
       setUploadProgress(100);
 
-      // Pequeña pausa visual
       await new Promise(resolve => setTimeout(resolve, 800));
 
       setData(processedData); 
@@ -137,14 +142,22 @@ export default function Overview() {
     }
   };
 
-  // --- CÁLCULOS (Originales + Nuevos) ---
   const totalBatches = getTotalBatches(data);
   const avgDeviation = getAverageCycleDeviation(data);
   const highestIdle = getMachineWithHighestIdleTime(data);
   
-  // Nuevos cálculos (solo si hay datos)
   const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
   const shiftStats = useMemo(() => getShiftStats ? getShiftStats(data) : [], [data]);
+
+  // Datos para la gráfica de pastel (Distribución de productos)
+  const pieData = useMemo(() => {
+    return recipeStats.map(stat => ({
+      name: stat.name,
+      value: stat.batchCount
+    })).sort((a, b) => b.value - a.value);
+  }, [recipeStats]);
+
+  const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
   const handleNavigateToDetail = () => {
     if (highestIdle.machine !== "N/A") {
@@ -153,7 +166,6 @@ export default function Overview() {
     }
   };
 
-  // --- RENDERIZADO (Lógica original de carga) ---
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -168,7 +180,6 @@ export default function Overview() {
           onDrop={handleDrop}
         >
           {loading ? (
-            /* ANIMACIÓN CERVEZA (Original) */
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
                <div className="absolute inset-x-0 bottom-0 h-full w-full overflow-hidden rounded-xl">
                  <div 
@@ -204,7 +215,6 @@ export default function Overview() {
                </div>
             </div>
           ) : (
-            /* UI DRAG & DROP (Original) */
             <>
               <div className={cn(
                 "rounded-full p-6 transition-transform duration-300",
@@ -277,8 +287,6 @@ export default function Overview() {
         <div className="lg:col-span-1"><AlertsWidget data={data} /></div>
       </div>
 
-      {/* --- AQUI COMIENZAN LAS SECCIONES NUEVAS (AÑADIDO) --- */}
-      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         
         {/* 1. Comparativa de Recetas */}
@@ -310,8 +318,52 @@ export default function Overview() {
           </CardContent>
         </Card>
 
-        {/* 2. Análisis de Turnos */}
+        {/* 2. Distribución de Productos (GRÁFICA DE PASTEL NUEVA) */}
         <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5 text-amber-500" />
+              Distribución de Productos
+            </CardTitle>
+            <CardDescription>Cantidad de lotes producidos por marca</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex items-center justify-center">
+              {pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                      formatter={(value: number) => [`${value} Lotes`, 'Cantidad']}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-muted-foreground">No hay datos suficientes</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Análisis de Turnos (Movido al final) */}
+        <Card className="bg-card border-border lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Moon className="h-5 w-5 text-indigo-500" />
@@ -320,10 +372,10 @@ export default function Overview() {
             <CardDescription>Desempeño acumulado por horario de inicio</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {shiftStats.map((shift) => (
-                <div key={shift.name} className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
-                  <div className="flex items-center gap-3">
+                <div key={shift.name} className="flex flex-col justify-between p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
+                  <div className="flex items-center gap-3 mb-3">
                     <div className={cn("p-2 rounded-full", 
                         shift.name.includes("Matutino") ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" : 
                         shift.name.includes("Vespertino") ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" : 
@@ -333,11 +385,11 @@ export default function Overview() {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{shift.name}</p>
-                      <p className="text-xs text-muted-foreground">{shift.batches} lotes iniciados</p>
+                      <p className="text-xs text-muted-foreground">{shift.batches} lotes</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={cn("text-sm font-bold", shift.avgIdle > 15 ? "text-red-500" : "text-green-600")}>
+                  <div className="text-right mt-auto">
+                    <p className={cn("text-xl font-bold", shift.avgIdle > 15 ? "text-red-500" : "text-green-600")}>
                       {shift.avgIdle} min
                     </p>
                     <p className="text-[10px] text-muted-foreground">T. Muerto Promedio</p>
@@ -349,9 +401,6 @@ export default function Overview() {
         </Card>
       </div>
 
-      {/* --- FIN SECCIONES NUEVAS --- */}
-
-      {/* GLOSARIO ORIGINAL (Mantenido) */}
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
