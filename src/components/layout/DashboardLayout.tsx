@@ -12,24 +12,25 @@ import {
   Timer,
   LogOut,
   ArrowLeft,
-  User // Nuevo icono importado
+  User,
+  Lock // Importamos icono de candado para indicar bloqueo
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth"; 
 import { auth } from "@/lib/firebase";   
-import { useAuth } from "@/context/AuthContext"; // Importamos el hook de autenticación
+import { useAuth } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext"; // 1. Importamos el hook de datos
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-// Actualizamos las rutas agregando /cocimientos al inicio
 const navItems = [
   { 
     path: "/cocimientos", 
     label: "Resumen", 
     icon: LayoutDashboard,
-    description: "Tablero principal"
+    description: "Carga de datos" // Actualicé la descripción para ser más claro
   },
   { 
     path: "/cocimientos/comparacion", 
@@ -55,7 +56,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth(); // Obtenemos el usuario actual del contexto
+  const { user } = useAuth();
+  
+  // 2. Obtenemos los datos para verificar si hay información cargada
+  const { data } = useData();
+  const hasData = data && data.length > 0;
 
   const handleLogout = async () => {
     try {
@@ -65,7 +70,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  // Componente reutilizable para la tarjeta de usuario
   const UserProfileCard = () => (
     user ? (
       <div className="flex items-center gap-3 px-3 py-2 mb-3 rounded-lg bg-sidebar-accent/50 border border-sidebar-border/50">
@@ -88,7 +92,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
-        {/* Header del Sidebar con link al Menú Principal */}
         <div 
             className="h-16 flex items-center gap-3 px-6 border-b border-sidebar-border cursor-pointer hover:bg-sidebar-accent/50 transition-colors"
             onClick={() => navigate("/")}
@@ -102,7 +105,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          {/* Botón explícito para volver */}
           <Button 
             variant="ghost" 
             className="w-full justify-start text-muted-foreground mb-4"
@@ -114,6 +116,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || location.pathname === item.path + "/";
+            
+            // 3. Lógica de bloqueo: Bloquear si NO es la página de resumen y NO hay datos
+            const isDisabled = item.path !== "/cocimientos" && !hasData;
+
+            if (isDisabled) {
+              return (
+                <div
+                  key={item.path}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-not-allowed opacity-50 bg-muted/20",
+                    "text-muted-foreground"
+                  )}
+                  title="Carga datos en Resumen primero para habilitar"
+                >
+                  <div className="relative">
+                    <item.icon className="h-5 w-5" />
+                    {/* Indicador visual de bloqueo */}
+                    <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5">
+                        <Lock className="h-2.5 w-2.5 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{item.label}</p>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.path}
@@ -136,7 +166,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
 
         <div className="p-4 border-t border-sidebar-border space-y-2">
-          {/* Mostrar usuario activo aquí */}
           <UserProfileCard />
 
           <Button 
@@ -190,6 +219,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
+              // Misma lógica de bloqueo para móvil
+              const isDisabled = item.path !== "/cocimientos" && !hasData;
+
+              if (isDisabled) {
+                return (
+                  <div
+                    key={item.path}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg opacity-50 bg-muted/20 text-muted-foreground cursor-not-allowed"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="font-medium">{item.label} (Requiere datos)</span>
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={item.path}
@@ -208,7 +252,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               );
             })}
             <div className="pt-2 mt-2 border-t border-sidebar-border space-y-2">
-              {/* Mostrar usuario activo en móvil también */}
               <UserProfileCard />
               
               <Button 
