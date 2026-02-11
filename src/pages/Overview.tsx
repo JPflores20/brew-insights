@@ -11,10 +11,12 @@ import {
   Beer, 
   Info, 
   AlertTriangle,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { processExcelFile } from "@/utils/excelProcessor";
 import { useData } from "@/context/DataContext"; 
@@ -32,13 +34,15 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  Tooltip
+  Tooltip as RechartsTooltip,
+  Label
 } from "recharts";
 
 export default function Overview() {
   const { data, setData } = useData(); 
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [expandedChart, setExpandedChart] = useState<"efficiency" | "distribution" | null>(null);
   
   const [uploadProgress, setUploadProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -152,7 +156,74 @@ export default function Overview() {
     }
   };
 
-  // --- Vista de Carga (sin cambios) ---
+  // --- Componente interno para la gráfica de pastel con el Total Central ---
+  const ProductPieChart = ({ expanded = false }: { expanded?: boolean }) => (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={pieData}
+          cx="50%"
+          cy="50%"
+          labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+          outerRadius={expanded ? 200 : 110} 
+          innerRadius={expanded ? 100 : 60} // Estilo dona
+          paddingAngle={2}
+          dataKey="value"
+          nameKey="name"
+        >
+          {pieData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2}/>
+          ))}
+          
+          {/* Etiqueta central con el Total de Lotes */}
+          <Label
+            content={({ viewBox }) => {
+              if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                return (
+                  <text
+                    x={viewBox.cx}
+                    y={viewBox.cy}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    <tspan
+                      x={viewBox.cx}
+                      y={viewBox.cy}
+                      className={cn(
+                        "fill-foreground font-bold",
+                        expanded ? "text-5xl" : "text-3xl"
+                      )}
+                    >
+                      {totalBatches}
+                    </tspan>
+                    <tspan
+                      x={viewBox.cx}
+                      y={(viewBox.cy || 0) + (expanded ? 32 : 24)}
+                      className={cn(
+                        "fill-muted-foreground",
+                        expanded ? "text-base" : "text-xs"
+                      )}
+                    >
+                      Lotes
+                    </tspan>
+                  </text>
+                )
+              }
+            }}
+          />
+        </Pie>
+        <RechartsTooltip 
+          contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+          itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+          formatter={(value: number) => [`${value} Lotes`, 'Cantidad']}
+        />
+        <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+      </PieChart>
+    </ResponsiveContainer>
+  );
+
+  // --- Vista de Carga ---
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -167,7 +238,6 @@ export default function Overview() {
           onDrop={handleDrop}
         >
           {loading ? (
-            // ... (Animación de carga existente) ...
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
                <div className="absolute inset-x-0 bottom-0 h-full w-full overflow-hidden rounded-xl">
                  <div 
@@ -203,7 +273,6 @@ export default function Overview() {
                </div>
             </div>
           ) : (
-            // ... (UI Drag & Drop existente) ...
             <>
               <div className={cn(
                 "rounded-full p-6 transition-transform duration-300",
@@ -248,7 +317,7 @@ export default function Overview() {
     );
   }
 
-  // --- VISTA PRINCIPAL DEL DASHBOARD (REORGANIZADA) ---
+  // --- VISTA PRINCIPAL DEL DASHBOARD ---
   return (
     <DashboardLayout>
       {/* Header */}
@@ -276,13 +345,28 @@ export default function Overview() {
         />
       </div>
 
-      {/* 2. Fila Central: Análisis Gráfico (Balanceado 50/50) */}
+      {/* 2. Fila Central: Análisis Gráfico */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
-        {/* Gráfico de Barras: Eficiencia por Grupo */}
-        <EfficiencyChart data={data} />
+        
+        {/* Gráfico de Barras: Eficiencia por Grupo (Clickeable) */}
+        <div 
+          className="relative group cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 rounded-xl"
+          onClick={() => setExpandedChart("efficiency")}
+        >
+          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1.5 rounded-md shadow-sm border border-border">
+             <Maximize2 className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <EfficiencyChart data={data} />
+        </div>
 
-        {/* Gráfico de Pastel: Distribución de Productos */}
-        <Card className="bg-card border-border shadow-sm flex flex-col">
+        {/* Gráfico de Pastel: Distribución de Productos (Clickeable) */}
+        <Card 
+          className="bg-card border-border shadow-sm flex flex-col cursor-pointer group relative transition-all hover:ring-2 hover:ring-primary/20"
+          onClick={() => setExpandedChart("distribution")}
+        >
+          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1.5 rounded-md shadow-sm border border-border">
+             <Maximize2 className="w-4 h-4 text-muted-foreground" />
+          </div>
           <CardHeader>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-amber-500" />
@@ -293,33 +377,7 @@ export default function Overview() {
           <CardContent className="flex-1 flex items-center justify-center p-2">
             <div className="h-[350px] w-full">
               {pieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      // Etiquetas externas más limpias
-                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={110}
-                      innerRadius={60} // Un toque moderno de "Donut Chart"
-                      paddingAngle={2}
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2}/>
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                      formatter={(value: number) => [`${value} Lotes`, 'Cantidad']}
-                    />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle"/>
-                  </PieChart>
-                </ResponsiveContainer>
+                <ProductPieChart />
               ) : (
                 <div className="text-muted-foreground flex flex-col items-center justify-center h-full">
                   <Info className="h-8 w-8 mb-2 opacity-50" />
@@ -331,7 +389,7 @@ export default function Overview() {
         </Card>
       </div>
 
-      {/* 3. Fila Inferior: Glosario de Indicadores (Rediseñado en 3 tarjetas) */}
+      {/* 3. Fila Inferior: Glosario de Indicadores */}
       <div>
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Info className="h-5 w-5 text-primary" />
@@ -398,9 +456,31 @@ export default function Overview() {
               </div>
             </CardContent>
           </Card>
-
         </div>
       </div>
+
+      {/* DIALOGS PARA GRÁFICAS EXPANDIDAS */}
+      <Dialog open={!!expandedChart} onOpenChange={(open) => !open && setExpandedChart(null)}>
+        <DialogContent className="max-w-[90vw] h-[80vh] flex flex-col p-6">
+          <DialogHeader>
+             <DialogTitle className="text-2xl flex items-center gap-2">
+                {expandedChart === 'efficiency' && <><TrendingUp className="h-6 w-6 text-primary"/> Eficiencia Detallada por Grupo</>}
+                {expandedChart === 'distribution' && <><PieChartIcon className="h-6 w-6 text-amber-500"/> Distribución Completa de Productos</>}
+             </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 w-full min-h-0 mt-4">
+             {expandedChart === 'efficiency' && (
+                // Pasamos una clase de altura específica para el modo expandido
+                <EfficiencyChart data={data} className="h-[60vh]" titleClassName="hidden" />
+             )}
+             
+             {expandedChart === 'distribution' && (
+                <ProductPieChart expanded={true} />
+             )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
