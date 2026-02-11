@@ -10,11 +10,11 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { getAveragesByMachine, BatchRecord } from "@/data/mockData";
-import { cn } from "@/lib/utils"; // Importamos cn para combinar clases
+import { cn } from "@/lib/utils"; 
 
 interface EfficiencyChartProps {
   data: BatchRecord[];
-  className?: string; // Nueva prop opcional
+  className?: string;
   titleClassName?: string;
 }
 
@@ -27,14 +27,13 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
   }));
 
   return (
-    <Card className="bg-card border-border h-full flex flex-col">
+    <Card className="bg-card border-border h-full flex flex-col overflow-hidden">
       <CardHeader>
         <CardTitle className={cn("text-lg font-semibold text-foreground", titleClassName)}>
           Eficiencia Promedio por Grupo
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0">
-        {/* Usamos className para permitir sobreescribir la altura por defecto */}
+      <CardContent className="flex-1 min-h-0 overflow-hidden">
         <div className={cn("h-[400px] w-full", className)}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart

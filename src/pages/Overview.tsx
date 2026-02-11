@@ -32,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { 
   ResponsiveContainer, 
-  Legend, 
   PieChart, 
   Pie, 
   Cell,
@@ -274,7 +273,7 @@ export default function Overview() {
           itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
           formatter={(value: number) => [`${value} Lotes`, 'Cantidad']}
         />
-        <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+        {/* Leyenda eliminada según lo solicitado */}
       </PieChart>
     </ResponsiveContainer>
   );
