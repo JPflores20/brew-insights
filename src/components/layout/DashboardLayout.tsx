@@ -1,5 +1,6 @@
+// src/components/layout/DashboardLayout.tsx
 import { ReactNode, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Agregar useNavigate
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -9,7 +10,8 @@ import {
   Menu,
   X,
   Timer,
-  LogOut 
+  LogOut,
+  ArrowLeft // Nuevo icono
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth"; 
@@ -19,27 +21,28 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+// Actualizamos las rutas agregando /cocimientos al inicio
 const navItems = [
   { 
-    path: "/", 
+    path: "/cocimientos", 
     label: "Resumen", 
     icon: LayoutDashboard,
     description: "Tablero principal"
   },
   { 
-    path: "/comparison", 
+    path: "/cocimientos/comparacion", 
     label: "Comparación", 
     icon: GitCompare,
     description: "Comparar lotes"
   },
   { 
-    path: "/machine", 
+    path: "/cocimientos/maquinaria", 
     label: "Maquinaria", 
     icon: Cog,
     description: "Detalle por equipo"
   },
   { 
-    path: "/cycles", 
+    path: "/cocimientos/ciclos", 
     label: "Ciclos & Gantt", 
     icon: Timer,
     description: "Tiempos y secuencia"
@@ -48,6 +51,7 @@ const navItems = [
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate(); // Hook para navegación
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -62,20 +66,32 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-sidebar-border">
+        {/* Header del Sidebar con link al Menú Principal */}
+        <div 
+            className="h-16 flex items-center gap-3 px-6 border-b border-sidebar-border cursor-pointer hover:bg-sidebar-accent/50 transition-colors"
+            onClick={() => navigate("/")}
+            title="Volver al Menú Principal"
+        >
           <Beer className="h-8 w-8 text-primary" />
           <div>
             <h1 className="font-bold text-foreground text-lg">Brew Insights</h1>
-            <p className="text-xs text-muted-foreground">Analítica Industrial</p>
+            <p className="text-xs text-muted-foreground">Área: Cocimientos</p>
           </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
+          {/* Botón explícito para volver */}
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-muted-foreground mb-4"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver al Menú
+          </Button>
+
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path || 
-                             (item.path === "/comparison" && location.pathname === "/batch-comparison") ||
-                             (item.path === "/machine" && location.pathname === "/machine-detail") ||
-                             (item.path === "/cycles" && location.pathname === "/cycle-analysis");
+            const isActive = location.pathname === item.path || location.pathname === item.path + "/";
             return (
               <Link
                 key={item.path}
@@ -108,16 +124,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </Button>
           
           <p className="text-xs text-muted-foreground text-center">
-            v1.0.0 • Producción
+            v1.1.0 • Producción
           </p>
         </div>
       </aside>
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={() => navigate("/")}>
           <Beer className="h-6 w-6 text-primary" />
-          <span className="font-bold text-foreground">Brew Insights</span>
+          <span className="font-bold text-foreground">Cocimientos</span>
         </div>
         <Button 
           variant="ghost" 
@@ -135,6 +151,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             className="absolute top-16 left-0 right-0 bg-sidebar border-b border-sidebar-border p-4 space-y-2 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
+             <Button 
+                variant="ghost" 
+                className="w-full justify-start mb-2"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/");
+                }}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver al Menú
+              </Button>
+
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (

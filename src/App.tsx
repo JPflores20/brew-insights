@@ -1,3 +1,4 @@
+// src/App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,10 @@ import { DataProvider } from "./context/DataContext";
 import { AuthProvider } from "./context/AuthContext"; 
 import { ProtectedRoute } from "./components/ProtectedRoute"; 
 import Login from "./pages/Login"; 
+
+// Importar nuevas páginas
+import MainMenu from "./pages/MainMenu";
+import ColdBlock from "./pages/ColdBlock";
 
 import Overview from "./pages/Overview";
 import MachineDetail from "./pages/MachineDetail";
@@ -28,9 +33,29 @@ const App = () => (
               {/* Login Público */}
               <Route path="/login" element={<Login />} />
 
-              {/* Rutas Privadas */}
+              {/* Ruta Raíz Protegida: Ahora es el Menú Principal */}
               <Route
                 path="/"
+                element={
+                  <ProtectedRoute>
+                    <MainMenu />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Ruta Bloque Frío */}
+              <Route
+                path="/bloque-frio"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas de Cocimientos (Hot Block) */}
+              <Route
+                path="/cocimientos"
                 element={
                   <ProtectedRoute>
                     <Overview />
@@ -38,7 +63,7 @@ const App = () => (
                 }
               />
               <Route
-                path="/machine-detail"
+                path="/cocimientos/maquinaria"
                 element={
                   <ProtectedRoute>
                     <MachineDetail />
@@ -46,7 +71,7 @@ const App = () => (
                 }
               />
               <Route
-                path="/batch-comparison"
+                path="/cocimientos/comparacion"
                 element={
                   <ProtectedRoute>
                     <BatchComparison />
@@ -54,17 +79,22 @@ const App = () => (
                 }
               />
               <Route
-                path="/cycle-analysis"
+                path="/cocimientos/ciclos"
                 element={
                   <ProtectedRoute>
                     <CycleAnalysis />
                   </ProtectedRoute>
                 }
               />
-              <Route path="/machine" element={<Navigate to="/machine-detail" replace />} />
-              <Route path="/comparison" element={<Navigate to="/batch-comparison" replace />} />
-              <Route path="/cycles" element={<Navigate to="/cycle-analysis" replace />} />
               
+              {/* Redirecciones de compatibilidad (por si alguien entra con la url vieja) */}
+              <Route path="/machine-detail" element={<Navigate to="/cocimientos/maquinaria" replace />} />
+              <Route path="/batch-comparison" element={<Navigate to="/cocimientos/comparacion" replace />} />
+              <Route path="/cycle-analysis" element={<Navigate to="/cocimientos/ciclos" replace />} />
+              <Route path="/machine" element={<Navigate to="/cocimientos/maquinaria" replace />} />
+              <Route path="/comparison" element={<Navigate to="/cocimientos/comparacion" replace />} />
+              <Route path="/cycles" element={<Navigate to="/cocimientos/ciclos" replace />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
