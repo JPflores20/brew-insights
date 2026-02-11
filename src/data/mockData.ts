@@ -24,7 +24,7 @@ export interface BatchParameter {
   target: number;
   unit: string;
   stepName: string;
-  timestamp?: string; // <--- NUEVO CAMPO: Hora exacta del registro
+  timestamp?: string;
 }
 
 export interface BatchRecord {
@@ -117,27 +117,54 @@ export function getDelayAlerts(data: BatchRecord[], threshold: number = 30): Bat
 // --- NUEVAS FUNCIONES PARA EL DASHBOARD AVANZADO ---
 
 export function getRecipeStats(data: BatchRecord[]) {
-  const recipes = new Map<string, { count: number, totalReal: number, totalExpected: number, totalIdle: number }>();
+  // Estructura para acumular datos
+  const recipes = new Map<string, { 
+    uniqueBatches: Set<string>, // Para contar lotes únicos (199)
+    totalRecords: number,       // Para contar operaciones totales (1065)
+    totalReal: number, 
+    totalExpected: number, 
+    totalIdle: number 
+  }>();
 
   data.forEach(d => {
     const name = d.productName || "Desconocido";
     if (!recipes.has(name)) {
-      recipes.set(name, { count: 0, totalReal: 0, totalExpected: 0, totalIdle: 0 });
+      recipes.set(name, { 
+        uniqueBatches: new Set(), 
+        totalRecords: 0,
+        totalReal: 0, 
+        totalExpected: 0, 
+        totalIdle: 0 
+      });
     }
     const r = recipes.get(name)!;
-    r.count++;
+    
+    // Agregamos al Set (solo guardará IDs únicos)
+    r.uniqueBatches.add(d.CHARG_NR);
+    // Incrementamos el contador de registros
+    r.totalRecords++;
+    
+    // Acumulamos tiempos
     r.totalReal += d.real_total_min;
     r.totalExpected += d.esperado_total_min;
     r.totalIdle += d.idle_wall_minus_sumsteps_min;
   });
 
-  return Array.from(recipes.entries()).map(([name, stats]) => ({
-    name,
-    avgReal: Math.round(stats.totalReal / stats.count),
-    avgExpected: Math.round(stats.totalExpected / stats.count),
-    avgIdle: Math.round(stats.totalIdle / stats.count),
-    batchCount: stats.count
-  })).sort((a, b) => b.avgIdle - a.avgIdle);
+  return Array.from(recipes.entries()).map(([name, stats]) => {
+    const uniqueCount = stats.uniqueBatches.size;
+
+    return {
+      name,
+      // Promedios calculados por LOTE (más útil para análisis de Recetas)
+      avgReal: uniqueCount > 0 ? Math.round(stats.totalReal / uniqueCount) : 0,
+      avgExpected: uniqueCount > 0 ? Math.round(stats.totalExpected / uniqueCount) : 0,
+      avgIdle: uniqueCount > 0 ? Math.round(stats.totalIdle / uniqueCount) : 0,
+      
+      // DEVOLVEMOS AMBOS CONTEOS:
+      batchCount: uniqueCount,    // Úsalo para ver "Cantidad de Lotes" (199)
+      recordCount: stats.totalRecords // Úsalo si necesitas ver "Cantidad de Pasos/Registros" (1065)
+    };
+  }).sort((a, b) => b.batchCount - a.batchCount);
 }
 
 export function getShiftStats(data: BatchRecord[]) {
