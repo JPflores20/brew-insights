@@ -12,7 +12,9 @@ import {
   Info, 
   AlertTriangle,
   PieChart as PieChartIcon,
-  Maximize2
+  Maximize2,
+  Calendar,
+  Files // Nuevo icono para múltiples archivos
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,20 +25,21 @@ import { useData } from "@/context/DataContext";
 import { 
   getTotalBatches, 
   getAverageCycleDeviation, 
-  getMachineWithHighestIdleTime,
-  getRecipeStats
+  getRecipeStats,
+  BatchRecord // Importamos el tipo para tipar correctamente
 } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { 
   ResponsiveContainer, 
-  Legend,
+  Legend, 
   PieChart, 
   Pie, 
   Cell,
   Tooltip as RechartsTooltip,
   Label
 } from "recharts";
+import { format } from "date-fns";
 
 export default function Overview() {
   const { data, setData } = useData(); 
@@ -50,7 +53,7 @@ export default function Overview() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // --- Lógica de carga de archivos (sin cambios) ---
+  // --- Lógica de carga de archivos ---
   const clearProgressInterval = () => {
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
@@ -58,10 +61,23 @@ export default function Overview() {
     }
   };
 
-  const processFile = async (file: File) => {
+  // MODIFICADO: Ahora acepta un array de archivos
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    
+    if (files.length > 4) {
+      toast({
+        variant: "destructive",
+        title: "Exceso de ingredientes",
+        description: "Solo puedes subir un máximo de 4 archivos a la vez.",
+      });
+      return;
+    }
+
     setLoading(true);
     setUploadProgress(0);
 
+    // Animación de progreso falsa pero satisfactoria
     progressIntervalRef.current = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev >= 90) {
@@ -73,22 +89,39 @@ export default function Overview() {
     }, 300);
 
     try {
-      const processedData = await processExcelFile(file);
+      let combinedData: BatchRecord[] = [];
+      let successCount = 0;
+
+      // Procesamos cada archivo secuencialmente y acumulamos los datos
+      for (const file of files) {
+        const fileData = await processExcelFile(file);
+        if (fileData && fileData.length > 0) {
+          combinedData = [...combinedData, ...fileData];
+          successCount++;
+        }
+      }
+
       clearProgressInterval();
       setUploadProgress(100);
       await new Promise(resolve => setTimeout(resolve, 800));
-      setData(processedData); 
-      toast({
-        title: "¡Tanque lleno!",
-        description: `Se han procesado ${processedData.length} registros correctamente.`,
-        className: "bg-amber-500 text-white border-none",
-      });
+      
+      if (combinedData.length > 0) {
+        setData(combinedData); 
+        toast({
+          title: "¡Tanque lleno!",
+          description: `Se han procesado ${successCount} archivo(s) con ${combinedData.length} registros totales.`,
+          className: "bg-amber-500 text-white border-none",
+        });
+      } else {
+        throw new Error("No se encontraron datos válidos en los archivos.");
+      }
+
     } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Error en la mezcla",
-        description: "El archivo no es válido o no tiene el formato esperado.",
+        description: "Uno o más archivos no son válidos o no tienen el formato esperado.",
       });
     } finally {
       clearProgressInterval();
@@ -101,10 +134,17 @@ export default function Overview() {
     return () => clearProgressInterval();
   }, []);
 
+  // MODIFICADO: Maneja selección múltiple desde el input
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    await processFile(file);
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Convertimos FileList a Array
+    const fileArray = Array.from(files);
+    await processFiles(fileArray);
+    
+    // Reset del input para permitir subir los mismos archivos de nuevo si es necesario
+    event.target.value = "";
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -117,18 +157,33 @@ export default function Overview() {
     setIsDragging(false);
   };
 
+  // MODIFICADO: Maneja soltar múltiples archivos
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     if (loading) return; 
-    const file = e.dataTransfer.files?.[0];
-    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-      await processFile(file);
+    
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    
+    // Filtramos solo Excels
+    const validFiles = droppedFiles.filter(file => 
+      file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+    );
+
+    if (validFiles.length > 0) {
+      if (validFiles.length !== droppedFiles.length) {
+         toast({
+          title: "Advertencia",
+          description: "Se ignoraron archivos que no eran Excel.",
+          variant: "default" // o warning si tuvieras
+        });
+      }
+      await processFiles(validFiles);
     } else {
       toast({
         variant: "destructive",
         title: "Ingrediente incorrecto",
-        description: "Por favor arrastra un archivo Excel (.xlsx o .xls).",
+        description: "Por favor arrastra archivos Excel (.xlsx o .xls).",
       });
     }
   };
@@ -137,26 +192,28 @@ export default function Overview() {
   // --- Cálculos ---
   const totalBatches = getTotalBatches(data);
   const avgDeviation = getAverageCycleDeviation(data);
-  const highestIdle = getMachineWithHighestIdleTime(data);
   const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
+
+  // --- Cálculo de Fechas ---
+  const dateRange = useMemo(() => {
+    if (data.length === 0) return "---";
+    const timestamps = data.map(d => new Date(d.timestamp).getTime());
+    const minTime = Math.min(...timestamps);
+    const maxTime = Math.max(...timestamps);
+    
+    return `${format(new Date(minTime), 'dd/MM/yyyy')} - ${format(new Date(maxTime), 'dd/MM/yyyy')}`;
+  }, [data]);
 
   const pieData = useMemo(() => {
     return recipeStats.map(stat => ({
       name: stat.name,
-      value: stat.batchCount // Usamos batchCount (lotes únicos)
+      value: stat.batchCount 
     })).sort((a, b) => b.value - a.value);
   }, [recipeStats]);
 
   const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
-  const handleNavigateToDetail = () => {
-    if (highestIdle.machine !== "N/A") {
-      window.localStorage.setItem("detail-machine-selection-v2", JSON.stringify(highestIdle.machine));
-      navigate("/machine");
-    }
-  };
-
-  // --- Componente interno para la gráfica de pastel con el Total Central ---
+  // --- Componente interno para la gráfica de pastel ---
   const ProductPieChart = ({ expanded = false }: { expanded?: boolean }) => (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
@@ -166,8 +223,8 @@ export default function Overview() {
           cy="50%"
           labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
           label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-          outerRadius={expanded ? 200 : 130} // Aumentado ligeramente para aprovechar el nuevo espacio
-          innerRadius={expanded ? 100 : 70}  // Aumentado ligeramente
+          outerRadius={expanded ? 200 : 130} 
+          innerRadius={expanded ? 100 : 70}
           paddingAngle={2}
           dataKey="value"
           nameKey="name"
@@ -176,7 +233,6 @@ export default function Overview() {
             <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2}/>
           ))}
           
-          {/* Etiqueta central con el Total de Lotes */}
           <Label
             content={({ viewBox }) => {
               if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -264,7 +320,7 @@ export default function Overview() {
                  </div>
                  <div className="space-y-1">
                    <h2 className="text-3xl font-bold text-white drop-shadow-md">
-                     {uploadProgress < 100 ? "Llenando el tanque..." : "¡Salud! Datos listos."}
+                     {uploadProgress < 100 ? "Mezclando ingredientes..." : "¡Salud! Datos listos."}
                    </h2>
                    <p className="text-xl text-white/90 font-mono font-bold drop-shadow-sm">
                      {Math.round(uploadProgress)}%
@@ -279,7 +335,7 @@ export default function Overview() {
                 isDragging ? "bg-amber-500/20 scale-110" : "bg-primary/10"
               )}>
                 {isDragging ? (
-                    <Beer className="h-16 w-16 text-amber-500 animate-bounce" />
+                    <Files className="h-16 w-16 text-amber-500 animate-bounce" />
                 ) : (
                     <FileSpreadsheet className="h-16 w-16 text-primary" />
                 )}
@@ -288,7 +344,7 @@ export default function Overview() {
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Cargar Datos de Producción</h1>
                 <p className="text-muted-foreground max-w-lg mx-auto">
-                  {isDragging ? "¡Suelta para empezar el cocimiento!" : "Arrastra tu archivo Excel aquí o haz clic para seleccionarlo."}
+                  {isDragging ? "¡Suelta los archivos!" : "Arrastra hasta 4 archivos Excel aquí o selecciona para empezar."}
                 </p>
               </div>
               
@@ -298,9 +354,10 @@ export default function Overview() {
                     isDragging ? "bg-amber-500 hover:bg-amber-600" : ""
                 )}>
                   <Upload className="mr-2 h-5 w-5" />
-                  Seleccionar Archivo Excel
+                  Seleccionar Archivos (Max 4)
                   <input 
                     type="file" 
+                    multiple // Permite selección múltiple
                     accept=".xlsx, .xls" 
                     className="absolute inset-0 cursor-pointer opacity-0" 
                     onChange={handleFileUpload} 
@@ -327,7 +384,7 @@ export default function Overview() {
           <p className="text-muted-foreground mt-1">Monitor de eficiencia y métricas clave de producción.</p>
         </div>
         <Button variant="outline" className="shadow-sm" onClick={() => setData([])}>
-          <Upload className="mr-2 h-4 w-4" /> Cargar otro archivo
+          <Upload className="mr-2 h-4 w-4" /> Cargar nuevos archivos
         </Button>
       </div>
 
@@ -335,20 +392,13 @@ export default function Overview() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <KPICard title="Total Lotes" value={totalBatches} subtitle="Procesados en el periodo" icon={Boxes} variant="success" />
         <KPICard title="Desviación Promedio" value={`${avgDeviation > 0 ? '+' : ''}${avgDeviation}%`} subtitle="Vs. Tiempo Esperado Total" icon={TrendingUp} variant={avgDeviation > 10 ? "danger" : "success"} />
-        <KPICard 
-          title="Mayor Tiempo Muerto" 
-          value={`${highestIdle.idleTime} min`} 
-          subtitle={`Equipo crítico: ${highestIdle.machine}`} 
-          icon={Clock} 
-          variant="warning"
-          onClick={handleNavigateToDetail}
-        />
+        <KPICard title="Periodo de Producción" value={dateRange} subtitle="Fecha Inicio - Fecha Fin" icon={Calendar} variant="default" />
       </div>
 
       {/* 2. Fila Central: Análisis Gráfico */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
         
-        {/* Gráfico de Barras: Eficiencia por Grupo (Clickeable) */}
+        {/* Gráfico de Barras: Eficiencia por Grupo */}
         <div 
           className="relative group cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 rounded-xl"
           onClick={() => setExpandedChart("efficiency")}
@@ -356,11 +406,10 @@ export default function Overview() {
           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1.5 rounded-md shadow-sm border border-border">
              <Maximize2 className="w-4 h-4 text-muted-foreground" />
           </div>
-          {/* AJUSTE: Altura aumentada a 450px para igualar la tarjeta de distribución */}
           <EfficiencyChart data={data} className="h-[450px]" />
         </div>
 
-        {/* Gráfico de Pastel: Distribución de Productos (Clickeable) */}
+        {/* Gráfico de Pastel: Distribución de Productos */}
         <Card 
           className="bg-card border-border shadow-sm flex flex-col cursor-pointer group relative transition-all hover:ring-2 hover:ring-primary/20"
           onClick={() => setExpandedChart("distribution")}
@@ -376,7 +425,6 @@ export default function Overview() {
             <CardDescription>Volumen de producción por tipo de cerveza</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex items-center justify-center p-2">
-            {/* AJUSTE: Altura aumentada a 450px para evitar desbordamiento */}
             <div className="h-[450px] w-full">
               {pieData.length > 0 ? (
                 <ProductPieChart />
@@ -399,7 +447,6 @@ export default function Overview() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* Tarjeta 1: Desviación */}
           <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
             <div className="absolute top-0 right-0 p-3 opacity-5">
               <TrendingUp className="h-24 w-24" />
@@ -419,7 +466,6 @@ export default function Overview() {
             </CardContent>
           </Card>
 
-          {/* Tarjeta 2: Retraso */}
           <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
             <div className="absolute top-0 right-0 p-3 opacity-5">
               <Clock className="h-24 w-24" />
@@ -439,7 +485,6 @@ export default function Overview() {
             </CardContent>
           </Card>
 
-          {/* Tarjeta 3: Tiempo Muerto */}
           <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
             <div className="absolute top-0 right-0 p-3 opacity-5">
               <AlertTriangle className="h-24 w-24" />
@@ -473,7 +518,6 @@ export default function Overview() {
           
           <div className="flex-1 w-full min-h-0 mt-4">
              {expandedChart === 'efficiency' && (
-                // Pasamos una clase de altura específica para el modo expandido
                 <EfficiencyChart data={data} className="h-[60vh]" titleClassName="hidden" />
              )}
              
