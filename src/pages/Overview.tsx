@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { EfficiencyChart } from "@/components/dashboard/EfficiencyChart";
-import { AlertsWidget } from "@/components/dashboard/AlertsWidget";
 import { 
   Boxes, 
   TrendingUp, 
@@ -12,9 +11,6 @@ import {
   Beer, 
   Info, 
   AlertTriangle,
-  Factory, 
-  Sun,
-  Moon,
   PieChart as PieChartIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,23 +22,17 @@ import {
   getTotalBatches, 
   getAverageCycleDeviation, 
   getMachineWithHighestIdleTime,
-  getRecipeStats, 
-  getShiftStats
+  getRecipeStats
 } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
   ResponsiveContainer, 
   Legend,
   PieChart, 
   Pie, 
-  Cell 
+  Cell,
+  Tooltip
 } from "recharts";
 
 export default function Overview() {
@@ -56,6 +46,7 @@ export default function Overview() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // --- Lógica de carga de archivos (sin cambios) ---
   const clearProgressInterval = () => {
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
@@ -79,12 +70,9 @@ export default function Overview() {
 
     try {
       const processedData = await processExcelFile(file);
-      
       clearProgressInterval();
       setUploadProgress(100);
-
       await new Promise(resolve => setTimeout(resolve, 800));
-
       setData(processedData); 
       toast({
         title: "¡Tanque lleno!",
@@ -129,7 +117,6 @@ export default function Overview() {
     e.preventDefault();
     setIsDragging(false);
     if (loading) return; 
-    
     const file = e.dataTransfer.files?.[0];
     if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
       await processFile(file);
@@ -141,15 +128,14 @@ export default function Overview() {
       });
     }
   };
+  // -------------------------------------------
 
+  // --- Cálculos ---
   const totalBatches = getTotalBatches(data);
   const avgDeviation = getAverageCycleDeviation(data);
   const highestIdle = getMachineWithHighestIdleTime(data);
-  
   const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
-  const shiftStats = useMemo(() => getShiftStats ? getShiftStats(data) : [], [data]);
 
-  // Datos para la gráfica de pastel (Distribución de productos)
   const pieData = useMemo(() => {
     return recipeStats.map(stat => ({
       name: stat.name,
@@ -166,6 +152,7 @@ export default function Overview() {
     }
   };
 
+  // --- Vista de Carga (sin cambios) ---
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -180,6 +167,7 @@ export default function Overview() {
           onDrop={handleDrop}
         >
           {loading ? (
+            // ... (Animación de carga existente) ...
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
                <div className="absolute inset-x-0 bottom-0 h-full w-full overflow-hidden rounded-xl">
                  <div 
@@ -215,6 +203,7 @@ export default function Overview() {
                </div>
             </div>
           ) : (
+            // ... (UI Drag & Drop existente) ...
             <>
               <div className={cn(
                 "rounded-full p-6 transition-transform duration-300",
@@ -259,76 +248,50 @@ export default function Overview() {
     );
   }
 
+  // --- VISTA PRINCIPAL DEL DASHBOARD (REORGANIZADA) ---
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Tablero General</h1>
-          <p className="text-muted-foreground">Monitor de eficiencia y métricas clave</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Tablero General</h1>
+          <p className="text-muted-foreground mt-1">Monitor de eficiencia y métricas clave de producción.</p>
         </div>
-        <Button variant="outline" onClick={() => setData([])}>Cargar otro archivo</Button>
+        <Button variant="outline" className="shadow-sm" onClick={() => setData([])}>
+          <Upload className="mr-2 h-4 w-4" /> Cargar otro archivo
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <KPICard title="Total Lotes" value={totalBatches} subtitle="Cargados" icon={Boxes} variant="success" />
-        <KPICard title="Desviación Promedio" value={`${avgDeviation > 0 ? '+' : ''}${avgDeviation}%`} subtitle="Vs Esperado" icon={TrendingUp} variant={avgDeviation > 10 ? "danger" : "success"} />
+      {/* 1. Fila Superior: KPIs Principales */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <KPICard title="Total Lotes" value={totalBatches} subtitle="Procesados en el periodo" icon={Boxes} variant="success" />
+        <KPICard title="Desviación Promedio" value={`${avgDeviation > 0 ? '+' : ''}${avgDeviation}%`} subtitle="Vs. Tiempo Esperado Total" icon={TrendingUp} variant={avgDeviation > 10 ? "danger" : "success"} />
         <KPICard 
           title="Mayor Tiempo Muerto" 
           value={`${highestIdle.idleTime} min`} 
-          subtitle={`Equipo: ${highestIdle.machine}`} 
+          subtitle={`Equipo crítico: ${highestIdle.machine}`} 
           icon={Clock} 
           variant="warning"
           onClick={handleNavigateToDetail}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2"><EfficiencyChart data={data} /></div>
-        <div className="lg:col-span-1"><AlertsWidget data={data} /></div>
-      </div>
+      {/* 2. Fila Central: Análisis Gráfico (Balanceado 50/50) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
+        {/* Gráfico de Barras: Eficiencia por Grupo */}
+        <EfficiencyChart data={data} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        
-        {/* 1. Comparativa de Recetas */}
-        <Card className="bg-card border-border">
+        {/* Gráfico de Pastel: Distribución de Productos */}
+        <Card className="bg-card border-border shadow-sm flex flex-col">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Factory className="h-5 w-5 text-purple-500" />
-              Rendimiento por Receta
-            </CardTitle>
-            <CardDescription>Comparación de tiempos reales y tiempos muertos promedio</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={recipeStats.slice(0, 5)} layout="vertical" margin={{ left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={120} tick={{fontSize: 10}} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
-                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="avgReal" name="T. Real Promedio" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
-                  <Bar dataKey="avgIdle" name="T. Muerto Promedio" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 2. Distribución de Productos (GRÁFICA DE PASTEL NUEVA) */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-amber-500" />
               Distribución de Productos
             </CardTitle>
-            <CardDescription>Cantidad de lotes producidos por marca</CardDescription>
+            <CardDescription>Volumen de producción por tipo de cerveza</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
+          <CardContent className="flex-1 flex items-center justify-center p-2">
+            <div className="h-[350px] w-full">
               {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -336,124 +299,108 @@ export default function Overview() {
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
+                      // Etiquetas externas más limpias
+                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={110}
+                      innerRadius={60} // Un toque moderno de "Donut Chart"
+                      paddingAngle={2}
                       dataKey="value"
                       nameKey="name"
                     >
                       {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2}/>
                       ))}
                     </Pie>
                     <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
                       formatter={(value: number) => [`${value} Lotes`, 'Cantidad']}
                     />
-                    <Legend />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="text-muted-foreground">No hay datos suficientes</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 3. Análisis de Turnos (Movido al final) */}
-        <Card className="bg-card border-border lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Moon className="h-5 w-5 text-indigo-500" />
-              Eficiencia por Turno
-            </CardTitle>
-            <CardDescription>Desempeño acumulado por horario de inicio</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {shiftStats.map((shift) => (
-                <div key={shift.name} className="flex flex-col justify-between p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={cn("p-2 rounded-full", 
-                        shift.name.includes("Matutino") ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" : 
-                        shift.name.includes("Vespertino") ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" : 
-                        "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
-                    )}>
-                      {shift.name.includes("Matutino") ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{shift.name}</p>
-                      <p className="text-xs text-muted-foreground">{shift.batches} lotes</p>
-                    </div>
-                  </div>
-                  <div className="text-right mt-auto">
-                    <p className={cn("text-xl font-bold", shift.avgIdle > 15 ? "text-red-500" : "text-green-600")}>
-                      {shift.avgIdle} min
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">T. Muerto Promedio</p>
-                  </div>
+                <div className="text-muted-foreground flex flex-col items-center justify-center h-full">
+                  <Info className="h-8 w-8 mb-2 opacity-50" />
+                  No hay datos suficientes para graficar.
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="bg-card border-border shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Info className="h-4 w-4 text-primary" />
-            </div>
-            <CardTitle className="text-lg">Glosario de Indicadores</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+      {/* 3. Fila Inferior: Glosario de Indicadores (Rediseñado en 3 tarjetas) */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Info className="h-5 w-5 text-primary" />
+          Guía Rápida de Indicadores
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          <div className="flex gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
-            <div className="mt-1">
-              <div className="p-2 rounded-full bg-chart-delay/10">
-                <Clock className="h-5 w-5 text-chart-delay" />
+          {/* Tarjeta 1: Desviación */}
+          <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-5">
+              <TrendingUp className="h-24 w-24" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center gap-2 text-green-600 dark:text-green-400">
+                <TrendingUp className="h-4 w-4" /> Desviación Promedio
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Porcentaje global que indica qué tanto se alejan los tiempos reales de los teóricos. Un valor positivo significa producción más lenta.
+              </p>
+              <div className="bg-secondary/50 p-2 rounded-md border border-border/50">
+                <code className="text-xs font-mono text-foreground">((T.Real - T.Esp) / T.Esp) * 100</code>
               </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                Retraso (Delay)
-                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-chart-delay/10 text-chart-delay">Ineficiencia Interna</span>
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                Mide la lentitud <strong>dentro</strong> de los pasos del proceso. Ocurre cuando la máquina tarda más de lo estipulado en la receta.
-              </p>
-              <p className="text-xs text-muted-foreground mt-2 font-mono bg-background/50 inline-block px-2 py-1 rounded border border-border">
-                Cálculo: Tiempo Real - Tiempo Esperado
-              </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="flex gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-colors">
-            <div className="mt-1">
-              <div className="p-2 rounded-full bg-orange-500/10">
-                <AlertTriangle className="h-5 w-5 text-orange-500" />
+          {/* Tarjeta 2: Retraso */}
+          <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-5">
+              <Clock className="h-24 w-24" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center gap-2 text-chart-delay">
+                <Clock className="h-4 w-4" /> Retraso (Delay)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Ineficiencia <strong>interna</strong> en los pasos. Ocurre cuando una máquina tarda más de lo estipulado en la receta para una tarea.
+              </p>
+              <div className="bg-secondary/50 p-2 rounded-md border border-border/50">
+                <code className="text-xs font-mono text-foreground">Tiempo Real - Tiempo Esperado</code>
               </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                Tiempo Muerto (Idle Time)
-                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500">Ineficiencia Externa</span>
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                Mide la ineficiencia <strong>entre</strong> pasos. Es la suma de los "huecos" (gaps) donde la máquina estuvo detenida esperando entre el fin de un paso y el inicio del siguiente.
-              </p>
-              <p className="text-xs text-muted-foreground mt-2 font-mono bg-background/50 inline-block px-2 py-1 rounded border border-border">
-                Cálculo: Suma de Gaps (Inicio<sub>n</sub> - Fin<sub>n-1</sub>)
-              </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-        </CardContent>
-      </Card>
+          {/* Tarjeta 3: Tiempo Muerto */}
+          <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-5">
+              <AlertTriangle className="h-24 w-24" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center gap-2 text-orange-500">
+                <AlertTriangle className="h-4 w-4" /> Tiempo Muerto (Idle)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Ineficiencia <strong>externa</strong> entre pasos. Es la suma de los "huecos" donde la máquina esperó entre el fin de un paso y el inicio del siguiente.
+              </p>
+              <div className="bg-secondary/50 p-2 rounded-md border border-border/50">
+                <code className="text-xs font-mono text-foreground">Σ (Inicioₙ - Finₙ₋₁)</code>
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
     </DashboardLayout>
   );
 }
