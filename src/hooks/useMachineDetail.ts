@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useTransition } from "react";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getMachineData } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -16,10 +16,16 @@ export function useMachineDetail() {
         return Array.from(recipes).sort();
     }, [data]);
 
-    const [selectedRecipe, setSelectedRecipe] = useLocalStorage<string>(
+    const [selectedRecipe, _setSelectedRecipe] = useLocalStorage<string>(
         "detail-recipe-selection",
         "ALL"
     );
+
+    const setSelectedRecipe = (value: string) => {
+        startTransition(() => {
+            _setSelectedRecipe(value);
+        });
+    };
 
     // --- 2. FILTRADO DE LOTES SEGÚN RECETA ---
     const filteredBatches = useMemo(() => {
@@ -38,14 +44,29 @@ export function useMachineDetail() {
         return map;
     }, [data]);
 
-    const [selectedBatchId, setSelectedBatchId] = useLocalStorage<string>(
+    const [isPending, startTransition] = useTransition();
+
+    const [selectedBatchId, _setSelectedBatchId] = useLocalStorage<string>(
         "detail-batch-selection-v2",
         ""
     );
-    const [selectedMachine, setSelectedMachine] = useLocalStorage<string>(
+    const [selectedMachine, _setSelectedMachine] = useLocalStorage<string>(
         "detail-machine-selection-v2",
         ""
     );
+
+    // Wrappers con startTransition para evitar bloqueo de UI
+    const setSelectedBatchId = (value: string) => {
+        startTransition(() => {
+            _setSelectedBatchId(value);
+        });
+    };
+
+    const setSelectedMachine = (value: string) => {
+        startTransition(() => {
+            _setSelectedMachine(value);
+        });
+    };
 
     // Estado para controlar la pestaña activa (para poder cambiarla desde el código)
     const [activeTab, setActiveTab] = useState("machine-view");
@@ -475,6 +496,7 @@ export function useMachineDetail() {
         tempTrendData,
         selectedTempIndices,
         setSelectedTempIndices,
-        loadSuggestion
+        loadSuggestion,
+        isPending
     };
 }

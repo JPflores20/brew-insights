@@ -11,6 +11,23 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { memo, useState, useMemo, useDeferredValue } from "react";
 import { AlertTriangle, Clock, Settings } from "lucide-react";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { motion } from "framer-motion";
@@ -23,13 +40,27 @@ interface MachineKPIsProps {
     currentIdle: number;
 }
 
-export function MachineKPIs({
+export const MachineKPIs = memo(function MachineKPIs({
     selectedMachine,
     setSelectedMachine,
     availableMachinesForBatch,
     currentGap,
     currentIdle,
 }: MachineKPIsProps) {
+    const [open, setOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const deferredSearch = useDeferredValue(searchTerm);
+
+    // Filter optimization
+    const displayedMachines = useMemo(() => {
+        let filtered = availableMachinesForBatch;
+        if (deferredSearch) {
+            const lower = deferredSearch.toLowerCase();
+            filtered = filtered.filter(m => m.toLowerCase().includes(lower));
+        }
+        return filtered.slice(0, 50);
+    }, [availableMachinesForBatch, deferredSearch]);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {/* 1. SELECCIÓN DE EQUIPO (Mantenemos Card estándar para el input) */}
@@ -51,28 +82,57 @@ export function MachineKPIs({
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Select
-                            value={selectedMachine}
-                            onValueChange={setSelectedMachine}
-                            disabled={availableMachinesForBatch.length === 0}
-                        >
-                            <SelectTrigger className="w-full bg-background/50 border-input focus:ring-primary/50">
-                                <SelectValue
-                                    placeholder={
-                                        availableMachinesForBatch.length === 0
+                        <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={open}
+                                    className="w-full justify-between bg-background/50 border-input focus:ring-primary/50"
+                                    disabled={availableMachinesForBatch.length === 0}
+                                >
+                                    {selectedMachine
+                                        ? selectedMachine
+                                        : availableMachinesForBatch.length === 0
                                             ? "Lote sin equipos"
-                                            : "Selecciona equipo"
-                                    }
-                                />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableMachinesForBatch.map((machine) => (
-                                    <SelectItem key={machine} value={machine}>
-                                        {machine}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                                            : "Selecciona equipo"}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" align="start">
+                                <Command shouldFilter={false}>
+                                    <CommandInput
+                                        placeholder="Buscar equipo..."
+                                        value={searchTerm}
+                                        onValueChange={setSearchTerm}
+                                    />
+                                    <CommandList>
+                                        <CommandEmpty>No se encontraron equipos.</CommandEmpty>
+                                        <CommandGroup>
+                                            {displayedMachines.map((machine) => (
+                                                <CommandItem
+                                                    key={machine}
+                                                    value={machine}
+                                                    onSelect={(currentValue) => {
+                                                        setSelectedMachine(currentValue === selectedMachine ? "" : currentValue);
+                                                        setOpen(false);
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            selectedMachine === machine ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    {machine}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+
                         <div className="mt-4 text-xs text-muted-foreground flex justify-between">
                             <span>Total Equipos: {availableMachinesForBatch.length}</span>
                             <span className="text-primary/80">{selectedMachine ? 'Activo' : 'Pendiente'}</span>
@@ -105,4 +165,4 @@ export function MachineKPIs({
             />
         </div>
     );
-}
+});

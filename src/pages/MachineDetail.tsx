@@ -61,7 +61,8 @@ export default function MachineDetail() {
     tempTrendData,
     selectedTempIndices,
     setSelectedTempIndices,
-    loadSuggestion
+    loadSuggestion,
+    isPending
   } = useMachineDetail();
 
   if (!data) {
@@ -110,122 +111,124 @@ export default function MachineDetail() {
           batchProductMap={batchProductMap}
         />
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-muted/50 p-1 rounded-lg">
-              <TabsTrigger
-                value="machine-view"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
-              >
-                <LayoutDashboard className="h-4 w-4" /> Detalle por Equipo
-              </TabsTrigger>
-              <TabsTrigger
-                value="global-view"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
-              >
-                <Layers className="h-4 w-4" /> Cronología Global
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent
-            value="machine-view"
-            className="space-y-6 outline-none"
+        <div className={isPending ? "opacity-50 pointer-events-none transition-opacity duration-200" : "transition-opacity duration-200"}>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-4"
           >
-            <MachineKPIs
-              selectedMachine={selectedMachine}
-              setSelectedMachine={setSelectedMachine}
-              availableMachinesForBatch={availableMachinesForBatch}
-              currentGap={currentGap}
-              currentIdle={currentIdle}
-            />
-
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-              <motion.div
-                className="xl:col-span-8 space-y-6"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <SequenceChart
-                  selectedRecord={selectedRecord}
-                  stepsData={stepsData}
-                  selectedBatchId={selectedBatchId}
-                  selectedMachine={selectedMachine}
-                />
-              </motion.div>
-
-              <motion.div
-                className="xl:col-span-4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
-                  <AnomaliesList anomaliesReport={anomaliesReport as any} />
-                </div>
-              </motion.div>
+            <div className="flex items-center justify-between">
+              <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-muted/50 p-1 rounded-lg">
+                <TabsTrigger
+                  value="machine-view"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                >
+                  <LayoutDashboard className="h-4 w-4" /> Detalle por Equipo
+                </TabsTrigger>
+                <TabsTrigger
+                  value="global-view"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                >
+                  <Layers className="h-4 w-4" /> Cronología Global
+                </TabsTrigger>
+              </TabsList>
             </div>
 
-            <motion.div
-              className="space-y-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+            <TabsContent
+              value="machine-view"
+              className="space-y-6 outline-none"
             >
-              <MachineHistoryChart
-                data={machineHistoryData}
-                selectedHistoryIndices={selectedHistoryIndices}
-                setSelectedHistoryIndices={setSelectedHistoryIndices}
-                trendBatch={trendBatch}
+              <MachineKPIs
                 selectedMachine={selectedMachine}
+                setSelectedMachine={setSelectedMachine}
+                availableMachinesForBatch={availableMachinesForBatch}
+                currentGap={currentGap}
+                currentIdle={currentIdle}
               />
 
-              <TemperatureTrendChart
-                data={tempTrendData}
-                trendBatch={trendBatch}
-                trendRecipe={trendRecipe}
-                trendMachine={trendMachine}
-                selectedTempParam={selectedTempParam}
-                uniqueRecipes={uniqueRecipes}
-                machinesWithTemps={machinesWithTemps}
-                availableTrendBatches={availableTrendBatches}
-                availableTempParams={availableTempParams}
-                setTrendRecipe={setTrendRecipe}
-                setTrendMachine={setTrendMachine}
-                setTrendBatch={setTrendBatch}
-                setSelectedTempParam={setSelectedTempParam}
-                selectedTempIndices={selectedTempIndices}
-                setSelectedTempIndices={setSelectedTempIndices}
-              />
-            </motion.div>
-          </TabsContent>
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                <motion.div
+                  className="xl:col-span-8 space-y-6"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <SequenceChart
+                    selectedRecord={selectedRecord}
+                    stepsData={stepsData}
+                    selectedBatchId={selectedBatchId}
+                    selectedMachine={selectedMachine}
+                  />
+                </motion.div>
 
-          <TabsContent
-            value="global-view"
-            className="space-y-6 outline-none"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
+                <motion.div
+                  className="xl:col-span-4"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
+                    <AnomaliesList anomaliesReport={anomaliesReport as any} />
+                  </div>
+                </motion.div>
+              </div>
+
+              <motion.div
+                className="space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <MachineHistoryChart
+                  data={machineHistoryData}
+                  selectedHistoryIndices={selectedHistoryIndices}
+                  setSelectedHistoryIndices={setSelectedHistoryIndices}
+                  trendBatch={trendBatch}
+                  selectedMachine={selectedMachine}
+                />
+
+                <TemperatureTrendChart
+                  data={tempTrendData}
+                  trendBatch={trendBatch}
+                  trendRecipe={trendRecipe}
+                  trendMachine={trendMachine}
+                  selectedTempParam={selectedTempParam}
+                  uniqueRecipes={uniqueRecipes}
+                  machinesWithTemps={machinesWithTemps}
+                  availableTrendBatches={availableTrendBatches}
+                  availableTempParams={availableTempParams}
+                  setTrendRecipe={setTrendRecipe}
+                  setTrendMachine={setTrendMachine}
+                  setTrendBatch={setTrendBatch}
+                  setSelectedTempParam={setSelectedTempParam}
+                  selectedTempIndices={selectedTempIndices}
+                  setSelectedTempIndices={setSelectedTempIndices}
+                />
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent
+              value="global-view"
+              className="space-y-6 outline-none"
             >
-              <GlobalTimeline
-                fullProcessData={fullProcessData}
-                fullProcessChartHeight={fullProcessChartHeight}
-              />
-            </motion.div>
-          </TabsContent>
-        </Tabs>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <GlobalTimeline
+                  fullProcessData={fullProcessData}
+                  fullProcessChartHeight={fullProcessChartHeight}
+                />
+              </motion.div>
+            </TabsContent>
+          </Tabs>
 
-        <ProblemsPanel
-          problematicBatches={problematicBatches}
-          loadSuggestion={loadSuggestion}
-        />
+          <ProblemsPanel
+            problematicBatches={problematicBatches}
+            loadSuggestion={loadSuggestion}
+          />
+        </div>
       </AnimatedPage>
     </DashboardLayout>
   );

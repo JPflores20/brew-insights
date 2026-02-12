@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 interface ChartTooltipProps {
@@ -9,7 +10,7 @@ interface ChartTooltipProps {
     hideLabel?: boolean;
 }
 
-export function ChartTooltip({
+export const ChartTooltip = memo(function ChartTooltip({
     active,
     payload,
     label,
@@ -24,7 +25,7 @@ export function ChartTooltip({
     return (
         <div
             className={cn(
-                "bg-popover/95 backdrop-blur-sm border border-border/50 shadow-xl rounded-lg p-3 text-sm animation-in fade-in zoom-in-95 duration-200",
+                "bg-popover/95 backdrop-blur-[2px] border border-border/50 shadow-xl rounded-lg p-3 text-sm",
                 className
             )}
         >
@@ -38,10 +39,9 @@ export function ChartTooltip({
                     <div key={index} className="flex items-center gap-2.5">
                         {indicator === "dot" && (
                             <div
-                                className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)]"
+                                className="h-2.5 w-2.5 rounded-full shadow-sm"
                                 style={{
                                     backgroundColor: item.fill || item.stroke || item.color,
-                                    boxShadow: `0 0 6px ${item.fill || item.stroke || item.color}40`
                                 }}
                             />
                         )}
@@ -61,4 +61,4 @@ export function ChartTooltip({
             </div>
         </div>
     );
-}
+});
