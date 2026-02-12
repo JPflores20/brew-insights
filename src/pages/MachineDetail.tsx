@@ -2,6 +2,9 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Clock, LayoutDashboard, Layers } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
+import { exportToCSV } from "@/utils/exportUtils";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 // Hook
 import { useMachineDetail } from "@/hooks/useMachineDetail";
@@ -65,6 +68,36 @@ export default function MachineDetail() {
     isPending
   } = useMachineDetail();
 
+  const { toast } = useToast();
+
+  const handleExport = () => {
+    if (!data || data.length === 0) return;
+
+    // Filter by selected machine if filtered
+    const dataToExport = selectedMachine
+      ? data.filter(d => d.TEILANL_GRUPO === selectedMachine)
+      : data;
+
+    if (dataToExport.length === 0) {
+      toast({ title: "Sin datos", description: "No hay datos para la selección actual.", variant: "destructive" });
+      return;
+    }
+
+    const exportData = dataToExport.map(d => ({
+      "Lote": d.CHARG_NR,
+      "Grupo Equipo": d.TEILANL_GRUPO,
+      "Producto": d.productName,
+      "Inicio": d.timestamp ? format(new Date(d.timestamp), 'dd/MM/yyyy HH:mm:ss') : '',
+      "Duración Real (min)": d.real_total_min,
+      "Duración Esperada (min)": d.esperado_total_min,
+      "Delta (min)": d.delta_total_min,
+      "Alertas": d.alerts.length
+    }));
+
+    exportToCSV(exportData, `BrewCycle_Machine_${selectedMachine || 'All'}_${format(new Date(), 'yyyyMMdd_HHmm')}`);
+    toast({ title: "Exportación exitosa", description: "Datos exportados correctamente." });
+  };
+
   if (!data) {
     return (
       <DashboardLayout>
@@ -99,6 +132,7 @@ export default function MachineDetail() {
         <MachineHeader
           selectedBatchId={selectedBatchId}
           selectedMachine={selectedMachine}
+          onExport={handleExport}
         />
 
         <GlobalFilters

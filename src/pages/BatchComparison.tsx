@@ -3,14 +3,19 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
-import { ArrowRight, BarChart as BarChartIcon, LineChart as LineChartIcon, Radar as RadarIcon, AreaChart as AreaChartIcon, Thermometer, Plus, Trash2, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, BarChart as BarChartIcon, LineChart as LineChartIcon, Radar as RadarIcon, AreaChart as AreaChartIcon, Thermometer, Plus, Trash2, SlidersHorizontal, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/context/DataContext";
 import { getUniqueBatchIds, getBatchById, generateTemperatureComparisonData, getUniqueMachineGroups } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { exportToCSV } from "@/utils/exportUtils";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BatchComparison() {
   const { data } = useData();
+  const { toast } = useToast();
   const batchIds = getUniqueBatchIds(data);
 
   const batchProductMap = useMemo(() => {
@@ -78,8 +83,9 @@ export default function BatchComparison() {
 
 
   // Nuevos estados para filtros de temperatura
-  const [tempMachine, setTempMachine] = useLocalStorage<string>("batch-comparison-temp-machine", "");
+  // tempMachine eliminado por redundancia con el constructor de series
   const [tempParam, setTempParam] = useLocalStorage<string>("batch-comparison-temp-param", "");
+  const [tempChartType, setTempChartType] = useLocalStorage<string>("batch-comparison-temp-chart-type", "line");
 
   useEffect(() => {
     if (batchIds.length >= 2) {
@@ -136,27 +142,23 @@ export default function BatchComparison() {
   // Available parameters for the selected batches (union of all params)
   const availableTempFilters = useMemo(() => {
     const relevantRecords = data.filter(d => activeBatches.includes(d.CHARG_NR));
-    const machines = Array.from(new Set(relevantRecords.map(r => r.TEILANL_GRUPO))).sort();
 
+    // Obtenemos todos los parámetros únicos disponibles en los lotes activos
     const parameters = Array.from(new Set(
       relevantRecords
-        .filter(r => !tempMachine || tempMachine === "ALL" || r.TEILANL_GRUPO === tempMachine)
         .flatMap(r => r.parameters || [])
         .map(p => p.name)
     )).sort();
 
-    return { machines, parameters };
-  }, [data, activeBatches, tempMachine]);
+    return { parameters };
+  }, [data, activeBatches]);
 
   // Seleccionar valores por defecto si no existen
   useEffect(() => {
-    if (availableTempFilters.machines.length > 0 && (!tempMachine || !availableTempFilters.machines.includes(tempMachine))) {
-      setTempMachine(availableTempFilters.machines[0]);
-    }
     if (availableTempFilters.parameters.length > 0 && (!tempParam || !availableTempFilters.parameters.includes(tempParam))) {
       setTempParam(availableTempFilters.parameters[0]);
     }
-  }, [availableTempFilters, tempMachine, tempParam, setTempMachine, setTempParam]);
+  }, [availableTempFilters, tempParam, setTempParam]);
 
   return (
     <DashboardLayout>
@@ -175,6 +177,20 @@ export default function BatchComparison() {
               <TabsTrigger value="radar" title="Radar"><RadarIcon className="h-4 w-4" /></TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (comparisonData.length === 0) {
+                toast({ title: "Sin datos", description: "No hay comparación activa para exportar.", variant: "destructive" });
+                return;
+              }
+              exportToCSV(comparisonData, `Comparativa_${batchA}_vs_${batchB}_${format(new Date(), 'yyyyMMdd')}`);
+              toast({ title: "Exportación exitosa", description: "Tabla comparativa descargada." });
+            }}
+          >
+            <ArrowRight className="mr-2 h-4 w-4 rotate-90 sm:rotate-0" /> Exportar Tabla
+          </Button>
         </div>
 
         <Card className="bg-card border-border">
@@ -382,44 +398,29 @@ export default function BatchComparison() {
         <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <CardTitle className="flex items-center gap-2">
                   <Thermometer className="h-5 w-5 text-red-500" />
                   Comparación Dinámica de Temperaturas
                 </CardTitle>
 
-                {/* Global Param Filters for the Chart */}
-                <div className="flex items-center gap-2">
-                  <Select value={tempMachine} onValueChange={setTempMachine}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filtrar Variable por Equipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">Todos los equipos</SelectItem>
-                      {availableTempFilters.machines.map(m => (
-                        <SelectItem key={m} value={m}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={tempParam} onValueChange={setTempParam}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Variable a Comparar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableTempFilters.parameters.map(p => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Tabs value={tempChartType} onValueChange={setTempChartType} className="w-full sm:w-auto">
+                  <TabsList className="grid w-full grid-cols-4 sm:w-[300px]">
+                    <TabsTrigger value="bar" title="Barras"><BarChartIcon className="h-4 w-4" /></TabsTrigger>
+                    <TabsTrigger value="line" title="Línea"><LineChartIcon className="h-4 w-4" /></TabsTrigger>
+                    <TabsTrigger value="area" title="Área"><AreaChartIcon className="h-4 w-4" /></TabsTrigger>
+                    <TabsTrigger value="radar" title="Radar"><RadarIcon className="h-4 w-4" /></TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
 
               {/* SERIES BUILDER */}
-              <div className="space-y-2 bg-muted/30 p-4 rounded-lg border border-border">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Configuración de Series
+              <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Configuración de Series
+                  </div>
                 </div>
 
                 {comparisonSeries.map((series, index) => {
@@ -492,43 +493,147 @@ export default function BatchComparison() {
           <CardContent>
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                  <XAxis
-                    dataKey="stepName"
-                    label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    interval="preserveStartEnd"
-                    minTickGap={30}
-                  />
-                  <YAxis
-                    label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    domain={[0, 'auto']}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
-                    labelFormatter={(value) => `Paso: ${value}`}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                {tempChartType === "line" ? (
+                  <LineChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis
+                      dataKey="stepName"
+                      label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      interval="preserveStartEnd"
+                      minTickGap={30}
+                    />
+                    <YAxis
+                      label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false}
+                      domain={[0, 'auto']}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
+                      labelFormatter={(value) => `Paso: ${value}`}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
-                  {comparisonSeries.map(series => (
-                    series.batchId && (
-                      <Line
-                        key={series.id}
-                        type="monotone"
-                        dataKey={series.batchId}
-                        name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
-                        stroke={series.color}
-                        strokeWidth={2}
-                        dot={false}
-                        activeDot={{ r: 6 }}
-                      />
-                    )
-                  ))}
-                </LineChart>
+                    {comparisonSeries.map(series => (
+                      series.batchId && (
+                        <Line
+                          key={series.id}
+                          type="monotone"
+                          dataKey={series.batchId}
+                          name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
+                          stroke={series.color}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 6 }}
+                        />
+                      )
+                    ))}
+                  </LineChart>
+                ) : tempChartType === "bar" ? (
+                  <BarChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis
+                      dataKey="stepName"
+                      label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      interval="preserveStartEnd"
+                      minTickGap={30}
+                    />
+                    <YAxis
+                      label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false}
+                      domain={[0, 'auto']}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
+                      labelFormatter={(value) => `Paso: ${value}`}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+
+                    {comparisonSeries.map(series => (
+                      series.batchId && (
+                        <Bar
+                          key={series.id}
+                          dataKey={series.batchId}
+                          name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
+                          fill={series.color}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      )
+                    ))}
+                  </BarChart>
+                ) : tempChartType === "area" ? (
+                  <AreaChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                    <defs>
+                      {comparisonSeries.map(series => (
+                        <linearGradient key={`grad-${series.id}`} id={`grad-${series.id}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={series.color} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={series.color} stopOpacity={0} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis
+                      dataKey="stepName"
+                      label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      interval="preserveStartEnd"
+                      minTickGap={30}
+                    />
+                    <YAxis
+                      label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false}
+                      domain={[0, 'auto']}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
+                      labelFormatter={(value) => `Paso: ${value}`}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+
+                    {comparisonSeries.map(series => (
+                      series.batchId && (
+                        <Area
+                          key={series.id}
+                          type="monotone"
+                          dataKey={series.batchId}
+                          name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
+                          stroke={series.color}
+                          fill={`url(#grad-${series.id})`}
+                          fillOpacity={0.4}
+                        />
+                      )
+                    ))}
+                  </AreaChart>
+                ) : (
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={temperatureData}>
+                    <PolarGrid stroke="hsl(var(--muted-foreground))" opacity={0.2} />
+                    <PolarAngleAxis dataKey="stepName" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
+                    />
+                    <Legend />
+                    {comparisonSeries.map(series => (
+                      series.batchId && (
+                        <Radar
+                          key={series.id}
+                          name={`Lote ${series.batchId}`}
+                          dataKey={series.batchId}
+                          stroke={series.color}
+                          fill={series.color}
+                          fillOpacity={0.4}
+                        />
+                      )
+                    ))}
+                  </RadarChart>
+                )}
               </ResponsiveContainer>
             </div>
           </CardContent>

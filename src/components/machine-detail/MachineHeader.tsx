@@ -3,9 +3,13 @@ import { Badge } from "@/components/ui/badge";
 interface MachineHeaderProps {
   selectedBatchId?: string;
   selectedMachine?: string;
+  onExport?: () => void;
 }
 
-export function MachineHeader({ selectedBatchId, selectedMachine }: MachineHeaderProps) {
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+
+export function MachineHeader({ selectedBatchId, selectedMachine, onExport }: MachineHeaderProps) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4">
       <div>
@@ -18,10 +22,15 @@ export function MachineHeader({ selectedBatchId, selectedMachine }: MachineHeade
       </div>
 
       <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="font-mono">
+        {onExport && (
+          <Button variant="outline" size="sm" onClick={onExport} className="h-8">
+            <Download className="mr-2 h-3 w-3" /> Exportar
+          </Button>
+        )}
+        <Badge variant="secondary" className="font-mono h-8 flex items-center">
           {selectedBatchId || "—"}
         </Badge>
-        <Badge variant="secondary" className="font-mono">
+        <Badge variant="secondary" className="font-mono h-8 flex items-center">
           {selectedMachine || "—"}
         </Badge>
       </div>

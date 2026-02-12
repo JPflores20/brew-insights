@@ -8,13 +8,15 @@ import {
   PieChart as PieChartIcon,
   Maximize2,
   Calendar,
-  Info
+  Info,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { processExcelFile } from "@/utils/excelProcessor";
+import { exportToCSV } from "@/utils/exportUtils";
 import { useData } from "@/context/DataContext";
 import {
   getTotalBatches,
@@ -32,11 +34,14 @@ import { EmptyStateUploader } from "@/components/dashboard/EmptyStateUploader";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 export default function Overview() {
   const { data, setData } = useData();
   const [loading, setLoading] = useState(false);
   const [expandedChart, setExpandedChart] = useState<"efficiency" | "distribution" | null>(null);
+  const [distributionDateRange, setDistributionDateRange] = useState<DateRange | undefined>();
   const [uploadProgress, setUploadProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -113,6 +118,36 @@ export default function Overview() {
     }
   };
 
+  const handleExport = () => {
+    if (data.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Sin datos",
+        description: "No hay datos para exportar.",
+      });
+      return;
+    }
+
+    const exportData = data.map(d => ({
+      "Lote": d.CHARG_NR,
+      "Grupo Equipo": d.TEILANL_GRUPO,
+      "Producto": d.productName || "Desconocido",
+      "Inicio": d.timestamp ? format(new Date(d.timestamp), 'dd/MM/yyyy HH:mm:ss') : '',
+      "Duración Real (min)": d.real_total_min,
+      "Duración Esperada (min)": d.esperado_total_min,
+      "Delta (min)": d.delta_total_min,
+      "Tiempo Muerto (min)": d.idle_wall_minus_sumsteps_min,
+      "Pasos": d.steps.length,
+      "Alertas": d.alerts.length
+    }));
+
+    exportToCSV(exportData, `BrewCycle_Overview_${format(new Date(), 'yyyyMMdd_HHmm')}`);
+    toast({
+      title: "Exportación exitosa",
+      description: "El archivo CSV se ha descargado correctamente.",
+    });
+  };
+
   useEffect(() => {
     return () => clearProgressInterval();
   }, []);
@@ -122,18 +157,48 @@ export default function Overview() {
   const avgDeviation = getAverageCycleDeviation(data);
   const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
 
-  const dateRange = useMemo(() => {
-    if (data.length === 0) return "---";
+  const availableDateRange = useMemo(() => {
+    if (data.length === 0) return { min: undefined, max: undefined, label: "---" };
     const timestamps = data.map(d => new Date(d.timestamp).getTime());
-    return `${format(new Date(Math.min(...timestamps)), 'dd/MM/yyyy')} - ${format(new Date(Math.max(...timestamps)), 'dd/MM/yyyy')}`;
+    const min = new Date(Math.min(...timestamps));
+    const max = new Date(Math.max(...timestamps));
+    // Normalize to start and end of day to ensuring inclusive filtering
+    min.setHours(0, 0, 0, 0);
+    max.setHours(23, 59, 59, 999);
+
+    return {
+      min,
+      max,
+      label: `${format(min, 'dd/MM/yyyy')} - ${format(max, 'dd/MM/yyyy')}`
+    };
   }, [data]);
 
+  // --- Filter Logic for Distribution Chart ---
+  const filteredPieDataRaw = useMemo(() => {
+    if (!distributionDateRange?.from) return data;
+
+    return data.filter(d => {
+      if (!d.timestamp) return false;
+      const date = new Date(d.timestamp);
+      const from = new Date(distributionDateRange.from!);
+      from.setHours(0, 0, 0, 0);
+
+      let to = distributionDateRange.to ? new Date(distributionDateRange.to) : new Date(from);
+      to.setHours(23, 59, 59, 999);
+
+      return date >= from && date <= to;
+    });
+  }, [data, distributionDateRange]);
+
+  const filteredRecipeStats = useMemo(() => getRecipeStats ? getRecipeStats(filteredPieDataRaw) : [], [filteredPieDataRaw]);
+  const filteredTotalBatches = useMemo(() => getTotalBatches(filteredPieDataRaw), [filteredPieDataRaw]);
+
   const pieData = useMemo(() => {
-    return recipeStats.map(stat => ({
+    return filteredRecipeStats.map(stat => ({
       name: stat.name,
       value: stat.batchCount
     })).sort((a, b) => b.value - a.value);
-  }, [recipeStats]);
+  }, [filteredRecipeStats]);
 
   // --- Render ---
   if (data.length === 0) {
@@ -165,9 +230,16 @@ export default function Overview() {
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Tablero General</h1>
             <p className="text-muted-foreground mt-1">Monitor de eficiencia y métricas clave de producción.</p>
           </div>
-          <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => setData([])}>
-            <Upload className="mr-2 h-4 w-4" /> Cargar nuevos archivos
-          </Button>
+          <div className="flex items-center gap-2">
+            {data.length > 0 && (
+              <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" /> Exportar CSV
+              </Button>
+            )}
+            <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => setData([])}>
+              <Upload className="mr-2 h-4 w-4" /> Cargar nuevos archivos
+            </Button>
+          </div>
         </div>
 
         {/* 1. KPIs Principales */}
@@ -192,7 +264,7 @@ export default function Overview() {
           />
           <MetricCard
             title="Periodo de Producción"
-            value={dateRange}
+            value={availableDateRange.label}
             subtitle="Rango de Fechas"
             icon={Calendar}
             delay={0.3}
@@ -230,17 +302,28 @@ export default function Overview() {
               <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1.5 rounded-md shadow-sm border border-border">
                 <Maximize2 className="w-4 h-4 text-muted-foreground" />
               </div>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <PieChartIcon className="h-5 w-5 text-accent" />
-                  Distribución de Productos
-                </CardTitle>
-                <CardDescription>Volumen de producción por tipo de cerveza</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <PieChartIcon className="h-5 w-5 text-accent" />
+                    Distribución de Productos
+                  </CardTitle>
+                  <CardDescription>Volumen de producción por tipo de cerveza</CardDescription>
+                </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DatePickerWithRange
+                    date={distributionDateRange}
+                    setDate={setDistributionDateRange}
+                    minDate={availableDateRange.min}
+                    maxDate={availableDateRange.max}
+                    className="w-[240px]"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="flex-1 flex items-center justify-center p-2">
                 <div className="h-[380px] w-full">
                   {pieData.length > 0 ? (
-                    <ProductPieChart data={pieData} totalBatches={totalBatches} />
+                    <ProductPieChart data={pieData} totalBatches={filteredTotalBatches} />
                   ) : (
                     <div className="text-muted-foreground flex flex-col items-center justify-center h-full">
                       <Info className="h-8 w-8 mb-2 opacity-50" />
@@ -260,9 +343,19 @@ export default function Overview() {
         <Dialog open={!!expandedChart} onOpenChange={(open) => !open && setExpandedChart(null)}>
           <DialogContent className="max-w-[90vw] h-[80vh] flex flex-col p-6 glass border-primary/20">
             <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                {expandedChart === 'efficiency' && <><TrendingUp className="h-6 w-6 text-primary" /> Eficiencia Detallada por Grupo</>}
-                {expandedChart === 'distribution' && <><PieChartIcon className="h-6 w-6 text-accent" /> Distribución Completa de Productos</>}
+              <DialogTitle className="text-2xl flex items-center justify-between gap-2 pr-8">
+                <div className="flex items-center gap-2">
+                  {expandedChart === 'efficiency' && <><TrendingUp className="h-6 w-6 text-primary" /> Eficiencia Detallada por Grupo</>}
+                  {expandedChart === 'distribution' && <><PieChartIcon className="h-6 w-6 text-accent" /> Distribución Completa de Productos</>}
+                </div>
+                {expandedChart === 'distribution' && (
+                  <DatePickerWithRange
+                    date={distributionDateRange}
+                    setDate={setDistributionDateRange}
+                    minDate={availableDateRange.min}
+                    maxDate={availableDateRange.max}
+                  />
+                )}
               </DialogTitle>
             </DialogHeader>
 
@@ -272,7 +365,7 @@ export default function Overview() {
               )}
 
               {expandedChart === 'distribution' && (
-                <ProductPieChart data={pieData} totalBatches={totalBatches} expanded={true} />
+                <ProductPieChart data={pieData} totalBatches={filteredTotalBatches} expanded={true} />
               )}
             </div>
           </DialogContent>
