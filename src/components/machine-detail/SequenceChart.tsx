@@ -17,6 +17,7 @@ import {
     AlertTriangle,
     ListFilter,
 } from "lucide-react";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 interface StepData {
     stepName: string;
@@ -91,12 +92,7 @@ export function SequenceChart({
                             interval={0}
                         />
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: "hsl(var(--popover))",
-                                borderColor: "hsl(var(--border))",
-                                borderRadius: "8px",
-                                color: "hsl(var(--popover-foreground))",
-                            }}
+                            content={<ChartTooltip />}
                             cursor={{ fill: "transparent" }}
                         />
                         <Legend

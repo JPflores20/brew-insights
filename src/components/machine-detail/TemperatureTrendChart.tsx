@@ -22,6 +22,7 @@ import {
 } from "recharts";
 import { Thermometer } from "lucide-react";
 import { CustomDot } from "./CustomDot";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 interface TemperatureTrendChartProps {
     data: any[];
@@ -214,32 +215,8 @@ export function TemperatureTrendChart({
                             axisLine={false}
                         />
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: "hsl(var(--popover))",
-                                borderColor: "hsl(var(--border))",
-                                borderRadius: "8px",
-                            }}
-                            labelStyle={{ color: "hsl(var(--popover-foreground))" }}
-                            formatter={(value: any) => [
-                                `${value} °C`,
-                                selectedTempParam,
-                            ]}
-                            labelFormatter={(label, payload) => {
-                                if (payload && payload.length > 0) {
-                                    const data = payload[0].payload;
-                                    // Tooltip dinámico según modo
-                                    if (trendBatch && trendBatch !== "ALL") {
-                                        return `${data.stepName} (${trendBatch})`;
-                                    } else {
-                                        let title = `${label} - ${data.date}`;
-                                        if (trendMachine === "ALL") {
-                                            title += ` (${data.machine})`;
-                                        }
-                                        return title;
-                                    }
-                                }
-                                return label;
-                            }}
+                            content={<ChartTooltip />}
+                            cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                         />
                         <Area
                             type="monotone"

@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 interface GanttChartProps {
     data: any[];
@@ -57,19 +58,7 @@ export function GanttChart({ data, minTime, maxTime }: GanttChartProps) {
                             />
                             <Tooltip
                                 cursor={{ fill: "transparent" }}
-                                content={({ active, payload }) => {
-                                    if (active && payload && payload.length) {
-                                        const d = payload[0].payload;
-                                        return (
-                                            <div className="bg-popover border border-border p-2 rounded shadow text-xs">
-                                                <p className="font-bold">{d.id}</p>
-                                                <p>Inicia: {d.startLabel}</p>
-                                                <p>Termina: {d.endLabel}</p>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                }}
+                                content={<ChartTooltip />}
                             />
                             <Bar dataKey="startOffset" stackId="a" fill="transparent" />
                             <Bar

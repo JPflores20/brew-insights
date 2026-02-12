@@ -9,6 +9,7 @@ import {
     YAxis,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 interface TrendAreaChartProps {
     data: any[];
@@ -67,33 +68,8 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
                         />
 
                         <Tooltip
-                            content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                    const d = payload[0].payload;
-                                    return (
-                                        <div className="bg-popover border border-border p-3 rounded-md shadow-md text-sm text-popover-foreground">
-                                            <p className="font-bold mb-2 text-primary">
-                                                Lote: {d.id}
-                                            </p>
-                                            <div className="grid grid-cols-[80px_1fr] gap-x-2 gap-y-1">
-                                                <span className="text-muted-foreground">Real:</span>
-                                                <span className="font-bold text-blue-600">
-                                                    {d.duration} min
-                                                </span>
-
-                                                <span className="text-muted-foreground">Ideal:</span>
-                                                <span className="font-bold text-green-600">
-                                                    {d.expectedDuration} min
-                                                </span>
-
-                                                <span className="text-muted-foreground">Inicio:</span>
-                                                <span>{d.startLabel}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                            }}
+                            content={<ChartTooltip />}
+                            cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                         />
 
                         <ReferenceLine

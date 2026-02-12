@@ -12,6 +12,7 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import { CustomDot } from "./CustomDot";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 interface MachineHistoryChartProps {
     data: any[];
@@ -81,12 +82,8 @@ export function MachineHistoryChart({
                             axisLine={false}
                         />
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: "hsl(var(--popover))",
-                                borderColor: "hsl(var(--border))",
-                                borderRadius: "8px",
-                            }}
-                            labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+                            content={<ChartTooltip />}
+                            cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                         />
                         <Area
                             type="monotone"

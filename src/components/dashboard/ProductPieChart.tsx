@@ -7,6 +7,7 @@ import {
     Label
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 interface ProductPieChartProps {
     data: { name: string; value: number }[];
@@ -73,9 +74,7 @@ export function ProductPieChart({ data, totalBatches, expanded = false }: Produc
                     />
                 </Pie>
                 <RechartsTooltip
-                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                    formatter={(value: number) => [`${value} Lotes`, 'Cantidad']}
+                    content={<ChartTooltip indicator="dot" />}
                 />
             </PieChart>
         </ResponsiveContainer>
