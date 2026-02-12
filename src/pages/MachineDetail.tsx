@@ -1,546 +1,92 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import {
-  AlertTriangle,
-  Clock,
-  ListFilter,
-  AlertCircle,
-  ArrowRight,
-  Search,
-  CheckCircle2,
-  Timer,
-  Gauge,
-  Thermometer,
-  Package,
-  Filter,
-  Layers,
-  LayoutDashboard,
-} from "lucide-react";
-import { useData } from "@/context/DataContext";
-import { getUniqueBatchIds, getMachineData, getUniqueMachineGroups } from "@/data/mockData";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Clock, LayoutDashboard, Layers } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
+// Hook
+import { useMachineDetail } from "@/hooks/useMachineDetail";
 
-const CustomDot = (props: any) => {
-  const { cx, cy, index, selectedIndices, stroke } = props;
-  
-  if (selectedIndices && selectedIndices.includes(index)) {
-    return (
-      <circle cx={cx} cy={cy} r={5} fill={stroke} stroke="white" strokeWidth={2} />
-    );
-  }
-  return null;
-};
+// Sub-components
+import { MachineHeader } from "@/components/machine-detail/MachineHeader";
+import { GlobalFilters } from "@/components/machine-detail/GlobalFilters";
+import { MachineKPIs } from "@/components/machine-detail/MachineKPIs";
+import { SequenceChart } from "@/components/machine-detail/SequenceChart";
+import { AnomaliesList } from "@/components/machine-detail/AnomaliesList";
+import { MachineHistoryChart } from "@/components/machine-detail/MachineHistoryChart";
+import { TemperatureTrendChart } from "@/components/machine-detail/TemperatureTrendChart";
+import { GlobalTimeline } from "@/components/machine-detail/GlobalTimeline";
+import { ProblemsPanel } from "@/components/machine-detail/ProblemsPanel";
+
+// UI Enhancements
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 export default function MachineDetail() {
-    const { data } = useData();
+  const {
+    data,
+    uniqueRecipes,
+    selectedRecipe,
+    setSelectedRecipe,
+    filteredBatches,
+    batchProductMap,
+    selectedBatchId,
+    setSelectedBatchId,
+    selectedMachine,
+    setSelectedMachine,
+    activeTab,
+    setActiveTab,
+    problematicBatches,
+    availableMachinesForBatch,
+    currentGap,
+    currentIdle,
+    selectedRecord,
+    stepsData,
+    fullProcessData,
+    fullProcessChartHeight,
+    anomaliesReport,
+    machineHistoryData,
+    selectedHistoryIndices,
+    setSelectedHistoryIndices,
+    trendBatch,
+    setTrendBatch,
+    trendRecipe,
+    setTrendRecipe,
+    trendMachine,
+    setTrendMachine,
+    selectedTempParam,
+    setSelectedTempParam,
+    machinesWithTemps,
+    availableTrendBatches,
+    availableTempParams,
+    tempTrendData,
+    selectedTempIndices,
+    setSelectedTempIndices,
+    loadSuggestion
+  } = useMachineDetail();
 
-  // Estados para selección de puntos en gráficas
-  const [selectedVarIndices, setSelectedVarIndices] = useState<number[]>([]);
-  const [selectedHistoryIndices, setSelectedHistoryIndices] = useState<number[]>([]);
-  const [selectedTempIndices, setSelectedTempIndices] = useState<number[]>([]);
-
-
-  // --- 1. LÓGICA DE RECETAS ---
-  const uniqueRecipes = useMemo(() => {
-    const recipes = new Set(data.map(d => d.productName).filter(Boolean));
-    return Array.from(recipes).sort();
-  }, [data]);
-
-  const [selectedRecipe, setSelectedRecipe] = useLocalStorage<string>(
-    "detail-recipe-selection",
-    "ALL"
-  );
-
-  // --- 2. FILTRADO DE LOTES SEGÚN RECETA ---
-  const filteredBatches = useMemo(() => {
-    let filtered = data;
-    if (selectedRecipe && selectedRecipe !== "ALL") {
-      filtered = filtered.filter(d => d.productName === selectedRecipe);
-    }
-    return getUniqueBatchIds(filtered);
-  }, [data, selectedRecipe]);
-
-  const batchProductMap = useMemo(() => {
-    const map = new Map<string, string>();
-    data.forEach((d) => {
-      if (d.productName) map.set(d.CHARG_NR, d.productName);
-    });
-    return map;
-  }, [data]);
-
-  const [selectedBatchId, setSelectedBatchId] = useLocalStorage<string>(
-    "detail-batch-selection-v2",
-    ""
-  );
-  const [selectedMachine, setSelectedMachine] = useLocalStorage<string>(
-    "detail-machine-selection-v2",
-    ""
-  );
-
-  const [paramFilter, setParamFilter] = useState<"all" | "process" | "materials">("process");
-  
-  // Estado para controlar la pestaña activa (para poder cambiarla desde el código)
-  const [activeTab, setActiveTab] = useState("machine-view");
-
-  const problematicBatches = useMemo(() => {
-    const issues: any[] = [];
-    data.forEach((record) => {
-      const hasGap = record.idle_wall_minus_sumsteps_min > 5;
-      const hasDelay = record.delta_total_min > 5;
-
-      if (hasGap || hasDelay) {
-        issues.push({
-          batch: record.CHARG_NR,
-          product: record.productName,
-          machine: record.TEILANL_GRUPO,
-          totalWait: record.idle_wall_minus_sumsteps_min,
-          totalDelay: record.delta_total_min,
-          isDelay: !hasGap && hasDelay,
-          timestamp: record.timestamp,
-        });
-      }
-    });
-    return issues.sort(
-      (a, b) =>
-        Math.max(b.totalWait, b.totalDelay) -
-        Math.max(a.totalWait, a.totalDelay)
+  if (!data) {
+    return (
+      <DashboardLayout>
+        <LoadingState message="Inicializando análisis..." />
+      </DashboardLayout>
     );
-  }, [data]);
-
-  useEffect(() => {
-    if (filteredBatches.length > 0) {
-      if (!selectedBatchId || !filteredBatches.includes(selectedBatchId)) {
-        setSelectedBatchId(filteredBatches[0]);
-      }
-    } else {
-        setSelectedBatchId("");
-    }
-  }, [filteredBatches, selectedBatchId, setSelectedBatchId]);
-
-  const availableMachinesForBatch = useMemo(() => {
-    if (!selectedBatchId) return [];
-    const records = data.filter((d) => d.CHARG_NR === selectedBatchId);
-    return Array.from(new Set(records.map((r) => r.TEILANL_GRUPO))).sort();
-  }, [data, selectedBatchId]);
-
-  useEffect(() => {
-    if (availableMachinesForBatch.length > 0) {
-      if (
-        !selectedMachine ||
-        !availableMachinesForBatch.includes(selectedMachine)
-      ) {
-        setSelectedMachine(availableMachinesForBatch[0]);
-      }
-    } else {
-      setSelectedMachine("");
-    }
-  }, [availableMachinesForBatch, selectedMachine, setSelectedMachine]);
-
-  const selectedRecord = data.find(
-    (d) => d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
-  );
-
-  const stepsData = useMemo(() => {
-    if (!selectedRecord?.steps) return [];
-
-    const source = selectedRecord.steps;
-    const merged: typeof source = [];
-
-    for (const step of source) {
-      const last = merged[merged.length - 1];
-      if (last && last.stepName === step.stepName) {
-        last.durationMin += step.durationMin;
-        last.expectedDurationMin += step.expectedDurationMin;
-      } else {
-        merged.push({ ...step });
-      }
-    }
-    return merged;
-  }, [selectedRecord]);
-
-  const fullProcessData = useMemo(() => {
-    if (!selectedBatchId) return [];
-    
-    const records = data.filter(d => d.CHARG_NR === selectedBatchId);
-    records.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-    let allSteps: any[] = [];
-
-    records.forEach(record => {
-        if (record.steps) {
-            const mergedLocal: any[] = [];
-            
-            for (const step of record.steps) {
-                const last = mergedLocal[mergedLocal.length - 1];
-                if (last && last.stepName === step.stepName) {
-                    last.durationMin += step.durationMin;
-                    last.expectedDurationMin += step.expectedDurationMin;
-                } else {
-                    mergedLocal.push({ 
-                        ...step, 
-                        machineName: record.TEILANL_GRUPO,
-                        uniqueLabel: `${record.TEILANL_GRUPO} - ${step.stepName}`
-                    });
-                }
-            }
-            allSteps = allSteps.concat(mergedLocal);
-        }
-    });
-
-    return allSteps;
-  }, [data, selectedBatchId]);
-
-  // --- CÁLCULO DE ALTURA DINÁMICA ---
-  const fullProcessChartHeight = useMemo(() => {
-    return Math.max(500, fullProcessData.length * 50);
-  }, [fullProcessData]);
-
-  const parametersData = selectedRecord?.parameters || [];
-
-  const filteredParameters = useMemo(() => {
-    if (paramFilter === "all") return parametersData;
-
-    return parametersData.filter((p) => {
-      const u = (p.unit || "").toLowerCase();
-      const isProcessVar = /°c|bar|mbar|pa|rpm|hz|%|hl\/h|m3\/h|l\/min|a|v|kw/.test(u);
-      
-      if (paramFilter === "process") {
-        return isProcessVar;
-      } else {
-        return !isProcessVar;
-      }
-    });
-  }, [parametersData, paramFilter]);
-
-  const anomaliesReport = useMemo(() => {
-    if (!stepsData.length) return [];
-    return stepsData
-      .map((step, index) => {
-        const isGap = step.stepName.includes("Espera");
-        const isSlow =
-          !isGap &&
-          step.expectedDurationMin > 0 &&
-          step.durationMin > step.expectedDurationMin + 1;
-
-        if (!isGap && !isSlow) return null;
-
-        const prevStep = index > 0 ? stepsData[index - 1].stepName : "Inicio";
-        const nextStep =
-          index < stepsData.length - 1 ? stepsData[index + 1].stepName : "Fin";
-
-        return {
-          id: index,
-          type: isGap ? "gap" : "delay",
-          name: step.stepName,
-          duration: step.durationMin,
-          expected: step.expectedDurationMin,
-          delta: isSlow
-            ? Math.round((step.durationMin - step.expectedDurationMin) * 100) /
-              100
-            : 0,
-          startTime: new Date(step.startTime).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          prevStep,
-          nextStep,
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .sort((a, b) => {
-        const impactA = a.type === "gap" ? a.duration : a.delta;
-        const impactB = b.type === "gap" ? b.duration : b.delta;
-        return impactB - impactA;
-      });
-  }, [stepsData]);
-
-  const machineHistoryData = useMemo(() => {
-    if (!selectedMachine) return [];
-    return getMachineData(data, selectedMachine)
-      .sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      )
-      .map((record) => ({
-        batchId: record.CHARG_NR,
-        realTime: record.real_total_min,
-        idle: record.idle_wall_minus_sumsteps_min,
-        isCurrent: record.CHARG_NR === selectedBatchId,
-      }));
-  }, [data, selectedMachine, selectedBatchId]);
-
-  // --- LOGICA DE TEMPERATURAS (ACTUALIZADO PARA DETALLE DE LOTE) ---
-  
-  // Estados locales para la gráfica de tendencias
-  const [trendMachine, setTrendMachine] = useState<string>("ALL");
-  const [trendRecipe, setTrendRecipe] = useState<string>("ALL");
-  const [trendBatch, setTrendBatch] = useState<string>("ALL");
-
-  // Sincronizar filtros iniciales
-  useEffect(() => {
-      if (selectedMachine) setTrendMachine(selectedMachine);
-  }, [selectedMachine]);
-
-  useEffect(() => {
-      if (selectedRecipe) setTrendRecipe(selectedRecipe);
-  }, [selectedRecipe]);
-
-  useEffect(() => {
-      // Resetear lote en tendencia si cambian los filtros superiores
-      setTrendBatch("ALL");
-  }, [trendRecipe, trendMachine]);
-
-  // Máquinas disponibles para filtro
-  const machinesWithTemps = useMemo(() => {
-    const machines = new Set<string>();
-    let filteredRecords = data;
-    if (trendRecipe && trendRecipe !== 'ALL') {
-        filteredRecords = data.filter(d => d.productName === trendRecipe);
-    }
-    filteredRecords.forEach(record => {
-      if (record.parameters && record.parameters.some(p => {
-           const u = (p.unit || "").toLowerCase();
-           return u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp');
-      })) {
-          machines.add(record.TEILANL_GRUPO);
-      }
-    });
-    return Array.from(machines).sort();
-  }, [data, trendRecipe]);
-
-  // Lotes disponibles para filtro
-  const availableTrendBatches = useMemo(() => {
-    const batches = new Set<string>();
-    let filteredRecords = data;
-    if (trendRecipe && trendRecipe !== 'ALL') {
-        filteredRecords = filteredRecords.filter(d => d.productName === trendRecipe);
-    }
-    if (trendMachine && trendMachine !== "ALL") {
-        filteredRecords = filteredRecords.filter(d => d.TEILANL_GRUPO === trendMachine);
-    }
-    filteredRecords.forEach(record => {
-      if (record.parameters && record.parameters.some(p => {
-           const u = (p.unit || "").toLowerCase();
-           return u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp');
-      })) {
-          batches.add(record.CHARG_NR);
-      }
-    });
-    return Array.from(batches).sort();
-  }, [data, trendRecipe, trendMachine]);
-
-  // Variables disponibles (Temp)
-  const availableTempParams = useMemo(() => {
-    if (!trendMachine) return [];
-    const allParams = data
-      .filter((d) => trendMachine === "ALL" || d.TEILANL_GRUPO === trendMachine)
-      .flatMap((d) => d.parameters || []);
-    
-    const temps = new Set<string>();
-    allParams.forEach(p => {
-        const u = (p.unit || "").toLowerCase();
-        if (u.includes('°c') || u.includes('temp') || p.name.toLowerCase().includes('temp')) {
-            temps.add(p.name);
-        }
-    });
-    return Array.from(temps).sort();
-  }, [data, trendMachine]);
-
-  const [selectedTempParam, setSelectedTempParam] = useState<string>("");
-
-  useEffect(() => {
-      if (availableTempParams.length > 0) {
-          if (!selectedTempParam || !availableTempParams.includes(selectedTempParam)) {
-              setSelectedTempParam(availableTempParams[0]);
-          }
-      } else {
-          setSelectedTempParam("");
-      }
-  }, [availableTempParams, selectedTempParam]);
-
-  // DATOS DE LA GRÁFICA DE TEMPERATURA
-  const tempTrendData = useMemo(() => {
-      if (!selectedTempParam) return [];
-      
-      // --- MODO 1: DETALLE DE LOTE (Paso a Paso) ---
-      if (trendBatch && trendBatch !== 'ALL') {
-          // Buscar el registro específico del lote
-          let record;
-          if (trendMachine && trendMachine !== "ALL") {
-             record = data.find(d => d.CHARG_NR === trendBatch && d.TEILANL_GRUPO === trendMachine);
-          } else {
-             // Si no hay máquina seleccionada, intentamos buscar cualquiera que tenga el lote
-             record = data.find(d => d.CHARG_NR === trendBatch);
-          }
-
-          if (!record || !record.parameters) return [];
-
-          // Extraer la secuencia de pasos para la variable seleccionada
-          return record.parameters
-            .filter(p => p.name === selectedTempParam)
-            .map((p, index) => ({
-                stepName: p.stepName || `Paso ${index + 1}`,
-                value: Number(p.value),
-                unit: p.unit,
-                // Agregamos propiedades para consistencia con el otro modo, aunque no se usen todas
-                batchId: record?.CHARG_NR,
-                date: record?.timestamp,
-                machine: record?.TEILANL_GRUPO,
-                isCurrent: true 
-            }));
-      }
-
-      // --- MODO 2: HISTÓRICO (Tendencia entre lotes) ---
-      let records = (trendMachine === "ALL") ? data : getMachineData(data, trendMachine);
-
-      if (trendRecipe && trendRecipe !== 'ALL') {
-          records = records.filter(d => d.productName === trendRecipe);
-      }
-      
-      return records
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-        .map(record => {
-            // En modo histórico solo tomamos el primer valor representativo
-            const param = record.parameters?.find(p => p.name === selectedTempParam);
-            return {
-                batchId: record.CHARG_NR,
-                value: param ? Number(param.value) : null,
-                date: new Date(record.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
-                machine: record.TEILANL_GRUPO,
-                isCurrent: record.CHARG_NR === selectedBatchId
-            };
-        })
-        .filter((d): d is { batchId: string; value: number; date: string; machine: string; isCurrent: boolean } => d.value !== null && Number.isFinite(d.value));
-  }, [data, trendMachine, trendRecipe, trendBatch, selectedTempParam, selectedBatchId]);
-
-  const currentGap = selectedRecord ? selectedRecord.max_gap_min : 0;
-  const currentIdle = selectedRecord
-    ? selectedRecord.idle_wall_minus_sumsteps_min
-    : 0;
-
-  const loadSuggestion = (batch: string, machine: string) => {
-    const record = data.find(d => d.CHARG_NR === batch);
-    if (record && selectedRecipe !== "ALL" && record.productName !== selectedRecipe) {
-        setSelectedRecipe("ALL");
-    }
-    setSelectedBatchId(batch);
-    setSelectedMachine(machine);
-    setActiveTab("machine-view"); // Forzar vista de máquina
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const themedTooltipContentStyle: CSSProperties = {
-    backgroundColor: "hsl(var(--popover))",
-    borderColor: "hsl(var(--border))",
-    borderRadius: "8px",
-    color: "hsl(var(--popover-foreground))",
-    fontSize: "14px",
-  };
-
-  const themedTooltipLabelStyle: CSSProperties = {
-    color: "hsl(var(--popover-foreground))",
-    fontWeight: "bold",
-  };
-
-  const themedTooltipItemStyle: CSSProperties = {
-    color: "hsl(var(--popover-foreground))",
-  };
-
-  const formatNumber = (v: any, decimals = 2) => {
-    const num = typeof v === "number" ? v : Number(v);
-    if (Number.isNaN(num)) return String(v);
-    const rounded = Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
-    return rounded.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: decimals,
-    });
-  };
-
-  const truncateLabel = (v: any, max = 18) => {
-    const s = String(v ?? "");
-    return s.length > max ? s.slice(0, max - 1) + "…" : s;
-  };
-
-  const paramTickInterval = useMemo(() => {
-    const n = filteredParameters.length;
-    if (n <= 10) return 0;
-    if (n <= 20) return 1;
-    if (n <= 30) return 2;
-    return Math.ceil(n / 10);
-  }, [filteredParameters.length]);
-
-  const getParamUnit = (payload: any) => {
-    const unit =
-      payload?.unit ??
-      payload?.units ??
-      payload?.uom ??
-      payload?.UOM ??
-      payload?.unidad ??
-      payload?.unidades;
-
-    if (unit) return ` ${unit}`;
-
-    const pname =
-      payload?.parameterName ??
-      payload?.paramName ??
-      payload?.parameter ??
-      payload?.name ??
-      payload?.tag;
-
-    if (typeof pname === "string") {
-      if (/temp|temper/i.test(pname)) return " °C";
-      if (/pres|press|presi/i.test(pname)) return " bar";
-      if (/flow|caudal/i.test(pname)) return " l/min";
-      if (/ph/i.test(pname)) return " pH";
-      if (/rpm/i.test(pname)) return " rpm";
-    }
-    return "";
-  };
+  }
 
   if (data.length === 0) {
     return (
       <DashboardLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <Clock className="mx-auto h-12 w-12 opacity-50 mb-4" />
-            <h2 className="text-xl font-semibold">Sin Datos</h2>
-            <p>
-              Por favor carga un archivo Excel en la pestaña "Resumen" primero.
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center text-muted-foreground glass p-8 rounded-xl"
+          >
+            <Clock className="mx-auto h-12 w-12 opacity-50 mb-4 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">Sin Datos</h2>
+            <p className="mt-2 text-sm text-balance">
+              Por favor carga un archivo Excel en la pestaña "Resumen" para comenzar el análisis.
             </p>
-          </div>
+          </motion.div>
         </div>
       </DashboardLayout>
     );
@@ -548,695 +94,139 @@ export default function MachineDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-in fade-in duration-500 pb-8">
-        {/* --- HEADER --- */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Detalle de Lote y Pasos
-            </h1>
-            <p className="text-muted-foreground">
-              Selecciona un lote o revisa las sugerencias automáticas
-            </p>
+      <AnimatedPage className="space-y-6 pb-12">
+        <MachineHeader
+          selectedBatchId={selectedBatchId}
+          selectedMachine={selectedMachine}
+        />
+
+        <GlobalFilters
+          selectedRecipe={selectedRecipe}
+          setSelectedRecipe={setSelectedRecipe}
+          uniqueRecipes={uniqueRecipes}
+          selectedBatchId={selectedBatchId}
+          setSelectedBatchId={setSelectedBatchId}
+          filteredBatches={filteredBatches}
+          batchProductMap={batchProductMap}
+        />
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger
+                value="machine-view"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              >
+                <LayoutDashboard className="h-4 w-4" /> Detalle por Equipo
+              </TabsTrigger>
+              <TabsTrigger
+                value="global-view"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              >
+                <Layers className="h-4 w-4" /> Cronología Global
+              </TabsTrigger>
+            </TabsList>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="font-mono">
-              {selectedBatchId || "—"}
-            </Badge>
-            <Badge variant="secondary" className="font-mono">
-              {selectedMachine || "—"}
-            </Badge>
-          </div>
-        </div>
+          <TabsContent
+            value="machine-view"
+            className="space-y-6 outline-none"
+          >
+            <MachineKPIs
+              selectedMachine={selectedMachine}
+              setSelectedMachine={setSelectedMachine}
+              availableMachinesForBatch={availableMachinesForBatch}
+              currentGap={currentGap}
+              currentIdle={currentIdle}
+            />
 
-        {/* --- FILTROS GLOBALES (RECETA Y LOTE) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* 1. SELECCIONAR RECETA */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
-                  1
-                </span>
-                Filtrar Receta
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todas las recetas</SelectItem>
-                  {uniqueRecipes.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              <motion.div
+                className="xl:col-span-8 space-y-6"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <SequenceChart
+                  selectedRecord={selectedRecord}
+                  stepsData={stepsData}
+                  selectedBatchId={selectedBatchId}
+                  selectedMachine={selectedMachine}
+                />
+              </motion.div>
 
-          {/* 2. SELECCIONAR LOTE */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
-                  2
-                </span>
-                Seleccionar Lote
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Buscar lote..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredBatches.map((batch) => (
-                    <SelectItem key={batch} value={batch}>
-                      {batch} - {batchProductMap.get(batch) || "Sin producto"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* --- PESTAÑAS PRINCIPALES --- */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-            <TabsTrigger value="machine-view" className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4" /> Detalle por Equipo
-            </TabsTrigger>
-            <TabsTrigger value="global-view" className="flex items-center gap-2">
-              <Layers className="h-4 w-4" /> Cronología Global
-            </TabsTrigger>
-          </TabsList>
-
-          {/* === PESTAÑA 1: VISTA DE MÁQUINA INDIVIDUAL === */}
-          <TabsContent value="machine-view" className="space-y-6 animate-in fade-in duration-300">
-             {/* SUB-FILTRO MÁQUINA + KPIS */}
-             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {/* 3. VER EN EQUIPO */}
-                <Card className="bg-card border-border">
-                  <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
-                        3
-                      </span>
-                      Ver en Equipo
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Select
-                      value={selectedMachine}
-                      onValueChange={setSelectedMachine}
-                      disabled={availableMachinesForBatch.length === 0}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder={
-                            availableMachinesForBatch.length === 0
-                              ? "Lote sin equipos"
-                              : "Selecciona equipo"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableMachinesForBatch.map((machine) => (
-                          <SelectItem key={machine} value={machine}>
-                            {machine}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </CardContent>
-                </Card>
-
-                {/* 4. KPI GAP */}
-                <Card className="bg-card border-border">
-                  <CardContent className="pt-6 flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Mayor Gap
-                      </p>
-                      <p className="text-3xl font-bold mt-2 text-chart-delay">
-                        {currentGap} m
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-full bg-chart-delay/10">
-                      <AlertTriangle className="h-6 w-6 text-chart-delay" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* 5. KPI TIEMPO MUERTO */}
-                <Card className="bg-card border-border">
-                  <CardContent className="pt-6 flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        T. Muerto
-                      </p>
-                      <p className="text-3xl font-bold mt-2 text-blue-500">
-                        {currentIdle} m
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-full bg-blue-500/10">
-                      <Clock className="h-6 w-6 text-blue-500" />
-                    </div>
-                  </CardContent>
-                </Card>
-             </div>
-
-             {/* LAYOUT PRINCIPAL DE LA VISTA MÁQUINA */}
-             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                {/* CONTENIDO (izquierda) */}
-                <div className="xl:col-span-8 space-y-6">
-                  {/* GRÁFICA DE SECUENCIA INDIVIDUAL */}
-                  {selectedRecord && stepsData.length > 0 ? (
-                    <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-[520px]">
-                      <div className="flex items-center gap-2 mb-6">
-                        <ListFilter className="h-5 w-5 text-primary" />
-                        <div className="min-w-0">
-                          <CardTitle className="text-lg font-semibold truncate">
-                            Secuencia de Pasos ({selectedBatchId} - {selectedMachine})
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {selectedRecord.productName}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="h-[420px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={stepsData}
-                            layout="vertical"
-                            margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-                            barCategoryGap="20%"
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              opacity={0.1}
-                              horizontal={true}
-                              vertical={true}
-                            />
-                            <XAxis type="number" hide />
-                            <YAxis
-                              dataKey="stepName"
-                              type="category"
-                              width={180}
-                              tick={{
-                                fontSize: 11,
-                                fill: "hsl(var(--muted-foreground))",
-                              }}
-                              interval={0}
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "hsl(var(--popover))",
-                                borderColor: "hsl(var(--border))",
-                                borderRadius: "8px",
-                                color: "hsl(var(--popover-foreground))",
-                              }}
-                              cursor={{ fill: "transparent" }}
-                            />
-                            <Legend
-                              wrapperStyle={{ paddingTop: "10px" }}
-                              payload={[
-                                {
-                                  value: "Duración Real (min)",
-                                  type: "rect",
-                                  color: "hsl(var(--primary))",
-                                },
-                                {
-                                  value: "Espera / Gap (min)",
-                                  type: "rect",
-                                  color: "#ef4444",
-                                },
-                                {
-                                  value: "Duración Esperada (min)",
-                                  type: "rect",
-                                  color: "#3b82f6", // COLOR AZUL
-                                },
-                              ]}
-                            />
-                            <Bar
-                              dataKey="durationMin"
-                              name="Duración Real (min)"
-                              fill="hsl(var(--primary))"
-                              radius={[0, 4, 4, 0]}
-                              barSize={20}
-                            >
-                              {stepsData.map((entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={
-                                    entry.stepName.includes("Espera")
-                                      ? "#ef4444"
-                                      : "hsl(var(--primary))"
-                                  }
-                                />
-                              ))}
-                            </Bar>
-                            <Bar
-                              dataKey="expectedDurationMin"
-                              name="Duración Esperada (min)"
-                              fill="#3b82f6" // COLOR AZUL
-                              radius={[0, 4, 4, 0]}
-                              barSize={10}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </Card>
-                  ) : (
-                    <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500 h-[520px]">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                        <p className="text-sm font-medium">
-                          Selecciona un lote para ver los detalles.
-                        </p>
-                      </div>
-                    </Card>
-                  )}
+              <motion.div
+                className="xl:col-span-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
+                  <AnomaliesList anomaliesReport={anomaliesReport as any} />
                 </div>
+              </motion.div>
+            </div>
 
-                {/* PANEL INSIGHTS (derecha) */}
-                <div className="xl:col-span-4">
-                  <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
-                    {/* LISTA DETALLADA DE ANOMALÍAS */}
-                    <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)] overflow-hidden">
-                      <CardHeader className="pb-3 border-b border-border">
-                        <div className="flex items-center gap-2 text-foreground">
-                          <AlertCircle className="h-5 w-5 text-orange-500" />
-                          <CardTitle className="text-lg">Detalle de Ineficiencias</CardTitle>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {anomaliesReport.length > 0
-                            ? `Lista de ${anomaliesReport.length} anomalías encontradas`
-                            : "Sin ineficiencias detectadas"}
-                        </p>
-                      </CardHeader>
+            <motion.div
+              className="space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <MachineHistoryChart
+                data={machineHistoryData}
+                selectedHistoryIndices={selectedHistoryIndices}
+                setSelectedHistoryIndices={setSelectedHistoryIndices}
+                trendBatch={trendBatch}
+                selectedMachine={selectedMachine}
+              />
 
-                      <CardContent className="flex-1 p-0 min-h-0">
-                        {anomaliesReport.length > 0 ? (
-                          <ScrollArea className="h-full w-full p-4">
-                            <div className="space-y-4">
-                              {anomaliesReport.map((item) => (
-                                <div
-                                  key={item.id}
-                                  className={`p-3 rounded-lg border text-sm animate-in fade-in slide-in-from-right-4 duration-500 ${
-                                    item.type === "gap"
-                                      ? "bg-red-500/10 border-red-500/20"
-                                      : "bg-orange-500/10 border-orange-500/20"
-                                  }`}
-                                >
-                                  <div className="flex justify-between items-start mb-2">
-                                    <Badge
-                                      variant="outline"
-                                      className={
-                                        item.type === "gap"
-                                          ? "text-red-500 border-red-500/30 bg-red-500/5 font-bold"
-                                          : "text-orange-600 border-orange-500/30 bg-orange-500/5 font-bold"
-                                      }
-                                    >
-                                      {item.type === "gap" ? "PARADA / GAP" : "PASO LENTO"}
-                                    </Badge>
-                                    <span
-                                      className={`font-mono font-bold ${
-                                        item.type === "gap" ? "text-red-500" : "text-orange-600"
-                                      }`}
-                                    >
-                                      {item.type === "gap"
-                                        ? `${item.duration} min`
-                                        : `+${item.delta} min`}
-                                    </span>
-                                  </div>
-
-                                  <div className="text-xs text-muted-foreground space-y-1">
-                                    <p className="font-medium text-foreground text-sm mb-1">
-                                      {item.name}
-                                    </p>
-
-                                    {item.type === "delay" && (
-                                      <div className="flex justify-between text-xs px-2 py-1 bg-background/50 rounded border border-border/50 mb-2">
-                                        <span>
-                                          Real: <strong>{item.duration}m</strong>
-                                        </span>
-                                        <span>
-                                          Esperado: <strong>{item.expected}m</strong>
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    <div className="flex items-center gap-1 opacity-80">
-                                      <Clock className="h-3 w-3" />
-                                      <span>Inicio: {item.startTime}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
-                            <CheckCircle2 className="h-12 w-12 text-green-500 mb-3 opacity-20" />
-                            <p className="text-sm">Todo correcto</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-             </div>
-
-             {/* ELEMENTOS ADICIONALES VISTA MAQUINA (Cp/Cpk, Variables, Historia) */}
-             <div className="space-y-6">
-                
-{machineHistoryData.length > 0 && (
-                  <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
-                    <CardTitle className="mb-6 text-lg font-semibold flex items-center justify-between">
-                      <span>Tendencia Histórica De Tiempos</span>
-                      <span className="text-sm font-normal text-muted-foreground">Comparativa con otros lotes en {selectedMachine}</span>
-                    </CardTitle>
-                    <div className="h-[340px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={machineHistoryData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedHistoryIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
-                          <defs>
-                            <linearGradient id="colorRealTime" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                          <XAxis dataKey={trendBatch && trendBatch !== "ALL" ? "date" : "batchId"} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} />
-                          <YAxis label={{ value: "Minutos", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
-                          <Tooltip contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} />
-                          <Area type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} fillOpacity={1} fill="url(#colorRealTime)" name="Tiempo Real" dot={(props) => <CustomDot {...props} selectedIndices={selectedHistoryIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </Card>
-                )}
-
-{/* Tendencia de Temperaturas (NUEVO) */}
-                {tempTrendData.length > 0 || (trendMachine && availableTempParams.length > 0) ? (
-                  <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
-                    <CardHeader className="px-0 pt-0 pb-6">
-                      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-                        <div className="space-y-1">
-                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                            <Thermometer className="h-5 w-5 text-red-500" />
-                            {trendBatch && trendBatch !== "ALL" ? "Perfil de Temperatura del Lote" : "Tendencia Histórica de Temperaturas"}
-                          </CardTitle>
-                          <CardDescription>
-                            {trendBatch && trendBatch !== "ALL" 
-                                ? `Visualizando evolución paso a paso del lote ${trendBatch}`
-                                : "Análisis histórico por equipo y receta"}
-                          </CardDescription>
-                        </div>
-                        
-                        {/* CONTROLES DE FILTRADO EN LA GRÁFICA */}
-                        <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
-                           {/* Selector de Receta (Local) */}
-                           <Select value={trendRecipe} onValueChange={setTrendRecipe}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                              <SelectValue placeholder="Receta" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ALL">Todas las recetas</SelectItem>
-                              {uniqueRecipes.map(r => (
-                                <SelectItem key={r} value={r}>{r}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                           {/* Selector de Equipo (Local) */}
-                           <Select value={trendMachine} onValueChange={setTrendMachine}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                              <SelectValue placeholder="Equipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ALL">Todos los equipos</SelectItem>
-                              {machinesWithTemps.map(m => (
-                                <SelectItem key={m} value={m}>{m}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                           {/* Selector de Lote (Local) */}
-                           <Select value={trendBatch} onValueChange={setTrendBatch}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                              <SelectValue placeholder="Lote" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ALL">Todos los lotes (Histórico)</SelectItem>
-                              {availableTrendBatches.map(b => (
-                                <SelectItem key={b} value={b}>{b}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                           {/* Selector de Variable */}
-                           <Select value={selectedTempParam} onValueChange={setSelectedTempParam}>
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                              <SelectValue placeholder="Variable" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableTempParams.map(p => (
-                                <SelectItem key={p} value={p}>{p}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <div className="h-[340px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={tempTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} onClick={(data) => { if (data && data.activeTooltipIndex !== undefined) { const idx = data.activeTooltipIndex; setSelectedTempIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]); } }}>
-                          <defs>
-                            <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                          
-                          {/* Eje X dinámico: 'stepName' para lote único, 'date'/'batchId' para histórico */}
-                          <XAxis 
-                            dataKey={trendBatch && trendBatch !== "ALL" ? "stepName" : "date"} 
-                            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} 
-                            axisLine={{ stroke: "hsl(var(--border))" }} 
-                            interval={trendBatch && trendBatch !== "ALL" ? 0 : "preserveStartEnd"}
-                            angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
-                            textAnchor={trendBatch && trendBatch !== "ALL" ? "end" : "middle"}
-                            height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
-                            tickFormatter={(val) => {
-                                if (trendBatch && trendBatch !== "ALL") return truncateLabel(val, 15);
-                                return val;
-                            }}
-                          />
-                          
-                          <YAxis label={{ value: "°C", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} 
-                            labelStyle={{ color: "hsl(var(--popover-foreground))" }}
-                            formatter={(value: any) => [`${value} °C`, selectedTempParam]}
-                            labelFormatter={(label, payload) => {
-                              if (payload && payload.length > 0) {
-                                const data = payload[0].payload;
-                                // Tooltip dinámico según modo
-                                if (trendBatch && trendBatch !== "ALL") {
-                                    return `${data.stepName} (${trendBatch})`;
-                                } else {
-                                    let title = `${label} - ${data.date}`;
-                                    if (trendMachine === "ALL") {
-                                        title += ` (${data.machine})`;
-                                    }
-                                    return title;
-                                }
-                              }
-                              return label;
-                            }}
-                          />
-                          <Area type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorTemp)" name="Temperatura" dot={(props) => <CustomDot {...props} selectedIndices={selectedTempIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </Card>
-                ) : null}
-
-             </div>
+              <TemperatureTrendChart
+                data={tempTrendData}
+                trendBatch={trendBatch}
+                trendRecipe={trendRecipe}
+                trendMachine={trendMachine}
+                selectedTempParam={selectedTempParam}
+                uniqueRecipes={uniqueRecipes}
+                machinesWithTemps={machinesWithTemps}
+                availableTrendBatches={availableTrendBatches}
+                availableTempParams={availableTempParams}
+                setTrendRecipe={setTrendRecipe}
+                setTrendMachine={setTrendMachine}
+                setTrendBatch={setTrendBatch}
+                setSelectedTempParam={setSelectedTempParam}
+                selectedTempIndices={selectedTempIndices}
+                setSelectedTempIndices={setSelectedTempIndices}
+              />
+            </motion.div>
           </TabsContent>
 
-          {/* === PESTAÑA 2: CRONOLOGÍA GLOBAL === */}
-          <TabsContent value="global-view" className="space-y-6 animate-in fade-in duration-300">
-             {fullProcessData.length > 0 ? (
-               <Card className="bg-card border-border p-6 shadow-sm">
-                 <div className="flex items-center gap-2 mb-6">
-                   <Layers className="h-5 w-5 text-indigo-500" />
-                   <div className="min-w-0">
-                     <CardTitle className="text-lg font-semibold truncate">
-                       Cronología Completa del Lote (Todos los Equipos)
-                     </CardTitle>
-                     <p className="text-sm text-muted-foreground truncate">
-                       Vista unificada de todas las máquinas secuenciadas por tiempo.
-                     </p>
-                   </div>
-                 </div>
-
-                 {/* WRAPPER CON SCROLL */}
-                 <ScrollArea className="h-[600px] w-full pr-4 border rounded-md bg-background/50">
-                   <div style={{ height: `${fullProcessChartHeight}px`, width: "100%", minWidth: "800px" }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={fullProcessData}
-                          layout="vertical"
-                          margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
-                          barCategoryGap="20%"
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            opacity={0.1}
-                            horizontal={true}
-                            vertical={true}
-                          />
-                          <XAxis type="number" />
-                          <YAxis
-                            dataKey="uniqueLabel"
-                            type="category"
-                            width={260}
-                            tick={{
-                              fontSize: 12,
-                              fill: "hsl(var(--muted-foreground))",
-                            }}
-                            interval={0}
-                            tickFormatter={(value) => {
-                                return value.length > 40 ? value.substring(0, 40) + "..." : value;
-                            }}
-                          />
-                          <Tooltip
-                            contentStyle={themedTooltipContentStyle}
-                            cursor={{ fill: "transparent" }}
-                            formatter={(value: any, name: any) => [value, name]}
-                            labelFormatter={(label) => label.split(' - ')[1] || label}
-                          />
-                          <Legend wrapperStyle={{ paddingTop: "10px" }} />
-                          <Bar
-                            dataKey="durationMin"
-                            name="Duración Real (min)"
-                            fill="hsl(var(--primary))"
-                            radius={[0, 4, 4, 0]}
-                            barSize={24}
-                          >
-                            {fullProcessData.map((entry, index) => (
-                              <Cell
-                                key={`cell-full-${index}`}
-                                fill={
-                                  entry.stepName.includes("Espera")
-                                    ? "#ef4444"
-                                    : "hsl(var(--primary))"
-                                }
-                              />
-                            ))}
-                          </Bar>
-                          <Bar
-                            dataKey="expectedDurationMin"
-                            name="Duración Esperada (min)"
-                            fill="#3b82f6" // COLOR AZUL
-                            radius={[0, 4, 4, 0]}
-                            barSize={12}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                   </div>
-                 </ScrollArea>
-               </Card>
-             ) : (
-                <div className="flex h-[300px] items-center justify-center border rounded-md bg-muted/20">
-                    <p className="text-muted-foreground">Selecciona un lote para ver la cronología.</p>
-                </div>
-             )}
+          <TabsContent
+            value="global-view"
+            className="space-y-6 outline-none"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <GlobalTimeline
+                fullProcessData={fullProcessData}
+                fullProcessChartHeight={fullProcessChartHeight}
+              />
+            </motion.div>
           </TabsContent>
         </Tabs>
 
-        {/* --- PANEL DE SUGERENCIAS (SIEMPRE VISIBLE AL FINAL) --- */}
-        {problematicBatches.length > 0 && (
-          <Card className="bg-card border-border border-l-4 border-l-orange-500 mt-8">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-lg">
-                  🔍 Detección Automática de Problemas
-                </CardTitle>
-              </div>
-              <CardDescription>
-                Se han encontrado {problematicBatches.length} registros con
-                ineficiencias.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[170px] w-full pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {problematicBatches.map((issue, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-3 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="secondary" className="font-mono">
-                            {issue.batch}
-                          </Badge>
-                          <span
-                            className="text-xs text-muted-foreground truncate max-w-[160px]"
-                            title={issue.machine}
-                          >
-                            {issue.machine}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mb-1 font-medium truncate">
-                          {issue.product}
-                        </div>
-                        <p
-                          className={
-                            issue.isDelay
-                              ? "text-xs text-orange-500 font-medium flex items-center gap-1"
-                              : "text-xs text-red-500 font-medium flex items-center gap-1"
-                          }
-                        >
-                          {issue.isDelay ? (
-                            <Timer className="h-3 w-3" />
-                          ) : (
-                            <Clock className="h-3 w-3" />
-                          )}
-                          {issue.isDelay
-                            ? `Retraso: +${issue.totalDelay} min`
-                            : `Espera: ${issue.totalWait} min`}
-                        </p>
-                      </div>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs ml-3 shrink-0"
-                        onClick={() => loadSuggestion(issue.batch, issue.machine)}
-                      >
-                        Analizar <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        <ProblemsPanel
+          problematicBatches={problematicBatches}
+          loadSuggestion={loadSuggestion}
+        />
+      </AnimatedPage>
     </DashboardLayout>
   );
 }

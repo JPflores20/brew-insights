@@ -8,119 +8,6 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 160 84% 39%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 160 84% 39%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 160 84% 39%;
-
-    --radius: 0.5rem;
-
-    /* Custom semantic colors for charts */
-    --chart-expected: 160 84% 39%;
-    --chart-real: 25 95% 53%;
-    --chart-delay: 350 89% 60%;
-    --chart-idle: 217 91% 60%;
-
-    /* Sidebar */
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 160 84% 39%;
-  }
-
-  .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 160 84% 39%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 160 84% 39%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 160 84% 39%;
-
-    /* Custom semantic colors for charts */
-    --chart-expected: 160 84% 39%;
-    --chart-real: 25 95% 53%;
-    --chart-delay: 350 89% 60%;
-    --chart-idle: 217 91% 60%;
-
-    /* Sidebar */
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 160 84% 39%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* BrewCycle Analytics - Industrial Dark Theme
-   All colors MUST be HSL.
-*/
-
-@layer base {
-  :root {
     /* Fondo muy oscuro (Azul noche profundo) */
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
@@ -232,6 +119,35 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    /* Subtle industrial gradient overlay */
+    background-image: radial-gradient(circle at 50% 0%, hsl(222, 47%, 15%), hsl(222, 47%, 11%));
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism utility for modern industrial look */
+  .glass {
+    @apply bg-card/80 backdrop-blur-md border border-white/5 shadow-sm;
+  }
+
+  /* Industrial Card hover effect */
+  .card-hover {
+    @apply transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_15px_rgba(249,115,22,0.1)];
+  }
+
+  /* Custom Scrollbar for Webkit */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full hover:bg-muted-foreground/50 transition-colors;
   }
 }
