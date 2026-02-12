@@ -118,32 +118,32 @@ export function getDelayAlerts(data: BatchRecord[], threshold: number = 30): Bat
 
 export function getRecipeStats(data: BatchRecord[]) {
   // Estructura para acumular datos
-  const recipes = new Map<string, { 
+  const recipes = new Map<string, {
     uniqueBatches: Set<string>, // Para contar lotes únicos (199)
     totalRecords: number,       // Para contar operaciones totales (1065)
-    totalReal: number, 
-    totalExpected: number, 
-    totalIdle: number 
+    totalReal: number,
+    totalExpected: number,
+    totalIdle: number
   }>();
 
   data.forEach(d => {
     const name = d.productName || "Desconocido";
     if (!recipes.has(name)) {
-      recipes.set(name, { 
-        uniqueBatches: new Set(), 
+      recipes.set(name, {
+        uniqueBatches: new Set(),
         totalRecords: 0,
-        totalReal: 0, 
-        totalExpected: 0, 
-        totalIdle: 0 
+        totalReal: 0,
+        totalExpected: 0,
+        totalIdle: 0
       });
     }
     const r = recipes.get(name)!;
-    
+
     // Agregamos al Set (solo guardará IDs únicos)
     r.uniqueBatches.add(d.CHARG_NR);
     // Incrementamos el contador de registros
     r.totalRecords++;
-    
+
     // Acumulamos tiempos
     r.totalReal += d.real_total_min;
     r.totalExpected += d.esperado_total_min;
@@ -159,7 +159,7 @@ export function getRecipeStats(data: BatchRecord[]) {
       avgReal: uniqueCount > 0 ? Math.round(stats.totalReal / uniqueCount) : 0,
       avgExpected: uniqueCount > 0 ? Math.round(stats.totalExpected / uniqueCount) : 0,
       avgIdle: uniqueCount > 0 ? Math.round(stats.totalIdle / uniqueCount) : 0,
-      
+
       // DEVOLVEMOS AMBOS CONTEOS:
       batchCount: uniqueCount,    // Úsalo para ver "Cantidad de Lotes" (199)
       recordCount: stats.totalRecords // Úsalo si necesitas ver "Cantidad de Pasos/Registros" (1065)
@@ -301,4 +301,86 @@ export function getCpCpkForTemperatureDeltaByParameter(
     const bc = b.cpk ?? -999;
     return ac - bc;
   });
+}
+
+// --- GENERADORES DE DATOS DE TEMPERATURA PARA COMPARACIÓN ---
+
+export interface TemperaturePoint {
+  time: number; // Minutos desde el inicio
+  stepName: string;
+  [key: string]: number | string; // batchId1: temp1, batchId2: temp2...
+}
+
+export function generateTemperatureComparisonData(
+  batchIds: string[],
+  data: BatchRecord[],
+  parameterName?: string
+): TemperaturePoint[] {
+  // En un caso real, buscaríamos los 'parameters' reales en 'data' filtrando por 'parameterName'
+  // Como esto es un mock, simularemos perfiles ligeramente diferentes según el parámetro elegido
+
+  let baseTemp = 45;
+  let peakTemp = 100;
+
+  // Ajustamos el "perfil" según el nombre del parámetro para dar sensación de realismo
+  if (parameterName?.includes("Frio") || parameterName?.includes("Salida")) {
+    baseTemp = 5;
+    peakTemp = 15;
+  } else if (parameterName?.includes("Presion")) {
+    baseTemp = 1;
+    peakTemp = 3;
+  }
+
+  const standardProfile = [
+    { step: "Arr. Cocedor", startTemp: 25, endTemp: 30, duration: 5 },
+    { step: "Recibir Grits 1", startTemp: 30, endTemp: 35, duration: 10 },
+    { step: "Recibir Grits 2", startTemp: 35, endTemp: 40, duration: 10 },
+    { step: "Calentar 1", startTemp: 40, endTemp: 50, duration: 15 },
+    { step: "Calentar 2", startTemp: 50, endTemp: 60, duration: 15 },
+    { step: "Calentar 3", startTemp: 60, endTemp: 70, duration: 15 },
+    { step: "Pausa 1", startTemp: 70, endTemp: 70, duration: 20 },
+    { step: "Calentar 4", startTemp: 70, endTemp: 80, duration: 15 },
+    { step: "Arr. Macerador", startTemp: 80, endTemp: 80, duration: 5 },
+    { step: "Pausa 2", startTemp: 80, endTemp: 80, duration: 20 },
+    { step: "Calentar 5", startTemp: 80, endTemp: 90, duration: 15 },
+    { step: "Cerrar Registro", startTemp: 90, endTemp: 90, duration: 5 },
+    { step: "Calentar a pre...", startTemp: 90, endTemp: 98, duration: 15 },
+    { step: "Hervir", startTemp: 98, endTemp: 100, duration: 60 },
+    { step: "Espera Macerad...", startTemp: 100, endTemp: 95, duration: 15 },
+    { step: "Bombear Adjunt... 1", startTemp: 95, endTemp: 90, duration: 10 },
+    { step: "Bombear Adjunt... 2", startTemp: 90, endTemp: 85, duration: 10 },
+    { step: "Agua de Enjuag...", startTemp: 85, endTemp: 80, duration: 10 },
+    { step: "Bombeo Enjuague", startTemp: 80, endTemp: 75, duration: 10 },
+    { step: "Fin Cocedor", startTemp: 75, endTemp: 25, duration: 10 },
+  ];
+
+  const points: TemperaturePoint[] = [];
+  let currentTime = 0;
+
+  // Generamos puntos cada 5 minutos
+  standardProfile.forEach(phase => {
+    const steps = phase.duration / 5;
+    const tempInc = (phase.endTemp - phase.startTemp) / steps;
+
+    for (let i = 0; i <= steps; i++) {
+      const point: TemperaturePoint = {
+        time: currentTime,
+        stepName: phase.step,
+      };
+
+      batchIds.forEach(id => {
+        // Añadimos variabilidad aleatoria por lote para que las curvas no sean idénticas
+        // Usamos el ID del lote para crear una "semilla" determinista simple
+        const seed = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const variance = (Math.sin(currentTime * 0.1 + seed) * 2) + ((seed % 5) - 2.5);
+
+        point[id] = Math.max(0, phase.startTemp + (tempInc * i) + variance);
+      });
+
+      points.push(point);
+      currentTime += 5;
+    }
+  });
+
+  return points;
 }

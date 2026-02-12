@@ -3,10 +3,10 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
-import { ArrowRight, BarChart as BarChartIcon, LineChart as LineChartIcon, Radar as RadarIcon, AreaChart as AreaChartIcon } from "lucide-react";
+import { ArrowRight, BarChart as BarChartIcon, LineChart as LineChartIcon, Radar as RadarIcon, AreaChart as AreaChartIcon, Thermometer, Plus, Trash2, SlidersHorizontal } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/context/DataContext";
-import { getUniqueBatchIds, getBatchById } from "@/data/mockData";
+import { getUniqueBatchIds, getBatchById, generateTemperatureComparisonData, getUniqueMachineGroups } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export default function BatchComparison() {
@@ -24,6 +24,62 @@ export default function BatchComparison() {
   const [batchA, setBatchA] = useLocalStorage<string>("batch-comparison-a", "");
   const [batchB, setBatchB] = useLocalStorage<string>("batch-comparison-b", "");
   const [chartType, setChartType] = useLocalStorage<string>("batch-comparison-chart-type", "bar");
+
+  // --- DYNAMIC SERIES STATE ---
+  interface ComparisonSeries {
+    id: string;
+    recipe: string;
+    machine: string;
+    batchId: string;
+    color: string;
+  }
+
+  const [comparisonSeries, setComparisonSeries] = useLocalStorage<ComparisonSeries[]>("batch-comparison-series", [
+    { id: "1", recipe: "ALL", machine: "ALL", batchId: "", color: "hsl(var(--primary))" },
+    { id: "2", recipe: "ALL", machine: "ALL", batchId: "", color: "#3b82f6" } // Blue
+  ]);
+
+  const COLORS = [
+    "hsl(var(--primary))",
+    "#3b82f6", // Blue
+    "#10b981", // Emerald
+    "#f59e0b", // Amber
+    "#8b5cf6", // Violet
+    "#ec4899", // Pink
+    "#06b6d4", // Cyan
+    "#84cc16", // Lime
+  ];
+
+  const addSeries = () => {
+    const newId = Math.random().toString(36).substring(7);
+    const color = COLORS[comparisonSeries.length % COLORS.length];
+    setComparisonSeries([...comparisonSeries, { id: newId, recipe: "ALL", machine: "ALL", batchId: "", color }]);
+  };
+
+  const removeSeries = (id: string) => {
+    if (comparisonSeries.length > 1) {
+      setComparisonSeries(comparisonSeries.filter(s => s.id !== id));
+    }
+  };
+
+  const updateSeries = (id: string, field: keyof ComparisonSeries, value: string) => {
+    setComparisonSeries(comparisonSeries.map(s => {
+      if (s.id !== id) return s;
+      // Reset sub-selections when parent changes
+      if (field === 'recipe') return { ...s, recipe: value, batchId: "" };
+      if (field === 'machine') return { ...s, machine: value, batchId: "" };
+      return { ...s, [field]: value };
+    }));
+  };
+
+  // Shared Lists
+  const uniqueRecipes = useMemo(() => Array.from(new Set(data.map(d => d.productName || "Desconocido"))).sort(), [data]);
+  const uniqueMachines = useMemo(() => getUniqueMachineGroups(data), [data]);
+
+
+  // Nuevos estados para filtros de temperatura
+  const [tempMachine, setTempMachine] = useLocalStorage<string>("batch-comparison-temp-machine", "");
+  const [tempParam, setTempParam] = useLocalStorage<string>("batch-comparison-temp-param", "");
 
   useEffect(() => {
     if (batchIds.length >= 2) {
@@ -65,6 +121,42 @@ export default function BatchComparison() {
       [batchB || 'Lote B']: recordB?.real_total_min || 0,
     };
   });
+
+  // Calculate Temperature Data dynamically for all series
+  const activeBatches = comparisonSeries.filter(s => s.batchId).map(s => s.batchId);
+
+  const temperatureData = useMemo(() => {
+    if (activeBatches.length === 0) return [];
+
+    // We pass the list of active batch IDs to the generator
+    // The generator returns points with keys matching the batch IDs
+    return generateTemperatureComparisonData(activeBatches, data, tempParam);
+  }, [activeBatches, data, tempParam]);
+
+  // Available parameters for the selected batches (union of all params)
+  const availableTempFilters = useMemo(() => {
+    const relevantRecords = data.filter(d => activeBatches.includes(d.CHARG_NR));
+    const machines = Array.from(new Set(relevantRecords.map(r => r.TEILANL_GRUPO))).sort();
+
+    const parameters = Array.from(new Set(
+      relevantRecords
+        .filter(r => !tempMachine || tempMachine === "ALL" || r.TEILANL_GRUPO === tempMachine)
+        .flatMap(r => r.parameters || [])
+        .map(p => p.name)
+    )).sort();
+
+    return { machines, parameters };
+  }, [data, activeBatches, tempMachine]);
+
+  // Seleccionar valores por defecto si no existen
+  useEffect(() => {
+    if (availableTempFilters.machines.length > 0 && (!tempMachine || !availableTempFilters.machines.includes(tempMachine))) {
+      setTempMachine(availableTempFilters.machines[0]);
+    }
+    if (availableTempFilters.parameters.length > 0 && (!tempParam || !availableTempFilters.parameters.includes(tempParam))) {
+      setTempParam(availableTempFilters.parameters[0]);
+    }
+  }, [availableTempFilters, tempMachine, tempParam, setTempMachine, setTempParam]);
 
   return (
     <DashboardLayout>
@@ -285,6 +377,162 @@ export default function BatchComparison() {
             </CardContent>
           </Card>
         )}
+
+        {/* DYNAMIC SERIES TEMPERATURE CHART */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Thermometer className="h-5 w-5 text-red-500" />
+                  Comparación Dinámica de Temperaturas
+                </CardTitle>
+
+                {/* Global Param Filters for the Chart */}
+                <div className="flex items-center gap-2">
+                  <Select value={tempMachine} onValueChange={setTempMachine}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filtrar Variable por Equipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Todos los equipos</SelectItem>
+                      {availableTempFilters.machines.map(m => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={tempParam} onValueChange={setTempParam}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Variable a Comparar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTempFilters.parameters.map(p => (
+                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* SERIES BUILDER */}
+              <div className="space-y-2 bg-muted/30 p-4 rounded-lg border border-border">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Configuración de Series
+                </div>
+
+                {comparisonSeries.map((series, index) => {
+                  // Filter batches for this specific row based on recipe/machine selection
+                  const rowBatches = data.filter(d =>
+                    (series.recipe === "ALL" || d.productName === series.recipe) &&
+                    (series.machine === "ALL" || d.TEILANL_GRUPO === series.machine)
+                  ).map(d => d.CHARG_NR).sort();
+
+                  // Unique set of batches for this row (deduplicated)
+                  const uniqueRowBatches = Array.from(new Set(rowBatches));
+
+                  return (
+                    <div key={series.id} className="flex flex-col sm:flex-row items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: series.color }} />
+
+                      <Select value={series.recipe} onValueChange={(v) => updateSeries(series.id, 'recipe', v)}>
+                        <SelectTrigger className="w-full sm:w-[200px] h-9">
+                          <SelectValue placeholder="Receta" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ALL">Todas las Recetas</SelectItem>
+                          {uniqueRecipes.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={series.machine} onValueChange={(v) => updateSeries(series.id, 'machine', v)}>
+                        <SelectTrigger className="w-full sm:w-[200px] h-9">
+                          <SelectValue placeholder="Equipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ALL">Todos los Equipos</SelectItem>
+                          {uniqueMachines.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={series.batchId} onValueChange={(v) => updateSeries(series.id, 'batchId', v)}>
+                        <SelectTrigger className="w-full sm:w-[240px] h-9">
+                          <SelectValue placeholder="Seleccionar Lote" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {uniqueRowBatches.slice(0, 50).map(b => (
+                            <SelectItem key={b} value={b}>{b}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <button
+                        onClick={() => removeSeries(series.id)}
+                        className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-md transition-colors"
+                        title="Eliminar serie"
+                        disabled={comparisonSeries.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+
+                <button
+                  onClick={addSeries}
+                  className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium mt-2 px-2 py-1 rounded-md hover:bg-primary/10 transition-colors w-fit"
+                >
+                  <Plus className="h-4 w-4" />
+                  Añadir Comparación
+                </button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                  <XAxis
+                    dataKey="stepName"
+                    label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    interval="preserveStartEnd"
+                    minTickGap={30}
+                  />
+                  <YAxis
+                    label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    axisLine={false}
+                    domain={[0, 'auto']}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
+                    labelFormatter={(value) => `Paso: ${value}`}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+
+                  {comparisonSeries.map(series => (
+                    series.batchId && (
+                      <Line
+                        key={series.id}
+                        type="monotone"
+                        dataKey={series.batchId}
+                        name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
+                        stroke={series.color}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 6 }}
+                      />
+                    )
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
