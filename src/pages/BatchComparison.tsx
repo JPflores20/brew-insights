@@ -3,15 +3,16 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
-import { ArrowRight, BarChart as BarChartIcon, LineChart as LineChartIcon, Radar as RadarIcon, AreaChart as AreaChartIcon, Thermometer, Plus, Trash2, SlidersHorizontal, Download } from "lucide-react";
+import { ArrowRight, BarChart as BarChartIcon, LineChart as LineChartIcon, Radar as RadarIcon, AreaChart as AreaChartIcon, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/context/DataContext";
-import { getUniqueBatchIds, getBatchById, generateTemperatureComparisonData, getUniqueMachineGroups } from "@/data/mockData";
+import { getUniqueBatchIds, getBatchById, getMachineData } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { exportToCSV } from "@/utils/exportUtils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { TemperatureTrendChart } from "@/components/machine-detail/TemperatureTrendChart";
 
 export default function BatchComparison() {
   const { data } = useData();
@@ -30,62 +31,150 @@ export default function BatchComparison() {
   const [batchB, setBatchB] = useLocalStorage<string>("batch-comparison-b", "");
   const [chartType, setChartType] = useLocalStorage<string>("batch-comparison-chart-type", "bar");
 
-  // --- DYNAMIC SERIES STATE ---
-  interface ComparisonSeries {
-    id: string;
-    recipe: string;
-    machine: string;
-    batchId: string;
-    color: string;
-  }
+  // --- TEMPERATURA TREND CHART STATE ---
+  const [trendMachine, setTrendMachine] = useLocalStorage<string>("batch-comparison-trend-machine", "ALL");
+  const [trendRecipe, setTrendRecipe] = useLocalStorage<string>("batch-comparison-trend-recipe", "ALL");
+  const [trendBatch, setTrendBatch] = useLocalStorage<string>("batch-comparison-trend-batch", "ALL");
+  const [selectedTempParam, setSelectedTempParam] = useLocalStorage<string>("batch-comparison-temp-param", "");
+  const [selectedTempIndices, setSelectedTempIndices] = useLocalStorage<number[]>("batch-comparison-temp-indices", []);
 
-  const [comparisonSeries, setComparisonSeries] = useLocalStorage<ComparisonSeries[]>("batch-comparison-series", [
-    { id: "1", recipe: "ALL", machine: "ALL", batchId: "", color: "hsl(var(--primary))" },
-    { id: "2", recipe: "ALL", machine: "ALL", batchId: "", color: "#3b82f6" } // Blue
-  ]);
+  // Reset batch when filters change
+  useEffect(() => {
+    setTrendBatch("ALL");
+  }, [trendRecipe, trendMachine, setTrendBatch]);
 
-  const COLORS = [
-    "hsl(var(--primary))",
-    "#3b82f6", // Blue
-    "#10b981", // Emerald
-    "#f59e0b", // Amber
-    "#8b5cf6", // Violet
-    "#ec4899", // Pink
-    "#06b6d4", // Cyan
-    "#84cc16", // Lime
-  ];
-
-  const addSeries = () => {
-    const newId = Math.random().toString(36).substring(7);
-    const color = COLORS[comparisonSeries.length % COLORS.length];
-    setComparisonSeries([...comparisonSeries, { id: newId, recipe: "ALL", machine: "ALL", batchId: "", color }]);
-  };
-
-  const removeSeries = (id: string) => {
-    if (comparisonSeries.length > 1) {
-      setComparisonSeries(comparisonSeries.filter(s => s.id !== id));
+  // Derived Lists for Trend Chart
+  const machinesWithTemps = useMemo(() => {
+    const machines = new Set<string>();
+    let filteredRecords = data;
+    if (trendRecipe && trendRecipe !== "ALL") {
+      filteredRecords = data.filter((d) => d.productName === trendRecipe);
     }
+    filteredRecords.forEach((record) => {
+      if (
+        record.parameters &&
+        record.parameters.some((p) => {
+          const u = (p.unit || "").toLowerCase();
+          return (
+            u.includes("°c") ||
+            u.includes("temp") ||
+            p.name.toLowerCase().includes("temp")
+          );
+        })
+      ) {
+        machines.add(record.TEILANL_GRUPO);
+      }
+    });
+    return Array.from(machines).sort();
+  }, [data, trendRecipe]);
+
+  const availableTrendBatches = useMemo(() => {
+    const batches = new Set<string>();
+    let filteredRecords = data;
+    if (trendRecipe && trendRecipe !== "ALL") {
+      filteredRecords = filteredRecords.filter((d) => d.productName === trendRecipe);
+    }
+    if (trendMachine && trendMachine !== "ALL") {
+      filteredRecords = filteredRecords.filter((d) => d.TEILANL_GRUPO === trendMachine);
+    }
+    filteredRecords.forEach((record) => {
+      if (
+        record.parameters &&
+        record.parameters.some((p) => {
+          const u = (p.unit || "").toLowerCase();
+          return (
+            u.includes("°c") ||
+            u.includes("temp") ||
+            p.name.toLowerCase().includes("temp")
+          );
+        })
+      ) {
+        batches.add(record.CHARG_NR);
+      }
+    });
+    return Array.from(batches).sort();
+  }, [data, trendRecipe, trendMachine]);
+
+  const availableTempParams = useMemo(() => {
+    // If no specific machine selected, aggregate from all relevant data
+    const relevantData = trendMachine === "ALL"
+      ? data
+      : data.filter(d => d.TEILANL_GRUPO === trendMachine);
+
+    const allParams = relevantData.flatMap((d) => d.parameters || []);
+    const temps = new Set<string>();
+
+    allParams.forEach((p) => {
+      const u = (p.unit || "").toLowerCase();
+      if (
+        u.includes("°c") ||
+        u.includes("temp") ||
+        p.name.toLowerCase().includes("temp")
+      ) {
+        temps.add(p.name);
+      }
+    });
+    return Array.from(temps).sort();
+  }, [data, trendMachine]);
+
+  // Auto-select first param
+  useEffect(() => {
+    if (availableTempParams.length > 0) {
+      if (!selectedTempParam || !availableTempParams.includes(selectedTempParam)) {
+        setSelectedTempParam(availableTempParams[0]);
+      }
+    } else {
+      setSelectedTempParam("");
+    }
+  }, [availableTempParams, selectedTempParam, setSelectedTempParam]);
+
+  // Data Calculation Helper
+  const calculateTrendData = (tMachine: string, tRecipe: string, tBatch: string, param: string) => {
+    if (!param) return [];
+
+    // Mode 1: Detailed Batch View
+    if (tBatch && tBatch !== "ALL") {
+      let record;
+      if (tMachine && tMachine !== "ALL") {
+        record = data.find((d) => d.CHARG_NR === tBatch && d.TEILANL_GRUPO === tMachine);
+      } else {
+        record = data.find((d) => d.CHARG_NR === tBatch);
+      }
+
+      if (!record || !record.parameters) return [];
+
+      return record.parameters
+        .filter((p) => p.name === param)
+        .map((p, index) => ({
+          stepName: p.stepName || `Paso ${index + 1}`,
+          value: Number(p.value),
+          unit: p.unit,
+        }));
+    }
+
+    // Mode 2: Historical Trend
+    let records = tMachine === "ALL" ? data : getMachineData(data, tMachine);
+
+    if (tRecipe && tRecipe !== "ALL") {
+      records = records.filter((d) => d.productName === tRecipe);
+    }
+
+    return records
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      .map((record) => {
+        const pVal = record.parameters?.find((p) => p.name === param);
+        return {
+          batchId: record.CHARG_NR,
+          value: pVal ? Number(pVal.value) : null,
+          date: new Date(record.timestamp).toLocaleString([], {
+            dateStyle: "short",
+            timeStyle: "short",
+          }),
+          machine: record.TEILANL_GRUPO,
+        };
+      })
+      .filter((d): d is any => d.value !== null && Number.isFinite(d.value));
   };
-
-  const updateSeries = (id: string, field: keyof ComparisonSeries, value: string) => {
-    setComparisonSeries(comparisonSeries.map(s => {
-      if (s.id !== id) return s;
-      // Reset sub-selections when parent changes
-      if (field === 'recipe') return { ...s, recipe: value, batchId: "" };
-      if (field === 'machine') return { ...s, machine: value, batchId: "" };
-      return { ...s, [field]: value };
-    }));
-  };
-
-  // Shared Lists
-  const uniqueRecipes = useMemo(() => Array.from(new Set(data.map(d => d.productName || "Desconocido"))).sort(), [data]);
-  const uniqueMachines = useMemo(() => getUniqueMachineGroups(data), [data]);
-
-
-  // Nuevos estados para filtros de temperatura
-  // tempMachine eliminado por redundancia con el constructor de series
-  const [tempParam, setTempParam] = useLocalStorage<string>("batch-comparison-temp-param", "");
-  const [tempChartType, setTempChartType] = useLocalStorage<string>("batch-comparison-temp-chart-type", "line");
 
   useEffect(() => {
     if (batchIds.length >= 2) {
@@ -127,38 +216,6 @@ export default function BatchComparison() {
       [batchB || 'Lote B']: recordB?.real_total_min || 0,
     };
   });
-
-  // Calculate Temperature Data dynamically for all series
-  const activeBatches = comparisonSeries.filter(s => s.batchId).map(s => s.batchId);
-
-  const temperatureData = useMemo(() => {
-    if (activeBatches.length === 0) return [];
-
-    // We pass the list of active batch IDs to the generator
-    // The generator returns points with keys matching the batch IDs
-    return generateTemperatureComparisonData(activeBatches, data, tempParam);
-  }, [activeBatches, data, tempParam]);
-
-  // Available parameters for the selected batches (union of all params)
-  const availableTempFilters = useMemo(() => {
-    const relevantRecords = data.filter(d => activeBatches.includes(d.CHARG_NR));
-
-    // Obtenemos todos los parámetros únicos disponibles en los lotes activos
-    const parameters = Array.from(new Set(
-      relevantRecords
-        .flatMap(r => r.parameters || [])
-        .map(p => p.name)
-    )).sort();
-
-    return { parameters };
-  }, [data, activeBatches]);
-
-  // Seleccionar valores por defecto si no existen
-  useEffect(() => {
-    if (availableTempFilters.parameters.length > 0 && (!tempParam || !availableTempFilters.parameters.includes(tempParam))) {
-      setTempParam(availableTempFilters.parameters[0]);
-    }
-  }, [availableTempFilters, tempParam, setTempParam]);
 
   return (
     <DashboardLayout>
@@ -394,250 +451,29 @@ export default function BatchComparison() {
           </Card>
         )}
 
-        {/* DYNAMIC SERIES TEMPERATURE CHART */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Thermometer className="h-5 w-5 text-red-500" />
-                  Comparación Dinámica de Temperaturas
-                </CardTitle>
 
-                <Tabs value={tempChartType} onValueChange={setTempChartType} className="w-full sm:w-auto">
-                  <TabsList className="grid w-full grid-cols-4 sm:w-[300px]">
-                    <TabsTrigger value="bar" title="Barras"><BarChartIcon className="h-4 w-4" /></TabsTrigger>
-                    <TabsTrigger value="line" title="Línea"><LineChartIcon className="h-4 w-4" /></TabsTrigger>
-                    <TabsTrigger value="area" title="Área"><AreaChartIcon className="h-4 w-4" /></TabsTrigger>
-                    <TabsTrigger value="radar" title="Radar"><RadarIcon className="h-4 w-4" /></TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {/* SERIES BUILDER */}
-              <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Configuración de Series
-                  </div>
-                </div>
-
-                {comparisonSeries.map((series, index) => {
-                  // Filter batches for this specific row based on recipe/machine selection
-                  const rowBatches = data.filter(d =>
-                    (series.recipe === "ALL" || d.productName === series.recipe) &&
-                    (series.machine === "ALL" || d.TEILANL_GRUPO === series.machine)
-                  ).map(d => d.CHARG_NR).sort();
-
-                  // Unique set of batches for this row (deduplicated)
-                  const uniqueRowBatches = Array.from(new Set(rowBatches));
-
-                  return (
-                    <div key={series.id} className="flex flex-col sm:flex-row items-center gap-2 animate-in fade-in slide-in-from-left-2">
-                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: series.color }} />
-
-                      <Select value={series.recipe} onValueChange={(v) => updateSeries(series.id, 'recipe', v)}>
-                        <SelectTrigger className="w-full sm:w-[200px] h-9">
-                          <SelectValue placeholder="Receta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ALL">Todas las Recetas</SelectItem>
-                          {uniqueRecipes.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={series.machine} onValueChange={(v) => updateSeries(series.id, 'machine', v)}>
-                        <SelectTrigger className="w-full sm:w-[200px] h-9">
-                          <SelectValue placeholder="Equipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ALL">Todos los Equipos</SelectItem>
-                          {uniqueMachines.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={series.batchId} onValueChange={(v) => updateSeries(series.id, 'batchId', v)}>
-                        <SelectTrigger className="w-full sm:w-[240px] h-9">
-                          <SelectValue placeholder="Seleccionar Lote" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {uniqueRowBatches.slice(0, 50).map(b => (
-                            <SelectItem key={b} value={b}>{b}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <button
-                        onClick={() => removeSeries(series.id)}
-                        className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-md transition-colors"
-                        title="Eliminar serie"
-                        disabled={comparisonSeries.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  );
-                })}
-
-                <button
-                  onClick={addSeries}
-                  className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium mt-2 px-2 py-1 rounded-md hover:bg-primary/10 transition-colors w-fit"
-                >
-                  <Plus className="h-4 w-4" />
-                  Añadir Comparación
-                </button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                {tempChartType === "line" ? (
-                  <LineChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis
-                      dataKey="stepName"
-                      label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      interval="preserveStartEnd"
-                      minTickGap={30}
-                    />
-                    <YAxis
-                      label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      domain={[0, 'auto']}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
-                      labelFormatter={(value) => `Paso: ${value}`}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
-
-                    {comparisonSeries.map(series => (
-                      series.batchId && (
-                        <Line
-                          key={series.id}
-                          type="monotone"
-                          dataKey={series.batchId}
-                          name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
-                          stroke={series.color}
-                          strokeWidth={2}
-                          dot={false}
-                          activeDot={{ r: 6 }}
-                        />
-                      )
-                    ))}
-                  </LineChart>
-                ) : tempChartType === "bar" ? (
-                  <BarChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis
-                      dataKey="stepName"
-                      label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      interval="preserveStartEnd"
-                      minTickGap={30}
-                    />
-                    <YAxis
-                      label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      domain={[0, 'auto']}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
-                      labelFormatter={(value) => `Paso: ${value}`}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
-
-                    {comparisonSeries.map(series => (
-                      series.batchId && (
-                        <Bar
-                          key={series.id}
-                          dataKey={series.batchId}
-                          name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
-                          fill={series.color}
-                          radius={[4, 4, 0, 0]}
-                        />
-                      )
-                    ))}
-                  </BarChart>
-                ) : tempChartType === "area" ? (
-                  <AreaChart data={temperatureData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                    <defs>
-                      {comparisonSeries.map(series => (
-                        <linearGradient key={`grad-${series.id}`} id={`grad-${series.id}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={series.color} stopOpacity={0.8} />
-                          <stop offset="95%" stopColor={series.color} stopOpacity={0} />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis
-                      dataKey="stepName"
-                      label={{ value: 'Paso del Proceso', position: 'insideBottomRight', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      interval="preserveStartEnd"
-                      minTickGap={30}
-                    />
-                    <YAxis
-                      label={{ value: 'Temp (°C)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      domain={[0, 'auto']}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
-                      labelFormatter={(value) => `Paso: ${value}`}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
-
-                    {comparisonSeries.map(series => (
-                      series.batchId && (
-                        <Area
-                          key={series.id}
-                          type="monotone"
-                          dataKey={series.batchId}
-                          name={`Lote ${series.batchId} (${series.recipe !== 'ALL' ? series.recipe : '...'})`}
-                          stroke={series.color}
-                          fill={`url(#grad-${series.id})`}
-                          fillOpacity={0.4}
-                        />
-                      )
-                    ))}
-                  </AreaChart>
-                ) : (
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={temperatureData}>
-                    <PolarGrid stroke="hsl(var(--muted-foreground))" opacity={0.2} />
-                    <PolarAngleAxis dataKey="stepName" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--popover-foreground))' }}
-                    />
-                    <Legend />
-                    {comparisonSeries.map(series => (
-                      series.batchId && (
-                        <Radar
-                          key={series.id}
-                          name={`Lote ${series.batchId}`}
-                          dataKey={series.batchId}
-                          stroke={series.color}
-                          fill={series.color}
-                          fillOpacity={0.4}
-                        />
-                      )
-                    ))}
-                  </RadarChart>
-                )}
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Temperatura Trend Chart */}
+        <div className="space-y-6 mt-6">
+          <TemperatureTrendChart
+            data={calculateTrendData(trendMachine, trendRecipe, trendBatch, selectedTempParam)}
+            trendBatch={trendBatch}
+            trendRecipe={trendRecipe}
+            trendMachine={trendMachine}
+            selectedTempParam={selectedTempParam}
+            uniqueRecipes={Array.from(new Set(data.map(d => d.productName || "Desconocido"))).sort()}
+            machinesWithTemps={machinesWithTemps}
+            availableTrendBatches={availableTrendBatches}
+            availableTempParams={availableTempParams}
+            setTrendRecipe={setTrendRecipe}
+            setTrendMachine={setTrendMachine}
+            setTrendBatch={setTrendBatch}
+            setSelectedTempParam={setSelectedTempParam}
+            selectedTempIndices={selectedTempIndices}
+            setSelectedTempIndices={setSelectedTempIndices}
+            chartType="line"
+            title="Análisis de Tendencias (Detallado)"
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

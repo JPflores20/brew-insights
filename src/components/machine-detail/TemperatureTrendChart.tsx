@@ -19,6 +19,8 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    LineChart,
+    Line,
 } from "recharts";
 import { Thermometer } from "lucide-react";
 import { CustomDot } from "./CustomDot";
@@ -40,6 +42,8 @@ interface TemperatureTrendChartProps {
     setSelectedTempParam: (val: string) => void;
     selectedTempIndices: number[];
     setSelectedTempIndices: React.Dispatch<React.SetStateAction<number[]>>;
+    chartType?: "area" | "line";
+    title?: string;
 }
 
 const truncateLabel = (v: any, max = 18) => {
@@ -63,10 +67,11 @@ export function TemperatureTrendChart({
     setSelectedTempParam,
     selectedTempIndices,
     setSelectedTempIndices,
+    chartType = "area",
+    title,
 }: TemperatureTrendChartProps) {
-    if (data.length === 0 && (!trendMachine || availableTempParams.length === 0)) {
-        return null;
-    }
+    // Always render the container, even if empty, so the user knows it's there.
+    // We will handle empty states inside the visualization area.
 
     return (
         <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
@@ -75,9 +80,9 @@ export function TemperatureTrendChart({
                     <div className="space-y-1">
                         <CardTitle className="text-lg font-semibold flex items-center gap-2">
                             <Thermometer className="h-5 w-5 text-red-500" />
-                            {trendBatch && trendBatch !== "ALL"
+                            {title || (trendBatch && trendBatch !== "ALL"
                                 ? "Perfil de Temperatura del Lote"
-                                : "Tendencia Histórica de Temperaturas"}
+                                : "Tendencia Histórica de Temperaturas")}
                         </CardTitle>
                         <CardDescription>
                             {trendBatch && trendBatch !== "ALL"
@@ -153,89 +158,172 @@ export function TemperatureTrendChart({
                 </div>
             </CardHeader>
             <div className="h-[340px] w-full">
+                {data.length === 0 ? (
+                    <div className="flex h-full w-full items-center justify-center flex-col gap-2 text-muted-foreground p-8 border-2 border-dashed border-muted rounded-lg">
+                        <Thermometer className="h-8 w-8 opacity-50" />
+                        <p>No hay datos de temperatura disponibles con los filtros actuales.</p>
+                        <p className="text-sm">Intenta seleccionar otra Receta o Equipo.</p>
+                    </div>
+                ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                        data={data}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                        onClick={(data) => {
-                            if (data && data.activeTooltipIndex !== undefined) {
-                                const idx = data.activeTooltipIndex;
-                                setSelectedTempIndices((prev) =>
-                                    prev.includes(idx)
-                                        ? prev.filter((i) => i !== idx)
-                                        : [...prev, idx]
-                                );
-                            }
-                        }}
-                    >
-                        <defs>
-                            <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            opacity={0.2}
-                            vertical={false}
-                        />
-
-                        {/* Eje X dinámico: 'stepName' para lote único, 'date'/'batchId' para histórico */}
-                        <XAxis
-                            dataKey={
-                                trendBatch && trendBatch !== "ALL" ? "stepName" : "date"
-                            }
-                            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                            axisLine={{ stroke: "hsl(var(--border))" }}
-                            interval={
-                                trendBatch && trendBatch !== "ALL"
-                                    ? 0
-                                    : "preserveStartEnd"
-                            }
-                            angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
-                            textAnchor={
-                                trendBatch && trendBatch !== "ALL" ? "end" : "middle"
-                            }
-                            height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
-                            tickFormatter={(val) => {
-                                if (trendBatch && trendBatch !== "ALL")
-                                    return truncateLabel(val, 15);
-                                return val;
+                    {chartType === "area" ? (
+                        <AreaChart
+                            data={data}
+                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                            onClick={(data) => {
+                                if (data && data.activeTooltipIndex !== undefined) {
+                                    const idx = data.activeTooltipIndex;
+                                    setSelectedTempIndices((prev) =>
+                                        prev.includes(idx)
+                                            ? prev.filter((i) => i !== idx)
+                                            : [...prev, idx]
+                                    );
+                                }
                             }}
-                        />
+                        >
+                            <defs>
+                                <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                opacity={0.2}
+                                vertical={false}
+                            />
 
-                        <YAxis
-                            label={{
-                                value: "°C",
-                                angle: -90,
-                                position: "insideLeft",
-                                fill: "hsl(var(--muted-foreground))",
+                            <XAxis
+                                dataKey={
+                                    trendBatch && trendBatch !== "ALL" ? "stepName" : "date"
+                                }
+                                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={{ stroke: "hsl(var(--border))" }}
+                                interval={
+                                    trendBatch && trendBatch !== "ALL"
+                                        ? 0
+                                        : "preserveStartEnd"
+                                }
+                                angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
+                                textAnchor={
+                                    trendBatch && trendBatch !== "ALL" ? "end" : "middle"
+                                }
+                                height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
+                                tickFormatter={(val) => {
+                                    if (trendBatch && trendBatch !== "ALL")
+                                        return truncateLabel(val, 15);
+                                    return val;
+                                }}
+                            />
+
+                            <YAxis
+                                label={{
+                                    value: "°C",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    fill: "hsl(var(--muted-foreground))",
+                                }}
+                                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={false}
+                            />
+                            <Tooltip
+                                content={<ChartTooltip />}
+                                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#ef4444"
+                                strokeWidth={2}
+                                fillOpacity={1}
+                                fill="url(#colorTemp)"
+                                name="Temperatura"
+                                dot={(props) => (
+                                    <CustomDot
+                                        {...props}
+                                        selectedIndices={selectedTempIndices}
+                                    />
+                                )}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                        </AreaChart>
+                    ) : (
+                        <LineChart
+                            data={data}
+                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                            onClick={(data) => {
+                                if (data && data.activeTooltipIndex !== undefined) {
+                                    const idx = data.activeTooltipIndex;
+                                    setSelectedTempIndices((prev) =>
+                                        prev.includes(idx)
+                                            ? prev.filter((i) => i !== idx)
+                                            : [...prev, idx]
+                                    );
+                                }
                             }}
-                            tick={{ fill: "hsl(var(--muted-foreground))" }}
-                            axisLine={false}
-                        />
-                        <Tooltip
-                            content={<ChartTooltip />}
-                            cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
-                        />
-                        <Area
-                            type="monotone"
-                            dataKey="value"
-                            stroke="#ef4444"
-                            strokeWidth={2}
-                            fillOpacity={1}
-                            fill="url(#colorTemp)"
-                            name="Temperatura"
-                            dot={(props) => (
-                                <CustomDot
-                                    {...props}
-                                    selectedIndices={selectedTempIndices}
-                                />
-                            )}
-                            activeDot={{ r: 6, strokeWidth: 0 }}
-                        />
-                    </AreaChart>
+                        >
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                opacity={0.2}
+                                vertical={false}
+                            />
+
+                            <XAxis
+                                dataKey={
+                                    trendBatch && trendBatch !== "ALL" ? "stepName" : "date"
+                                }
+                                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={{ stroke: "hsl(var(--border))" }}
+                                interval={
+                                    trendBatch && trendBatch !== "ALL"
+                                        ? 0
+                                        : "preserveStartEnd"
+                                }
+                                angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
+                                textAnchor={
+                                    trendBatch && trendBatch !== "ALL" ? "end" : "middle"
+                                }
+                                height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
+                                tickFormatter={(val) => {
+                                    if (trendBatch && trendBatch !== "ALL")
+                                        return truncateLabel(val, 15);
+                                    return val;
+                                }}
+                            />
+
+                            <YAxis
+                                label={{
+                                    value: "°C",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    fill: "hsl(var(--muted-foreground))",
+                                }}
+                                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={false}
+                            />
+                            <Tooltip
+                                content={<ChartTooltip />}
+                                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#ef4444"
+                                strokeWidth={2}
+                                name="Temperatura"
+                                dot={(props) => (
+                                    <CustomDot
+                                        {...props}
+                                        selectedIndices={selectedTempIndices}
+                                    />
+                                )}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                        </LineChart>
+                    )}
+
                 </ResponsiveContainer>
+                )}
             </div>
         </Card>
     );
