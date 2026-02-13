@@ -127,7 +127,7 @@ export function TemperatureTrendChart({
 
                     {/* CONTROLES DE FILTRADO */}
                     {isMultiSeries ? (
-                        <div className="flex flex-col gap-3 w-full">
+                        <div className="flex flex-col gap-3 w-full print:hidden">
                             {series.map((s) => (
                                 <div key={s.id} className="flex flex-col sm:flex-row gap-2 w-full items-center p-2 rounded-md bg-muted/30 border border-border/50">
                                     <div 

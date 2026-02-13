@@ -13,6 +13,9 @@ import { exportToCSV } from "@/utils/exportUtils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { TemperatureTrendChart, SeriesConfig } from "@/components/machine-detail/TemperatureTrendChart";
+import { useReactToPrint } from "react-to-print";
+import { Printer } from "lucide-react";
+import { useRef } from "react";
 
 // Definición de colores para las múltiples series
 // Aseguramos que haya suficientes colores para rotar
@@ -37,35 +40,13 @@ export default function BatchComparison() {
   const [chartType, setChartType] = useLocalStorage<string>("batch-comparison-chart-type", "bar");
 
   // --- STATE ---
-  const [seriesList, setSeriesList] = useLocalStorage<any[]>("batch-comparison-series-list", [
+  // Using useState instead of useLocalStorage so that it resets on reload
+  const [seriesList, setSeriesList] = useState<any[]>([
     { id: '1', recipe: 'ALL', machine: 'ALL', batch: 'ALL', color: COLORS[0] }
   ]);
 
-  // Sanitize seriesList on mount/update to ensure all have ID and Color
-  useEffect(() => {
-    let hasChanges = false;
-    const sanitized = seriesList.map((s, index) => {
-      let newItem = { ...s };
-      if (!newItem.id) {
-        newItem.id = (index + 1).toString();
-        hasChanges = true;
-      }
-      if (!newItem.color) {
-        // Assign color based on ID if possible, else index
-        const idNum = parseInt(newItem.id) || (index + 1);
-        newItem.color = COLORS[(idNum - 1) % COLORS.length];
-        hasChanges = true;
-      }
-      return newItem;
-    });
-
-    if (hasChanges) {
-      setSeriesList(sanitized);
-    }
-  }, [seriesList, setSeriesList]);
-
-  const [selectedTempParam, setSelectedTempParam] = useLocalStorage<string>("batch-comparison-temp-param", "");
-  const [selectedTempIndices, setSelectedTempIndices] = useLocalStorage<number[]>("batch-comparison-temp-indices", []);
+  const [selectedTempParam, setSelectedTempParam] = useState<string>("");
+  const [selectedTempIndices, setSelectedTempIndices] = useState<number[]>([]);
 
   const uniqueRecipes = useMemo(() => Array.from(new Set(data.map(d => d.productName || "Desconocido"))).sort(), [data]);
 
@@ -415,40 +396,76 @@ export default function BatchComparison() {
     };
   });
 
+  const componentRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = useReactToPrint({
+      contentRef: componentRef,
+      documentTitle: `Reporte_Comparacion_${format(new Date(), 'yyyy-MM-dd_HHmm')}`,
+      pageStyle: `
+        @page { size: auto; margin: 15mm; }
+        @media print {
+          body { -webkit-print-color-adjust: exact; }
+          .print:hidden { display: none !important; }
+        }
+      `
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Comparación de Lotes</h1>
             <p className="text-muted-foreground">Analiza diferencias de tiempo entre dos cocimientos</p>
           </div>
 
-          <Tabs value={chartType} onValueChange={setChartType} className="w-full md:w-auto">
-            <TabsList className="grid w-full grid-cols-4 md:w-[300px]">
-              <TabsTrigger value="bar" title="Barras"><BarChartIcon className="h-4 w-4" /></TabsTrigger>
-              <TabsTrigger value="line" title="Línea"><LineChartIcon className="h-4 w-4" /></TabsTrigger>
-              <TabsTrigger value="area" title="Área"><AreaChartIcon className="h-4 w-4" /></TabsTrigger>
-              <TabsTrigger value="radar" title="Radar"><RadarIcon className="h-4 w-4" /></TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-2">
+            <Tabs value={chartType} onValueChange={setChartType} className="w-full md:w-auto">
+                <TabsList className="grid w-full grid-cols-4 md:w-[300px]">
+                <TabsTrigger value="bar" title="Barras"><BarChartIcon className="h-4 w-4" /></TabsTrigger>
+                <TabsTrigger value="line" title="Línea"><LineChartIcon className="h-4 w-4" /></TabsTrigger>
+                <TabsTrigger value="area" title="Área"><AreaChartIcon className="h-4 w-4" /></TabsTrigger>
+                <TabsTrigger value="radar" title="Radar"><RadarIcon className="h-4 w-4" /></TabsTrigger>
+                </TabsList>
+            </Tabs>
 
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (comparisonData.length === 0) {
-                toast({ title: "Sin datos", description: "No hay comparación activa para exportar.", variant: "destructive" });
-                return;
-              }
-              exportToCSV(comparisonData, `Comparativa_${batchA}_vs_${batchB}_${format(new Date(), 'yyyyMMdd')}`);
-              toast({ title: "Exportación exitosa", description: "Tabla comparativa descargada." });
-            }}
-          >
-            <ArrowRight className="mr-2 h-4 w-4 rotate-90 sm:rotate-0" /> Exportar Tabla
-          </Button>
+            <Button
+                variant="outline"
+                onClick={() => handlePrint()}
+                className="gap-2"
+            >
+                <Printer className="h-4 w-4" />
+                <span className="hidden sm:inline">Imprimir PDF</span>
+            </Button>
+
+            <Button
+                variant="outline"
+                onClick={() => {
+                if (comparisonData.length === 0) {
+                    toast({ title: "Sin datos", description: "No hay comparación activa para exportar.", variant: "destructive" });
+                    return;
+                }
+                exportToCSV(comparisonData, `Comparativa_${batchA}_vs_${batchB}_${format(new Date(), 'yyyyMMdd')}`);
+                toast({ title: "Exportación exitosa", description: "Tabla comparativa descargada." });
+                }}
+            >
+                <ArrowRight className="mr-2 h-4 w-4 rotate-90 sm:rotate-0" /> Exportar CSV
+            </Button>
+          </div>
         </div>
+        
+        {/* Printable Content Wrapper */}
+        <div ref={componentRef} className="space-y-6">
+            {/* Title for Print View Only */}
+            <div className="hidden print:block mb-6">
+                <h1 className="text-3xl font-bold text-black mb-2">Reporte de Comparación de Lotes</h1>
+                <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
+                {batchA && batchB && (
+                  <p className="text-lg mt-2 text-black">Comparando: <strong>{batchA}</strong> vs <strong>{batchB}</strong></p>
+                )}
+            </div>
 
-        <Card className="bg-card border-border">
+            <Card className="bg-card border-border print:hidden">
           <CardHeader><CardTitle>Seleccionar Lotes</CardTitle></CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -665,6 +682,7 @@ export default function BatchComparison() {
             series={seriesConfig}
             onAddSeries={addSeries}
           />
+        </div>
         </div>
       </div>
     </DashboardLayout>

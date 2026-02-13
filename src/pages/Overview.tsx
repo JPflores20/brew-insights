@@ -9,7 +9,8 @@ import {
   Maximize2,
   Calendar,
   Info,
-  Download
+  Download,
+  Printer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,6 +27,7 @@ import {
 } from "@/data/mockData";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { useReactToPrint } from "react-to-print";
 
 // Components
 import { ProductPieChart } from "@/components/dashboard/ProductPieChart";
@@ -148,99 +150,124 @@ export default function Overview() {
     });
   };
 
-  useEffect(() => {
-    return () => clearProgressInterval();
-  }, []);
-
-  // --- Cálculos ---
-  const totalBatches = getTotalBatches(data);
-  const avgDeviation = getAverageCycleDeviation(data);
-  const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
-
-  const availableDateRange = useMemo(() => {
-    if (data.length === 0) return { min: undefined, max: undefined, label: "---" };
-    const timestamps = data.map(d => new Date(d.timestamp).getTime());
-    const min = new Date(Math.min(...timestamps));
-    const max = new Date(Math.max(...timestamps));
-    // Normalize to start and end of day to ensuring inclusive filtering
-    min.setHours(0, 0, 0, 0);
-    max.setHours(23, 59, 59, 999);
-
-    return {
-      min,
-      max,
-      label: `${format(min, 'dd/MM/yyyy')} - ${format(max, 'dd/MM/yyyy')}`
-    };
-  }, [data]);
-
-  // --- Filter Logic for Distribution Chart ---
-  const filteredPieDataRaw = useMemo(() => {
-    if (!distributionDateRange?.from) return data;
-
-    return data.filter(d => {
-      if (!d.timestamp) return false;
-      const date = new Date(d.timestamp);
-      const from = new Date(distributionDateRange.from!);
-      from.setHours(0, 0, 0, 0);
-
-      let to = distributionDateRange.to ? new Date(distributionDateRange.to) : new Date(from);
-      to.setHours(23, 59, 59, 999);
-
-      return date >= from && date <= to;
+  const componentRef = useRef<HTMLDivElement>(null);
+  
+    const handlePrint = useReactToPrint({
+        contentRef: componentRef,
+        documentTitle: `Overview_Report_${format(new Date(), 'yyyy-MM-dd_HHmm')}`,
+        pageStyle: `
+          @page { size: auto; margin: 15mm; }
+          @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .print:hidden { display: none !important; }
+          }
+        `
     });
-  }, [data, distributionDateRange]);
-
-  const filteredRecipeStats = useMemo(() => getRecipeStats ? getRecipeStats(filteredPieDataRaw) : [], [filteredPieDataRaw]);
-  const filteredTotalBatches = useMemo(() => getTotalBatches(filteredPieDataRaw), [filteredPieDataRaw]);
-
-  const pieData = useMemo(() => {
-    return filteredRecipeStats.map(stat => ({
-      name: stat.name,
-      value: stat.batchCount
-    })).sort((a, b) => b.value - a.value);
-  }, [filteredRecipeStats]);
-
-  // --- Render ---
-  if (data.length === 0) {
+  
+    useEffect(() => {
+      return () => clearProgressInterval();
+    }, []);
+  
+    // --- Cálculos ---
+    const totalBatches = getTotalBatches(data);
+    const avgDeviation = getAverageCycleDeviation(data);
+    const recipeStats = useMemo(() => getRecipeStats ? getRecipeStats(data) : [], [data]);
+  
+    const availableDateRange = useMemo(() => {
+      if (data.length === 0) return { min: undefined, max: undefined, label: "---" };
+      const timestamps = data.map(d => new Date(d.timestamp).getTime());
+      const min = new Date(Math.min(...timestamps));
+      const max = new Date(Math.max(...timestamps));
+      // Normalize to start and end of day to ensuring inclusive filtering
+      min.setHours(0, 0, 0, 0);
+      max.setHours(23, 59, 59, 999);
+  
+      return {
+        min,
+        max,
+        label: `${format(min, 'dd/MM/yyyy')} - ${format(max, 'dd/MM/yyyy')}`
+      };
+    }, [data]);
+  
+    // --- Filter Logic for Distribution Chart ---
+    const filteredPieDataRaw = useMemo(() => {
+      if (!distributionDateRange?.from) return data;
+  
+      return data.filter(d => {
+        if (!d.timestamp) return false;
+        const date = new Date(d.timestamp);
+        const from = new Date(distributionDateRange.from!);
+        from.setHours(0, 0, 0, 0);
+  
+        let to = distributionDateRange.to ? new Date(distributionDateRange.to) : new Date(from);
+        to.setHours(23, 59, 59, 999);
+  
+        return date >= from && date <= to;
+      });
+    }, [data, distributionDateRange]);
+  
+    const filteredRecipeStats = useMemo(() => getRecipeStats ? getRecipeStats(filteredPieDataRaw) : [], [filteredPieDataRaw]);
+    const filteredTotalBatches = useMemo(() => getTotalBatches(filteredPieDataRaw), [filteredPieDataRaw]);
+  
+    const pieData = useMemo(() => {
+      return filteredRecipeStats.map(stat => ({
+        name: stat.name,
+        value: stat.batchCount
+      })).sort((a, b) => b.value - a.value);
+    }, [filteredRecipeStats]);
+  
+    // --- Render ---
+    if (data.length === 0) {
+      return (
+        <DashboardLayout>
+          <EmptyStateUploader
+            loading={loading}
+            uploadProgress={uploadProgress}
+            onFilesSelected={processFiles}
+          />
+        </DashboardLayout>
+      );
+    }
+  
+    if (loading) {
+      return (
+        <DashboardLayout>
+          <LoadingState message="Procesando archivos..." />
+        </DashboardLayout>
+      );
+    }
+  
     return (
       <DashboardLayout>
-        <EmptyStateUploader
-          loading={loading}
-          uploadProgress={uploadProgress}
-          onFilesSelected={processFiles}
-        />
-      </DashboardLayout>
-    );
-  }
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <LoadingState message="Procesando archivos..." />
-      </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout>
-      <AnimatedPage>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">Tablero General</h1>
-            <p className="text-muted-foreground mt-1">Monitor de eficiencia y métricas clave de producción.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {data.length > 0 && (
-              <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={handleExport}>
-                <Download className="mr-2 h-4 w-4" /> Exportar CSV
+        <AnimatedPage>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8 print:hidden">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground tracking-tight">Tablero General</h1>
+              <p className="text-muted-foreground mt-1">Monitor de eficiencia y métricas clave de producción.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => handlePrint()}>
+                  <Printer className="mr-2 h-4 w-4" /> Imprimir PDF
               </Button>
-            )}
-            <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => setData([])}>
-              <Upload className="mr-2 h-4 w-4" /> Cargar nuevos archivos
-            </Button>
+              {data.length > 0 && (
+                <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={handleExport}>
+                  <Download className="mr-2 h-4 w-4" /> Exportar CSV
+                </Button>
+              )}
+              <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => setData([])}>
+                <Upload className="mr-2 h-4 w-4" /> Cargar nuevos archivos
+              </Button>
+            </div>
           </div>
-        </div>
+  
+          {/* Printable Content Wrapper */}
+          <div ref={componentRef}>
+             {/* Title for Print View Only */}
+             <div className="hidden print:block mb-6">
+                  <h1 className="text-3xl font-bold text-black mb-2">Reporte General de Producción</h1>
+                  <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
+              </div>
 
         {/* 1. KPIs Principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -283,7 +310,7 @@ export default function Overview() {
             className="relative group cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 rounded-xl"
             onClick={() => setExpandedChart("efficiency")}
           >
-            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1.5 rounded-md shadow-sm border border-border">
+            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1.5 rounded-md shadow-sm border border-border print:hidden">
               <Maximize2 className="w-4 h-4 text-muted-foreground" />
             </div>
             <EfficiencyChart data={data} className="h-[450px]" />
@@ -299,7 +326,7 @@ export default function Overview() {
               className="bg-card/50 backdrop-blur-sm border-border shadow-sm flex flex-col cursor-pointer group relative transition-all hover:ring-2 hover:ring-primary/20 h-full"
               onClick={() => setExpandedChart("distribution")}
             >
-              <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1.5 rounded-md shadow-sm border border-border">
+              <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1.5 rounded-md shadow-sm border border-border print:hidden">
                 <Maximize2 className="w-4 h-4 text-muted-foreground" />
               </div>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -310,7 +337,7 @@ export default function Overview() {
                   </CardTitle>
                   <CardDescription>Volumen de producción por tipo de cerveza</CardDescription>
                 </div>
-                <div onClick={(e) => e.stopPropagation()}>
+                <div onClick={(e) => e.stopPropagation()} className="print:hidden">
                   <DatePickerWithRange
                     date={distributionDateRange}
                     setDate={setDistributionDateRange}
@@ -337,7 +364,10 @@ export default function Overview() {
         </div>
 
         {/* 3. Glosario */}
-        <Glossary />
+        <div className="print:hidden">
+            <Glossary />
+        </div>
+        </div>
 
         {/* DIALOGS */}
         <Dialog open={!!expandedChart} onOpenChange={(open) => !open && setExpandedChart(null)}>

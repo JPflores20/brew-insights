@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { format, parseISO } from "date-fns";
-import { AlertCircle, Clock, TrendingUp, Activity, CheckCircle } from "lucide-react";
+import { AlertCircle, Clock, TrendingUp, Activity, CheckCircle, Printer } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { calculateMergedDuration } from "@/utils/timeUtils";
 import { TrendAreaChart } from "@/components/analysis/TrendAreaChart";
@@ -16,6 +17,7 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { motion } from "framer-motion";
+import { useReactToPrint } from "react-to-print";
 
 export default function CycleAnalysis() {
   const { data } = useData();
@@ -24,6 +26,19 @@ export default function CycleAnalysis() {
   const [selectedProduct, setSelectedProduct] = useLocalStorage<string>("cycle-product", "");
   const [theoreticalDuration, setTheoreticalDuration] = useLocalStorage<number>("cycle-theoretical", 120);
   const [selectedStep, setSelectedStep] = useState<string>("FULL_CYCLE");
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+      contentRef: componentRef,
+      documentTitle: `Analisis_Ciclos_${selectedProduct || 'Global'}_${format(new Date(), 'yyyy-MM-dd_HHmm')}`,
+      pageStyle: `
+        @page { size: auto; margin: 15mm; }
+        @media print {
+          body { -webkit-print-color-adjust: exact; }
+          .print:hidden { display: none !important; }
+        }
+      `
+  });
 
   // --- PREPARACIÓN DE DATOS ---
 
@@ -239,13 +254,20 @@ export default function CycleAnalysis() {
       <AnimatedPage className="space-y-6 pb-10">
 
         {/* ENCABEZADO Y CONTROLES */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Análisis de Tiempos</h1>
             <p className="text-muted-foreground mt-1">Comparativa: Área Verde (Ideal) vs Área Azul (Real).</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 bg-card/50 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm">
+          <div className="flex items-center gap-3">
+             <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => handlePrint()}>
+                  <Printer className="mr-2 h-4 w-4" /> Imprimir PDF
+              </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 bg-card/50 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm print:hidden">
             <div className="w-full sm:w-[200px]">
               <Label className="text-xs text-muted-foreground mb-1 block">Producto</Label>
               <Select value={selectedProduct} onValueChange={setSelectedProduct}>
@@ -276,67 +298,82 @@ export default function CycleAnalysis() {
                 onChange={(e) => setTheoreticalDuration(Number(e.target.value))}
               />
             </div>
-          </div>
         </div>
 
-        {/* TARJETAS KPI */}
-        <div className="grid gap-6 md:grid-cols-4">
-          <MetricCard
-            title="Lotes Únicos"
-            value={stats.count}
-            icon={Activity}
-            delay={0.1}
-            className="border-l-4 border-l-primary"
-          />
+        {/* Printable Content Wrapper */}
+        <div ref={componentRef}>
+             {/* Title for Print View Only */}
+             <div className="hidden print:block mb-6">
+                  <h1 className="text-3xl font-bold text-black mb-2">Reporte de Análisis de Ciclos</h1>
+                  <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
+                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-black border-t pt-4">
+                    <p><strong>Producto:</strong> {selectedProduct || 'Todos'}</p>
+                    <p><strong>Fase:</strong> {selectedStep === 'FULL_CYCLE' ? 'Ciclo Completo' : selectedStep}</p>
+                    <p><strong>Meta:</strong> {theoreticalDuration} min</p>
+                  </div>
+              </div>
 
-          <MetricCard
-            title="Promedio Real"
-            value={`${stats.avg} min`}
-            subtitle={`Meta Global: ${theoreticalDuration} min`}
-            icon={Clock}
-            delay={0.2}
-            trend={stats.avg > theoreticalDuration ? "down" : "up"}
-            trendValue={stats.avg > theoreticalDuration ? "Excede Meta" : "En Meta"}
-            className={stats.avg > theoreticalDuration ? "border-l-4 border-l-destructive" : "border-l-4 border-l-green-500"}
-          />
+            {/* TARJETAS KPI */}
+            <div className="grid gap-6 md:grid-cols-4">
+            <MetricCard
+                title="Lotes Únicos"
+                value={stats.count}
+                icon={Activity}
+                delay={0.1}
+                className="border-l-4 border-l-primary"
+            />
 
-          <MetricCard
-            title="Desviación Máxima"
-            value={`+${Math.round((stats.max - theoreticalDuration) * 100) / 100} min`}
-            subtitle={`Peor caso: ${stats.max} min`}
-            icon={TrendingUp}
-            delay={0.3}
-            className="border-l-4 border-l-chart-delay"
-          />
+            <MetricCard
+                title="Promedio Real"
+                value={`${stats.avg} min`}
+                subtitle={`Meta Global: ${theoreticalDuration} min`}
+                icon={Clock}
+                delay={0.2}
+                trend={stats.avg > theoreticalDuration ? "down" : "up"}
+                trendValue={stats.avg > theoreticalDuration ? "Excede Meta" : "En Meta"}
+                className={stats.avg > theoreticalDuration ? "border-l-4 border-l-destructive" : "border-l-4 border-l-green-500"}
+            />
 
-          <MetricCard
-            title="Cumplimiento"
-            value={`${compliancePercentage}%`}
-            subtitle="Lotes dentro de meta"
-            icon={CheckCircle}
-            delay={0.4}
-            trend={compliancePercentage > 80 ? "up" : "down"}
-            className={compliancePercentage > 80 ? "border-l-4 border-l-green-500" : "border-l-4 border-l-amber-500"}
-          />
+            <MetricCard
+                title="Desviación Máxima"
+                value={`+${Math.round((stats.max - theoreticalDuration) * 100) / 100} min`}
+                subtitle={`Peor caso: ${stats.max} min`}
+                icon={TrendingUp}
+                delay={0.3}
+                className="border-l-4 border-l-chart-delay"
+            />
+
+            <MetricCard
+                title="Cumplimiento"
+                value={`${compliancePercentage}%`}
+                subtitle="Lotes dentro de meta"
+                icon={CheckCircle}
+                delay={0.4}
+                trend={compliancePercentage > 80 ? "up" : "down"}
+                className={compliancePercentage > 80 ? "border-l-4 border-l-green-500" : "border-l-4 border-l-amber-500"}
+            />
+            </div>
+
+            {/* 1. GRÁFICO DE TENDENCIA (AREA CHART) */}
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6"
+            >
+            <TrendAreaChart data={chartData} theoreticalDuration={theoreticalDuration} />
+            </motion.div>
+
+            {/* 2. GANTT: Secuencia Global */}
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-6"
+            >
+            <GanttChart data={ganttData} minTime={minTime} maxTime={maxTime} />
+            </motion.div>
         </div>
-
-        {/* 1. GRÁFICO DE TENDENCIA (AREA CHART) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <TrendAreaChart data={chartData} theoreticalDuration={theoreticalDuration} />
-        </motion.div>
-
-        {/* 2. GANTT: Secuencia Global */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <GanttChart data={ganttData} minTime={minTime} maxTime={maxTime} />
-        </motion.div>
 
       </AnimatedPage>
     </DashboardLayout>
