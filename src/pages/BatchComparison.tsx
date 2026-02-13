@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,12 +12,17 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { exportToCSV } from "@/utils/exportUtils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { TemperatureTrendChart } from "@/components/machine-detail/TemperatureTrendChart";
+import { TemperatureTrendChart, SeriesConfig } from "@/components/machine-detail/TemperatureTrendChart";
+
+// Definición de colores para las múltiples series
+// Aseguramos que haya suficientes colores para rotar
+const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e', '#64748b'];
 
 export default function BatchComparison() {
   const { data } = useData();
   const { toast } = useToast();
   const batchIds = getUniqueBatchIds(data);
+
 
   const batchProductMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -31,128 +36,204 @@ export default function BatchComparison() {
   const [batchB, setBatchB] = useLocalStorage<string>("batch-comparison-b", "");
   const [chartType, setChartType] = useLocalStorage<string>("batch-comparison-chart-type", "bar");
 
-  // --- TEMPERATURA TREND CHART STATE ---
-  const [trendMachine, setTrendMachine] = useLocalStorage<string>("batch-comparison-trend-machine", "ALL");
-  const [trendRecipe, setTrendRecipe] = useLocalStorage<string>("batch-comparison-trend-recipe", "ALL");
-  const [trendBatch, setTrendBatch] = useLocalStorage<string>("batch-comparison-trend-batch", "ALL");
+  // --- STATE ---
+  const [seriesList, setSeriesList] = useLocalStorage<any[]>("batch-comparison-series-list", [
+    { id: '1', recipe: 'ALL', machine: 'ALL', batch: 'ALL', color: COLORS[0] }
+  ]);
+
+  // Sanitize seriesList on mount/update to ensure all have ID and Color
+  useEffect(() => {
+    let hasChanges = false;
+    const sanitized = seriesList.map((s, index) => {
+      let newItem = { ...s };
+      if (!newItem.id) {
+        newItem.id = (index + 1).toString();
+        hasChanges = true;
+      }
+      if (!newItem.color) {
+        // Assign color based on ID if possible, else index
+        const idNum = parseInt(newItem.id) || (index + 1);
+        newItem.color = COLORS[(idNum - 1) % COLORS.length];
+        hasChanges = true;
+      }
+      return newItem;
+    });
+
+    if (hasChanges) {
+      setSeriesList(sanitized);
+    }
+  }, [seriesList, setSeriesList]);
+
   const [selectedTempParam, setSelectedTempParam] = useLocalStorage<string>("batch-comparison-temp-param", "");
   const [selectedTempIndices, setSelectedTempIndices] = useLocalStorage<number[]>("batch-comparison-temp-indices", []);
 
-  // Reset batch when filters change
-  useEffect(() => {
-    setTrendBatch("ALL");
-  }, [trendRecipe, trendMachine, setTrendBatch]);
+  const uniqueRecipes = useMemo(() => Array.from(new Set(data.map(d => d.productName || "Desconocido"))).sort(), [data]);
 
-  // Derived Lists for Trend Chart
-  const machinesWithTemps = useMemo(() => {
-    const machines = new Set<string>();
-    let filteredRecords = data;
-    if (trendRecipe && trendRecipe !== "ALL") {
-      filteredRecords = data.filter((d) => d.productName === trendRecipe);
+  // Helper to compute available options based on current selection for a specific series
+  const getOptions = (currentRecipe: string, currentMachine: string) => {
+    let filtered = data;
+
+    // 1. Available Recipes: Filter by Machine (if selected)
+    let recipes = new Set<string>();
+    let recipeSource = data;
+    if (currentMachine && currentMachine !== "ALL") {
+        recipeSource = recipeSource.filter(d => d.TEILANL_GRUPO === currentMachine);
     }
-    filteredRecords.forEach((record) => {
-      if (
-        record.parameters &&
-        record.parameters.some((p) => {
-          const u = (p.unit || "").toLowerCase();
-          return (
-            u.includes("°c") ||
-            u.includes("temp") ||
-            p.name.toLowerCase().includes("temp")
-          );
-        })
-      ) {
-        machines.add(record.TEILANL_GRUPO);
-      }
+    recipeSource.forEach(d => {
+        if(d.productName) recipes.add(d.productName);
     });
-    return Array.from(machines).sort();
-  }, [data, trendRecipe]);
 
-  const availableTrendBatches = useMemo(() => {
-    const batches = new Set<string>();
-    let filteredRecords = data;
-    if (trendRecipe && trendRecipe !== "ALL") {
-      filteredRecords = filteredRecords.filter((d) => d.productName === trendRecipe);
+    // 2. Available Machines: Filter by Recipe (if selected)
+    let machines = new Set<string>();
+    let machineSource = data;
+    if (currentRecipe && currentRecipe !== "ALL") {
+        machineSource = machineSource.filter(d => d.productName === currentRecipe);
     }
-    if (trendMachine && trendMachine !== "ALL") {
-      filteredRecords = filteredRecords.filter((d) => d.TEILANL_GRUPO === trendMachine);
-    }
-    filteredRecords.forEach((record) => {
-      if (
-        record.parameters &&
-        record.parameters.some((p) => {
-          const u = (p.unit || "").toLowerCase();
-          return (
-            u.includes("°c") ||
-            u.includes("temp") ||
-            p.name.toLowerCase().includes("temp")
-          );
-        })
-      ) {
-        batches.add(record.CHARG_NR);
-      }
+    machineSource.forEach(d => {
+        // Only include machines that have temp parameters
+        if (d.parameters && d.parameters.some(p => {
+            const u = (p.unit || "").toLowerCase();
+            return u.includes("°c") || u.includes("temp") || p.name.toLowerCase().includes("temp");
+        })) {
+            machines.add(d.TEILANL_GRUPO);
+        }
     });
-    return Array.from(batches).sort();
-  }, [data, trendRecipe, trendMachine]);
 
+    // 3. Available Batches: Filter by Recipe AND Machine
+    let batches = new Set<string>();
+    let batchSource = data;
+    if (currentRecipe && currentRecipe !== "ALL") {
+        batchSource = batchSource.filter(d => d.productName === currentRecipe);
+    }
+    if (currentMachine && currentMachine !== "ALL") {
+        batchSource = batchSource.filter(d => d.TEILANL_GRUPO === currentMachine);
+    }
+    batchSource.forEach(d => {
+         if (d.parameters && d.parameters.some(p => {
+            const u = (p.unit || "").toLowerCase();
+            return u.includes("°c") || u.includes("temp") || p.name.toLowerCase().includes("temp");
+        })) {
+            batches.add(d.CHARG_NR);
+        }
+    });
+
+    return {
+        recipes: Array.from(recipes).sort(),
+        machines: Array.from(machines).sort(),
+        batches: Array.from(batches).sort()
+    };
+  };
+
+  // Compute available params based on ALL data (Global Y Axis)
   const availableTempParams = useMemo(() => {
-    // If no specific machine selected, aggregate from all relevant data
-    const relevantData = trendMachine === "ALL"
-      ? data
-      : data.filter(d => d.TEILANL_GRUPO === trendMachine);
-
-    const allParams = relevantData.flatMap((d) => d.parameters || []);
     const temps = new Set<string>();
-
-    allParams.forEach((p) => {
-      const u = (p.unit || "").toLowerCase();
-      if (
-        u.includes("°c") ||
-        u.includes("temp") ||
-        p.name.toLowerCase().includes("temp")
-      ) {
-        temps.add(p.name);
-      }
+    data.forEach((d) => {
+        d.parameters?.forEach((p) => {
+            const u = (p.unit || "").toLowerCase();
+            if (u.includes("°c") || u.includes("temp") || p.name.toLowerCase().includes("temp")) {
+                temps.add(p.name);
+            }
+        });
     });
     return Array.from(temps).sort();
-  }, [data, trendMachine]);
+  }, [data]);
 
-  // Auto-select first param
+  // Auto-select first param if none selected or invalid
   useEffect(() => {
     if (availableTempParams.length > 0) {
+      // If we have params available, ensure one is selected
       if (!selectedTempParam || !availableTempParams.includes(selectedTempParam)) {
+        // If current selection is invalid or empty, default to first available
         setSelectedTempParam(availableTempParams[0]);
       }
-    } else {
-      setSelectedTempParam("");
     }
+    // Remove the else block that clears it immediately. 
+    // Persist the value even if temporarily unavailable during loading.
   }, [availableTempParams, selectedTempParam, setSelectedTempParam]);
 
-  // Data Calculation Helper
+  // Data Calculation Helper (Single Series)
   const calculateTrendData = (tMachine: string, tRecipe: string, tBatch: string, param: string) => {
-    if (!param) return [];
+    // Helper to find best parameter match in a record
+    const getParamValue = (record: any) => {
+      if (!record || !record.parameters) return null;
+      
+      // 1. Try exact match
+      const exact = record.parameters.find((p: any) => p.name === param);
+      if (exact) return exact;
 
-    // Mode 1: Detailed Batch View
+      // 2. Try partial match or semantic match for "Temperature"
+      // This is crucial if different machines use slightly different param names for the "Main Temp"
+      // or if we have hidden the selector and just want "The Temperature".
+      const fallback = record.parameters.find((p: any) => {
+         const u = (p.unit || "").toLowerCase();
+         const n = (p.name || "").toLowerCase();
+         return u.includes("°c") || u.includes("temp") || n.includes("temp");
+      });
+      return fallback;
+    };
+
+    // Mode 1: Detailed Batch View (Specific Batch Selected)
     if (tBatch && tBatch !== "ALL") {
       let record;
+      // Strict matching if machine is selected, otherwise find first occurrence
       if (tMachine && tMachine !== "ALL") {
         record = data.find((d) => d.CHARG_NR === tBatch && d.TEILANL_GRUPO === tMachine);
       } else {
         record = data.find((d) => d.CHARG_NR === tBatch);
       }
 
-      if (!record || !record.parameters) return [];
+      const pVal = getParamValue(record);
+      if (!pVal) return [];
 
-      return record.parameters
-        .filter((p) => p.name === param)
-        .map((p, index) => ({
+      // If we found a valid param (either exact or fallback), return it as a single point series?
+      // Wait, Detailed View expects an ARRAY of steps?
+      // Actually, record.parameters is an array of ALL params for that batch.
+      // But usually 'parameters' in this dataset seems to be [ {name: 'Temp', value: 10}, {name: 'Pressure', value: 5} ]
+      // It does NOT seem to be a time-series within one record, based on "Mode 1" logic returning:
+      // record.parameters.filter(p => p.name === param).map(...)
+      
+      // If the data structure is: One Record = One Batch Summary?
+      // The original code: record.parameters.filter(p => p.name === param).map(...)
+      // This suggests 'parameters' might contain MULTIPLE entries for 'Temp' (time series)?
+      // OR 'parameters' contains different params.
+      
+      // Let's assume 'parameters' might contain multiple values for the same param name (TimeSeries-like)
+      // OR we just return the single value.
+      // The map: .map((p, index) => ({ stepName: ..., value: ... }))
+      
+      // If we use getParamValue, it returns ONE item.
+      // If the original code filtered by name, it could return MULTIPLE items (TimeSeries).
+      
+      // So precise logic:
+      if (!record || !record.parameters) return [];
+      
+      // 1. Try exact match filter
+      const exactMatches = record.parameters.filter((p: any) => p.name === param);
+      if (exactMatches.length > 0) {
+          return exactMatches.map((p: any, index: number) => ({
+            stepName: p.stepName || `Paso ${index + 1}`,
+            value: Number(p.value),
+            unit: p.unit,
+            date: record.timestamp
+          }));
+      }
+      
+      // 2. Fallback: Filter by "Is Temperature"
+      const fallbackMatches = record.parameters.filter((p: any) => {
+         const u = (p.unit || "").toLowerCase();
+         const n = (p.name || "").toLowerCase();
+         return u.includes("°c") || u.includes("temp") || n.includes("temp");
+      });
+      
+      return fallbackMatches.map((p: any, index: number) => ({
           stepName: p.stepName || `Paso ${index + 1}`,
           value: Number(p.value),
           unit: p.unit,
-        }));
+          date: record.timestamp
+      }));
     }
 
-    // Mode 2: Historical Trend
+    // Mode 2: Historical Trend (ALL Batches)
     let records = tMachine === "ALL" ? data : getMachineData(data, tMachine);
 
     if (tRecipe && tRecipe !== "ALL") {
@@ -162,7 +243,7 @@ export default function BatchComparison() {
     return records
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
       .map((record) => {
-        const pVal = record.parameters?.find((p) => p.name === param);
+        const pVal = getParamValue(record); // Use helper to find ANY temp
         return {
           batchId: record.CHARG_NR,
           value: pVal ? Number(pVal.value) : null,
@@ -171,11 +252,128 @@ export default function BatchComparison() {
             timeStyle: "short",
           }),
           machine: record.TEILANL_GRUPO,
+          stepName: new Date(record.timestamp).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) // Use date as stepName for history
         };
       })
       .filter((d): d is any => d.value !== null && Number.isFinite(d.value));
   };
 
+  // Compute Merged Data for Chart
+  const chartData = useMemo(() => {
+    const dataMap = new Map<string, any>();
+
+    seriesList.forEach((series) => {
+        const points = calculateTrendData(series.machine, series.recipe, series.batch, selectedTempParam);
+        points.forEach((p, index) => {
+            // Use index as the primary key to ensure sequential alignment even with duplicate step names
+            // If we are in historical mode (batch=ALL), stepName is actually a unique date string or batch ID, so it's safe.
+            // If we are in batch mode, stepName might be "Calentar", "Calentar", etc.
+            // So we use index to distinguish them: 0_Calentar, 1_Calentar, etc.
+            
+            // However, we want to align "Step 1" of Series A with "Step 1" of Series B.
+            // So key should be based on index.
+            // But we want to preserve the display name.
+            
+            const isBatchMode = series.batch && series.batch !== 'ALL';
+            const key = isBatchMode ? index.toString() : p.stepName; 
+            
+            if (!dataMap.has(key)) {
+                dataMap.set(key, { 
+                    originalIndex: index,
+                    // Use the step name from the first series that populates this index
+                    stepName: p.stepName, 
+                    date: p.date, 
+                    unit: p.unit 
+                });
+            }
+            const entry = dataMap.get(key);
+            entry[`value_${series.id}`] = p.value;
+            // Preserve unit if found
+            if(p.unit) entry.unit = p.unit;
+        });
+    });
+
+    // Convert to array
+    const result = Array.from(dataMap.values());
+
+    // Sort
+    if (result.length > 0) {
+        const isBatchModeGlobal = seriesList.some(s => s.batch && s.batch !== 'ALL');
+        
+        if (isBatchModeGlobal) {
+            // Sort by original index to ensure sequence (Step 1, Step 2, ...)
+             result.sort((a, b) => a.originalIndex - b.originalIndex);
+        } else {
+            // Sort by date/string for historical view
+            result.sort((a, b) => {
+                 const dA = new Date(a.date || a.stepName).getTime();
+                 const dB = new Date(b.date || b.stepName).getTime();
+                 return dA - dB;
+            });
+        }
+    }
+
+    return result;
+  }, [seriesList, selectedTempParam, data]);
+
+  // Series Management Actions
+  const addSeries = () => {
+    const nextId = Math.max(0, ...seriesList.map(s => parseInt(s.id))) + 1;
+    const newId = nextId.toString();
+    // Use modulo of the ID (minus 1 to start at 0) to cycle through colors consistently 
+    // regardless of how many items are currently in the list
+    const color = COLORS[(nextId - 1) % COLORS.length];
+    
+    // Duplicate the last series settings for convenience
+    const lastSeries = seriesList[seriesList.length - 1];
+    setSeriesList([...seriesList, { 
+        id: newId, 
+        recipe: lastSeries ? lastSeries.recipe : 'ALL', 
+        machine: lastSeries ? lastSeries.machine : 'ALL', 
+        batch: lastSeries ? lastSeries.batch : 'ALL', 
+        color 
+    }]);
+  };
+
+  const removeSeries = (id: string) => {
+      setSeriesList(seriesList.filter(s => s.id !== id));
+  };
+
+  const updateSeries = (index: number, field: string, value: string) => {
+      const newList = [...seriesList];
+      newList[index] = { ...newList[index], [field]: value };
+      
+      // Reset dependent fields
+      if (field === 'recipe') {
+          newList[index].batch = 'ALL';
+          // Keep machine if it's still valid? Simpler to reset or keep. 
+          // Let's keep machine but user might need to change it if invalid. 
+          // The getOptions will handle showing validity.
+      }
+      if (field === 'machine') {
+          newList[index].batch = 'ALL';
+      }
+      
+      setSeriesList(newList);
+  };
+
+  const seriesConfig: SeriesConfig[] = seriesList.map((s, index) => {
+    const options = getOptions(s.recipe, s.machine);
+    return {
+        ...s,
+        availableRecipes: options.recipes,
+        availableMachines: options.machines,
+        availableBatches: options.batches,
+        setRecipe: (val) => updateSeries(index, 'recipe', val),
+        setMachine: (val) => updateSeries(index, 'machine', val),
+        setBatch: (val) => updateSeries(index, 'batch', val),
+        onRemove: seriesList.length > 1 ? () => removeSeries(s.id) : undefined
+    };
+  });
+
+  // ... (Keep the rest of the file layout)
+  
+  // (Previous Effect for Batch Comparison Top Chart)
   useEffect(() => {
     if (batchIds.length >= 2) {
       if (!batchA || !batchIds.includes(batchA)) {
@@ -452,27 +650,20 @@ export default function BatchComparison() {
         )}
 
 
-        {/* Temperatura Trend Chart */}
+        {/* Temperatura Trend Chart (Refactored for Multi-Series) */}
         <div className="space-y-6 mt-6">
           <TemperatureTrendChart
-            data={calculateTrendData(trendMachine, trendRecipe, trendBatch, selectedTempParam)}
-            trendBatch={trendBatch}
-            trendRecipe={trendRecipe}
-            trendMachine={trendMachine}
+            data={chartData}
             selectedTempParam={selectedTempParam}
-            uniqueRecipes={Array.from(new Set(data.map(d => d.productName || "Desconocido"))).sort()}
-            machinesWithTemps={machinesWithTemps}
-            availableTrendBatches={availableTrendBatches}
             availableTempParams={availableTempParams}
-            setTrendRecipe={setTrendRecipe}
-            setTrendMachine={setTrendMachine}
-            setTrendBatch={setTrendBatch}
             setSelectedTempParam={setSelectedTempParam}
             selectedTempIndices={selectedTempIndices}
             setSelectedTempIndices={setSelectedTempIndices}
             chartType="line"
             title="Análisis de Tendencias (Detallado)"
             hideParamSelector={true}
+            series={seriesConfig}
+            onAddSeries={addSeries}
           />
         </div>
       </div>
