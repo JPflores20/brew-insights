@@ -472,6 +472,7 @@ export default function BatchComparison() {
             setSelectedTempIndices={setSelectedTempIndices}
             chartType="line"
             title="Análisis de Tendencias (Detallado)"
+            hideParamSelector={true}
           />
         </div>
       </div>

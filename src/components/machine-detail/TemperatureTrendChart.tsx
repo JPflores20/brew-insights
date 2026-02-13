@@ -44,6 +44,7 @@ interface TemperatureTrendChartProps {
     setSelectedTempIndices: React.Dispatch<React.SetStateAction<number[]>>;
     chartType?: "area" | "line";
     title?: string;
+    hideParamSelector?: boolean;
 }
 
 const truncateLabel = (v: any, max = 18) => {
@@ -69,6 +70,7 @@ export function TemperatureTrendChart({
     setSelectedTempIndices,
     chartType = "area",
     title,
+    hideParamSelector = false,
 }: TemperatureTrendChartProps) {
     // Always render the container, even if empty, so the user knows it's there.
     // We will handle empty states inside the visualization area.
@@ -76,7 +78,7 @@ export function TemperatureTrendChart({
     return (
         <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
             <CardHeader className="px-0 pt-0 pb-6">
-                <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                <div className="flex flex-col gap-4">
                     <div className="space-y-1">
                         <CardTitle className="text-lg font-semibold flex items-center gap-2">
                             <Thermometer className="h-5 w-5 text-red-500" />
@@ -92,7 +94,13 @@ export function TemperatureTrendChart({
                     </div>
 
                     {/* CONTROLES DE FILTRADO EN LA GRÁFICA */}
-                    <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full items-center">
+                        {/* Indicador de Color de Serie */}
+                        <div 
+                            className="w-4 h-4 rounded-full bg-red-500 shrink-0 border border-border" 
+                            title="Color de la serie actual"
+                        />
+
                         {/* Selector de Receta (Local) */}
                         <Select value={trendRecipe} onValueChange={setTrendRecipe}>
                             <SelectTrigger className="w-full sm:w-[180px]">
@@ -138,22 +146,26 @@ export function TemperatureTrendChart({
                             </SelectContent>
                         </Select>
 
+
+
                         {/* Selector de Variable */}
-                        <Select
-                            value={selectedTempParam}
-                            onValueChange={setSelectedTempParam}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Variable" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableTempParams.map((p) => (
-                                    <SelectItem key={p} value={p}>
-                                        {p}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        {!hideParamSelector && (
+                            <Select
+                                value={selectedTempParam}
+                                onValueChange={setSelectedTempParam}
+                            >
+                                <SelectTrigger className="w-full sm:w-[200px]">
+                                    <SelectValue placeholder="Variable" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableTempParams.map((p) => (
+                                        <SelectItem key={p} value={p}>
+                                            {p}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
                     </div>
                 </div>
             </CardHeader>
