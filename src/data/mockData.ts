@@ -25,6 +25,7 @@ export interface BatchParameter {
   unit: string;
   stepName: string;
   timestamp?: string;
+  dfmCode?: string;
 }
 
 export interface BatchRecord {

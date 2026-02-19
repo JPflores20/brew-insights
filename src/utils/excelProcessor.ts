@@ -72,7 +72,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
 
     // Arrays temporales para esta fila
     const rowMaterials: { name: string, val: number, exp: number, unit: string }[] = [];
-    const rowParams: { name: string, val: number, target: number, unit: string }[] = [];
+    const rowParams: { name: string, val: number, target: number, unit: string, dfmCode: string }[] = [];
     
     // Escaneamos las 24 columnas DFM posibles
     for (let i = 1; i <= 24; i++) {
@@ -90,7 +90,7 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
                 rowMaterials.push({ name: String(name).trim(), val: val || 0, exp: exp || 0, unit });
             } else if (isParam || (!isMaterial && val > 0)) {
                 // Si tiene valor y no es material explícito, lo tratamos como parámetro
-                rowParams.push({ name: String(name).trim(), val: val || 0, target: exp || 0, unit });
+                rowParams.push({ name: String(name).trim(), val: val || 0, target: exp || 0, unit, dfmCode: `DFM${i}` });
             }
         }
     }
@@ -182,7 +182,8 @@ export async function processExcelFile(file: File): Promise<BatchRecord[]> {
               target: param.target,
               unit: param.unit,
               stepName: evt.GOP_NAME,
-              timestamp: evt.start ? evt.start.toISOString() : undefined // <--- AQUI GUARDAMOS EL TIEMPO
+              timestamp: evt.start ? evt.start.toISOString() : undefined, // <--- AQUI GUARDAMOS EL TIEMPO
+              dfmCode: param.dfmCode
           });
       });
 

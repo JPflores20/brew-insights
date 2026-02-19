@@ -20,7 +20,8 @@ import { AnomaliesList } from "@/components/machine-detail/AnomaliesList";
 import { MachineHistoryChart } from "@/components/machine-detail/MachineHistoryChart";
 import { TemperatureTrendChart } from "@/components/machine-detail/TemperatureTrendChart";
 import { GlobalTimeline } from "@/components/machine-detail/GlobalTimeline";
-import { ProblemsPanel } from "@/components/machine-detail/ProblemsPanel";
+
+import { MachineryTab } from "@/components/machine-detail/MachineryTab";
 
 // UI Enhancements
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -181,7 +182,7 @@ export default function MachineDetail() {
                 className="space-y-4"
             >
                 <div className="flex items-center justify-between print:hidden">
-                <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-muted/50 p-1 rounded-lg">
+                <TabsList className="grid w-full max-w-[600px] grid-cols-3 bg-muted/50 p-1 rounded-lg">
                     <TabsTrigger
                     value="machine-view"
                     className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
@@ -193,6 +194,12 @@ export default function MachineDetail() {
                     className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                     >
                     <Layers className="h-4 w-4" /> Cronología Global
+                    </TabsTrigger>
+                    <TabsTrigger
+                    value="machinery"
+                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                    >
+                    <Layers className="h-4 w-4" /> Maquinaria
                     </TabsTrigger>
                 </TabsList>
                 </div>
@@ -287,14 +294,19 @@ export default function MachineDetail() {
                     />
                 </motion.div>
                 </TabsContent>
+
+                <TabsContent
+                value="machinery"
+                className="space-y-6 outline-none"
+                >
+                  <MachineryTab
+                    data={data}
+                    selectedBatchId={selectedBatchId}
+                  />
+                </TabsContent>
             </Tabs>
 
-            <div className="print:hidden">
-                <ProblemsPanel
-                    problematicBatches={problematicBatches}
-                    loadSuggestion={loadSuggestion}
-                />
-            </div>
+
             </div>
         </div>
       </AnimatedPage>
