@@ -1,51 +1,19 @@
 import { format } from "date-fns";
 
-// --- INTERFACES ---
+// Re-exportar interfaces centralizadas para compatibilidad con imports existentes
+export type {
+  BatchStep,
+  BatchMaterial,
+  BatchParameter,
+  BatchRecord,
+  ProcessCapabilityResult,
+  TemperaturePoint,
+} from "@/types";
 
-export interface BatchStep {
-  stepName: string;
-  stepNr: string;
-  durationMin: number;
-  expectedDurationMin: number;
-  startTime: string;
-  endTime: string;
-}
+// Importar tipos necesarios para las funciones de este archivo
+import type { BatchRecord, BatchParameter, ProcessCapabilityResult } from "@/types";
 
-export interface BatchMaterial {
-  name: string;
-  totalReal: number;
-  totalExpected: number;
-  unit: string;
-}
 
-export interface BatchParameter {
-  name: string;
-  value: number;
-  target: number;
-  unit: string;
-  stepName: string;
-  timestamp?: string;
-  dfmCode?: string;
-}
-
-export interface BatchRecord {
-  CHARG_NR: string;
-  TEILANL_GRUPO: string;
-  productName: string;
-  real_total_min: number;
-  esperado_total_min: number;
-  delta_total_min: number;
-  idle_wall_minus_sumsteps_min: number;
-  max_gap_min: number;
-  timestamp: string;
-  startHour: number;
-  steps: BatchStep[];
-  materials: BatchMaterial[];
-  parameters: BatchParameter[];
-  alerts: string[];
-}
-
-// --- HELPERS BÁSICOS ---
 
 export function getUniqueBatchIds(data: BatchRecord[]): string[] {
   return Array.from(new Set(data.map(d => d.CHARG_NR))).sort();
@@ -197,16 +165,7 @@ export function getShiftStats(data: BatchRecord[]) {
 // ===============================
 //  CAPACIDAD DE PROCESO: Cp / Cpk (UTILIDADES)
 // ===============================
-
-export interface ProcessCapabilityResult {
-  n: number;
-  mean: number;
-  sigma: number;
-  lsl: number;
-  usl: number;
-  cp: number | null;
-  cpk: number | null;
-}
+// (ProcessCapabilityResult se importa/exporta desde @/types)
 
 function _mean(values: number[]): number {
   if (values.length === 0) return 0;
@@ -306,11 +265,8 @@ export function getCpCpkForTemperatureDeltaByParameter(
 
 // --- GENERADORES DE DATOS DE TEMPERATURA PARA COMPARACIÓN ---
 
-export interface TemperaturePoint {
-  time: number; // Minutos desde el inicio
-  stepName: string;
-  [key: string]: number | string; // batchId1: temp1, batchId2: temp2...
-}
+// (TemperaturePoint se importa/exporta desde @/types)
+import type { TemperaturePoint } from "@/types";
 
 export function generateTemperatureComparisonData(
   batchIds: string[],
