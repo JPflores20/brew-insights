@@ -45,7 +45,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
   const startStepName = "PRIMER MOSTO new";
 
   // Encontrar el índice del paso inicial
-  const startIndex = filterSteps.findIndex((s) => s.stepName === startStepName);
+  const startIndex = filterSteps.findIndex((s) => s.stepName.toLowerCase() === startStepName.toLowerCase());
 
   // Opciones para el paso final (solo pasos posteriores al inicial)
   const endStepOptions = useMemo(() => {
