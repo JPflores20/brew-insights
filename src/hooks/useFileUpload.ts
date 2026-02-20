@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useData } from "@/context/DataContext";
 import { processExcelFile } from "@/utils/excelProcessor";
+import { processDbfFile } from "@/utils/dbfProcessor";
 import { useToast } from "@/hooks/use-toast";
 import { BatchRecord } from "@/types";
 
@@ -56,7 +57,11 @@ export function useFileUpload() {
       let successCount = 0;
 
       for (const file of files) {
-        const fileData = await processExcelFile(file);
+        const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+        const isDbf = ext === 'dbf';
+        const fileData = isDbf
+          ? await processDbfFile(file)
+          : await processExcelFile(file);
         if (fileData && fileData.length > 0) {
           combinedData = [...combinedData, ...fileData];
           successCount++;

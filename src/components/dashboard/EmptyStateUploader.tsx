@@ -128,7 +128,7 @@ export function EmptyStateUploader({
                         <p className="text-muted-foreground max-w-lg mx-auto">
                             {isDragging
                                 ? "¡Suelta los archivos!"
-                                : "Arrastra hasta 4 archivos Excel aquí o selecciona para empezar."}
+                                : "Arrastra hasta 4 archivos Excel (.xlsx/.xls) o DBF aquí, o selecciona para empezar."}
                         </p>
                     </div>
 
@@ -145,14 +145,14 @@ export function EmptyStateUploader({
                             <input
                                 type="file"
                                 multiple
-                                accept=".xlsx, .xls"
+                                accept=".xlsx, .xls, .dbf"
                                 className="absolute inset-0 cursor-pointer opacity-0"
                                 onChange={handleFileInput}
                             />
                         </Button>
                         {!isDragging && (
                             <p className="text-xs text-muted-foreground">
-                                Soporta archivos .xlsx y .xls
+                                Soporta archivos .xlsx, .xls y .dbf
                             </p>
                         )}
                     </div>
