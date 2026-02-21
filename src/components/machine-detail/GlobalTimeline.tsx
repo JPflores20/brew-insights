@@ -99,7 +99,7 @@ export function GlobalTimeline({
                             <Tooltip
                                 contentStyle={themedTooltipContentStyle}
                                 cursor={{ fill: "transparent" }}
-                                formatter={(value: any, name: any) => [value, name]}
+                                formatter={(value: any, name: any) => [`${value} min`, name]}
                                 labelFormatter={(label) => label.split(" - ")[1] || label}
                             />
                             <Legend wrapperStyle={{ paddingTop: "10px" }} />

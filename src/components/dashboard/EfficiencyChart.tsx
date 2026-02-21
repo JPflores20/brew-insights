@@ -120,15 +120,17 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                 <DropdownMenuContent align="end" className="w-[200px]">
                     <DropdownMenuLabel>Filtrar Equipos</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {allChartData.map((d) => (
-                        <DropdownMenuCheckboxItem
-                            key={d.machine}
-                            checked={selectedMachines.length === 0 || selectedMachines.includes(d.machine)}
-                            onCheckedChange={() => toggleMachine(d.machine)}
-                        >
-                            {d.machine}
-                        </DropdownMenuCheckboxItem>
-                    ))}
+                    <div className="max-h-[300px] overflow-y-auto overflow-x-hidden">
+                        {allChartData.map((d) => (
+                            <DropdownMenuCheckboxItem
+                                key={d.machine}
+                                checked={selectedMachines.length === 0 || selectedMachines.includes(d.machine)}
+                                onCheckedChange={() => toggleMachine(d.machine)}
+                            >
+                                {d.machine}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </div>
                     {selectedMachines.length > 0 && (
                         <>
                             <DropdownMenuSeparator />
@@ -182,7 +184,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                         tickLine={false}
                         label={{ value: 'Minutos', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                       />
-                      <Tooltip content={<ChartTooltip indicator="line" />} cursor={{ fill: 'hsl(var(--muted)/0.4)' }} />
+                      <Tooltip content={<ChartTooltip indicator="line" valueSuffix="min" />} cursor={{ fill: 'hsl(var(--muted)/0.4)' }} />
                       <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                       <Bar dataKey="Tiempo Esperado" fill="hsl(var(--chart-expected))" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="Tiempo Real" fill="hsl(var(--chart-real))" radius={[4, 4, 0, 0]} />
@@ -213,7 +215,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                          axisLine={false}
                          tickLine={false}
                       />
-                      <Tooltip content={<ChartTooltip indicator="line" />} />
+                      <Tooltip content={<ChartTooltip indicator="line" valueSuffix="min" />} />
                       <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                       <Line type="monotone" dataKey="Tiempo Esperado" stroke="hsl(var(--chart-expected))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                       <Line type="monotone" dataKey="Tiempo Real" stroke="hsl(var(--chart-real))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />

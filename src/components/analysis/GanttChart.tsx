@@ -58,7 +58,7 @@ export function GanttChart({ data, minTime, maxTime }: GanttChartProps) {
                             />
                             <Tooltip
                                 cursor={{ fill: "transparent" }}
-                                content={<ChartTooltip />}
+                                content={<ChartTooltip valueSuffix="ms" />}
                             />
                             <Bar dataKey="startOffset" stackId="a" fill="transparent" />
                             <Bar

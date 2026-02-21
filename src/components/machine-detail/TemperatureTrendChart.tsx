@@ -323,7 +323,7 @@ export function TemperatureTrendChart({
                                 axisLine={false}
                             />
                             <Tooltip
-                                content={<ChartTooltip />}
+                                content={<ChartTooltip valueSuffix={data[0]?.unit || "°C"} />}
                                 cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                             />
                             <Legend />
@@ -389,7 +389,7 @@ export function TemperatureTrendChart({
                                     axisLine={false}
                                 />
                                 <Tooltip
-                                    content={<ChartTooltip />}
+                                    content={<ChartTooltip valueSuffix={data[0]?.unit || "°C"} />}
                                     cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                                 />
                                 <Area
@@ -439,7 +439,7 @@ export function TemperatureTrendChart({
                                     axisLine={false}
                                 />
                                 <Tooltip
-                                    content={<ChartTooltip />}
+                                    content={<ChartTooltip valueSuffix={data[0]?.unit || "°C"} />}
                                     cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                                 />
                                 <Line

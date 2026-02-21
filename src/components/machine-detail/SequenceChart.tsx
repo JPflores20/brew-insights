@@ -101,7 +101,7 @@ export const SequenceChart = memo(function SequenceChart({
                                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                                     interval={0}
                                 />
-                                <Tooltip content={<ChartTooltip />} cursor={{ fill: "transparent" }} />
+                                <Tooltip content={<ChartTooltip valueSuffix="min" />} cursor={{ fill: "transparent" }} />
                                 <Legend wrapperStyle={{ paddingTop: "10px" }} />
                                 <Bar dataKey="durationMin" name="Duración Real (min)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20}>
                                     {stepsData.map((entry, index) => (
@@ -126,7 +126,7 @@ export const SequenceChart = memo(function SequenceChart({
                                     height={80}
                                 />
                                 <YAxis label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }} />
-                                <Tooltip content={<ChartTooltip indicator="line" />} />
+                                <Tooltip content={<ChartTooltip indicator="line" valueSuffix="min" />} />
                                 <Legend wrapperStyle={{ paddingTop: "10px" }} />
                                 <Line type="monotone" dataKey="expectedDurationMin" name="Esperado" stroke="#3b82f6" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                                 <Line type="monotone" dataKey="durationMin" name="Real" stroke="hsl(var(--primary))" strokeWidth={2} activeDot={{ r: 8 }} />
@@ -140,7 +140,7 @@ export const SequenceChart = memo(function SequenceChart({
                                 <PolarGrid opacity={0.2} />
                                 <PolarAngleAxis dataKey="stepName" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
-                                <Tooltip content={<ChartTooltip />} />
+                                <Tooltip content={<ChartTooltip valueSuffix="min" />} />
                                 <Radar name="Real" dataKey="durationMin" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
                                 <Radar name="Esperado" dataKey="expectedDurationMin" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
                                 <Legend wrapperStyle={{ paddingTop: "10px" }} />

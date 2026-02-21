@@ -82,7 +82,7 @@ export function MachineHistoryChart({
                     axisLine={false}
                 />
                 <Tooltip
-                    content={<ChartTooltip />}
+                    content={<ChartTooltip valueSuffix="min" />}
                     cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
             </>

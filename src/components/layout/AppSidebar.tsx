@@ -20,7 +20,9 @@ import {
     LogOut,
     ArrowLeft,
     User,
-    Lock
+    Lock,
+    Wrench,
+    Activity
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -51,6 +53,24 @@ const navItems = [
         title: "Ciclos & Gantt",
         url: "/cocimientos/ciclos",
         icon: Timer,
+    },
+    {
+        title: "Análisis de Recetas",
+        url: "/cocimientos/recetas",
+        icon: Beer,
+        badge: "Nuevo"
+    },
+    {
+        title: "Mantenimiento",
+        url: "/cocimientos/mantenimiento",
+        icon: Wrench,
+        badge: "Nuevo"
+    },
+    {
+        title: "Calidad del Producto",
+        url: "/cocimientos/calidad",
+        icon: Activity,
+        badge: "Nuevo"
     },
 ];
 
@@ -115,6 +135,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                             >
                                                 <item.icon className="text-muted-foreground" />
                                                 <span className="text-muted-foreground">{item.title}</span>
+                                                {'badge' in item && (
+                                                    <span className="ml-2 rounded-md bg-green-500/20 px-1.5 py-0.5 text-[10px] font-medium text-green-600 leading-none">
+                                                        {item.badge}
+                                                    </span>
+                                                )}
                                                 <Lock className="ml-auto size-3 text-muted-foreground/70" />
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
@@ -124,9 +149,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 return (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton asChild isActive={isActive} tooltip={item.title} className={cn(isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_0_15px_rgba(234,88,12,0.15)]")}>
-                                            <Link to={item.url}>
+                                            <Link to={item.url} className="flex items-center w-full">
                                                 <item.icon className={cn(isActive && "text-primary")} />
                                                 <span>{item.title}</span>
+                                                {'badge' in item && (
+                                                    <span className="ml-auto rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[10px] font-medium text-green-500 leading-none shadow-sm shadow-green-500/10">
+                                                        {item.badge}
+                                                    </span>
+                                                )}
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

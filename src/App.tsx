@@ -17,6 +17,9 @@ import Overview from "./pages/Overview";
 import MachineDetail from "./pages/MachineDetail";
 import BatchComparison from "./pages/BatchComparison";
 import CycleAnalysis from "./pages/CycleAnalysis";
+import RecipeAnalysis from "./pages/RecipeAnalysis";
+import PredictiveMaintenance from "./pages/PredictiveMaintenance";
+import QualityConsistency from "./pages/QualityConsistency";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +86,30 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <CycleAnalysis />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cocimientos/recetas"
+                element={
+                  <ProtectedRoute>
+                    <RecipeAnalysis />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cocimientos/mantenimiento"
+                element={
+                  <ProtectedRoute>
+                    <PredictiveMaintenance />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cocimientos/calidad"
+                element={
+                  <ProtectedRoute>
+                    <QualityConsistency />
                   </ProtectedRoute>
                 }
               />

@@ -22,6 +22,7 @@ interface ChartTooltipProps {
     className?: string;
     indicator?: "line" | "dot" | "dashed";
     hideLabel?: boolean;
+    valueSuffix?: string | ((value: any, name: string) => string);
 }
 
 export const ChartTooltip = memo(function ChartTooltip({
@@ -31,6 +32,7 @@ export const ChartTooltip = memo(function ChartTooltip({
     className,
     indicator = "dot",
     hideLabel = false,
+    valueSuffix,
 }: ChartTooltipProps) {
     if (!active || !payload || payload.length === 0) {
         return null;
@@ -70,7 +72,14 @@ export const ChartTooltip = memo(function ChartTooltip({
                                     {typeof item.value === 'number'
                                         ? item.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
                                         : item.value}
-                                    {item.unit && <span className="text-xs ml-0.5 text-muted-foreground">{item.unit}</span>}
+                                    
+                                    {(item.unit || item.payload?.unit) ? (
+                                        <span className="text-xs ml-0.5 text-muted-foreground">{item.unit || item.payload?.unit}</span>
+                                    ) : valueSuffix ? (
+                                        <span className="text-xs ml-0.5 text-muted-foreground">
+                                            {typeof valueSuffix === 'function' ? valueSuffix(item.value, item.name) : valueSuffix}
+                                        </span>
+                                    ) : null}
                                 </span>
                             </div>
                         </div>

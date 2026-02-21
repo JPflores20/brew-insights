@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChartType } from "@/types";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 
 const TOOLTIP_STYLE = {
   backgroundColor: "hsl(var(--popover))",
@@ -56,7 +57,7 @@ export function BatchComparisonChart({
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis {...AXIS_PROPS} />
                 <YAxis label={{ value: "Minutos", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "hsl(var(--muted)/0.2)" }} />
+                <Tooltip content={<ChartTooltip valueSuffix="min" />} cursor={{ fill: "hsl(var(--muted)/0.2)" }} />
                 <Legend wrapperStyle={{ paddingTop: "20px" }} />
                 <Bar dataKey={batchA} fill="hsl(var(--primary))" name={nameA} radius={[4, 4, 0, 0]} />
                 <Bar dataKey={batchB} fill="#3b82f6" name={nameB} radius={[4, 4, 0, 0]} />
@@ -66,7 +67,7 @@ export function BatchComparisonChart({
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis {...AXIS_PROPS} />
                 <YAxis label={{ value: "Minutos", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip content={<ChartTooltip valueSuffix="min" />} />
                 <Legend wrapperStyle={{ paddingTop: "20px" }} />
                 <Line type="monotone" dataKey={batchA} stroke="hsl(var(--primary))" strokeWidth={2} name={`Lote ${batchA}`} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 <Line type="monotone" dataKey={batchB} stroke="#3b82f6" strokeWidth={2} name={`Lote ${batchB}`} dot={{ r: 4 }} activeDot={{ r: 6 }} />
@@ -86,7 +87,7 @@ export function BatchComparisonChart({
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis {...AXIS_PROPS} />
                 <YAxis label={{ value: "Minutos", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }} tick={{ fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip content={<ChartTooltip valueSuffix="min" />} />
                 <Legend wrapperStyle={{ paddingTop: "20px" }} />
                 <Area type="monotone" dataKey={batchA} stroke="hsl(var(--primary))" fill="url(#colorBatchA)" fillOpacity={0.4} name={`Lote ${batchA}`} />
                 <Area type="monotone" dataKey={batchB} stroke="#3b82f6" fill="url(#colorBatchB)" fillOpacity={0.4} name={`Lote ${batchB}`} />
@@ -99,7 +100,7 @@ export function BatchComparisonChart({
                 <Radar name={`Lote ${batchA}`} dataKey={batchA} stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
                 <Radar name={`Lote ${batchB}`} dataKey={batchB} stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} />
                 <Legend />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip content={<ChartTooltip valueSuffix="min" />} />
               </RadarChart>
             )}
           </ResponsiveContainer>

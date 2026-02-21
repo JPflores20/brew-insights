@@ -74,7 +74,7 @@ export function ProductPieChart({ data, totalBatches, expanded = false }: Produc
                     />
                 </Pie>
                 <RechartsTooltip
-                    content={<ChartTooltip indicator="dot" />}
+                    content={<ChartTooltip indicator="dot" valueSuffix=" lotes" />}
                 />
             </PieChart>
         </ResponsiveContainer>
