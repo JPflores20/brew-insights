@@ -139,10 +139,13 @@ export default function Login() {
           </form>
         </CardContent>
 
-        <CardFooter className="flex justify-center py-6 bg-white/5 border-t border-white/5 rounded-b-xl">
+        <CardFooter className="flex flex-col justify-center py-6 bg-white/5 border-t border-white/5 rounded-b-xl gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Lock className="h-3 w-3" />
             <span>Acceso restringido a personal autorizado</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-500/50 text-center select-none">
+            Creado por: <br /> Ing. en Soft. José Luis Flores Carrillo
           </div>
         </CardFooter>
       </Card>

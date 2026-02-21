@@ -2,8 +2,8 @@
 // La página consume useFileUpload — la lógica de carga ya no vive aquí
 
 import { useState, useRef, useMemo } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { EfficiencyChart } from "@/components/dashboard/EfficiencyChart";
+import { DashboardLayout } from "@/components/layout/dashboard_layout";
+import { EfficiencyChart } from "@/components/dashboard/efficiency_chart";
 import {
   Boxes, TrendingUp, Upload, PieChart as PieChartIcon,
   Maximize2, Calendar, Info, Download, Printer,
@@ -11,26 +11,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { exportToCSV } from "@/utils/exportUtils";
-import { useData } from "@/context/DataContext";
-import { getTotalBatches, getAverageCycleDeviation, getRecipeStats } from "@/data/mockData";
+import { useToast } from "@/hooks/use_toast";
+import { exportToCSV } from "@/utils/export_utils";
+import { useData } from "@/context/data_context";
+import { getTotalBatches, getAverageCycleDeviation, getRecipeStats } from "@/data/mock_data";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useReactToPrint } from "react-to-print";
 
 // Components
-import { ProductPieChart } from "@/components/dashboard/ProductPieChart";
+import { ProductPieChart } from "@/components/dashboard/product_pie_chart";
 import { Glossary } from "@/components/dashboard/Glossary";
-import { EmptyStateUploader } from "@/components/dashboard/EmptyStateUploader";
-import { MetricCard } from "@/components/ui/MetricCard";
-import { AnimatedPage } from "@/components/layout/AnimatedPage";
-import { LoadingState } from "@/components/ui/LoadingState";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { EmptyStateUploader } from "@/components/dashboard/empty_state_uploader";
+import { MetricCard } from "@/components/ui/metric_card";
+import { AnimatedPage } from "@/components/layout/animated_page";
+import { LoadingState } from "@/components/ui/loading_state";
+import { DatePickerWithRange } from "@/components/ui/date_range_picker";
 import { DateRange } from "react-day-picker";
 
 // Hook extraído
-import { useFileUpload } from "@/hooks/useFileUpload";
+import { useFileUpload } from "@/hooks/use_file_upload";
 
 export default function Overview() {
   const { data, setData } = useData();

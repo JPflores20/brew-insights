@@ -4,23 +4,23 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { DataProvider } from "./context/DataContext";
-import { AuthProvider } from "./context/AuthContext"; 
-import { ProtectedRoute } from "./components/ProtectedRoute"; 
+import { DataProvider } from "./context/data_context";
+import { AuthProvider } from "./context/auth_context"; 
+import { ProtectedRoute } from "./components/protected_route"; 
 import Login from "./pages/Login"; 
 
 // Importar nuevas páginas
-import MainMenu from "./pages/MainMenu";
-import ColdBlock from "./pages/ColdBlock";
+import MainMenu from "./pages/main_menu";
+import ColdBlock from "./pages/cold_block";
 
 import Overview from "./pages/Overview";
-import MachineDetail from "./pages/MachineDetail";
-import BatchComparison from "./pages/BatchComparison";
-import CycleAnalysis from "./pages/CycleAnalysis";
-import RecipeAnalysis from "./pages/RecipeAnalysis";
-import PredictiveMaintenance from "./pages/PredictiveMaintenance";
-import QualityConsistency from "./pages/QualityConsistency";
-import NotFound from "./pages/NotFound";
+import MachineDetail from "./pages/machine_detail";
+import BatchComparison from "./pages/batch_comparison";
+import CycleAnalysis from "./pages/cycle_analysis";
+import RecipeAnalysis from "./pages/recipe_analysis";
+import PredictiveMaintenance from "./pages/predictive_maintenance";
+import QualityConsistency from "./pages/quality_consistency";
+import NotFound from "./pages/not_found";
 
 const queryClient = new QueryClient();
 
