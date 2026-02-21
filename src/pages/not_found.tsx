@@ -1,13 +1,10 @@
-import { useLocation, Link } from "react-router-dom"; // Agregué Link para navegación interna más rápida
+import { useLocation, Link } from "react-router-dom"; 
 import { useEffect } from "react";
-
 const NotFound = () => {
   const location = useLocation();
-
   useEffect(() => {
     console.error("404 Error: Intento de acceso a ruta inexistente:", location.pathname);
   }, [location.pathname]);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted">
       <div className="text-center">
@@ -20,5 +17,4 @@ const NotFound = () => {
     </div>
   );
 };
-
 export default NotFound;

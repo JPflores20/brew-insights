@@ -5,13 +5,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Target, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FILTER_ALL } from "@/lib/constants";
 
 interface RecipeWasteTrafficLightProps {
   data: BatchRecord[];
   onSelectRecipe: (recipe: string | 'ALL') => void;
   selectedRecipe: string | 'ALL';
 }
-
 interface RecipeWasteStatus {
     name: string;
     totalExpected: number;
@@ -20,35 +20,26 @@ interface RecipeWasteStatus {
     percentDeviation: number;
     status: "good" | "warning" | "danger" | "no-data";
 }
-
 export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }: RecipeWasteTrafficLightProps) {
-  
   const recipeData: RecipeWasteStatus[] = useMemo(() => {
     const rawMap = new Map<string, { exp: number, real: number }>();
-    
-    // Agrupar
     data.forEach(batch => {
         const name = batch.productName || "Desconocido";
         if (!rawMap.has(name)) rawMap.set(name, { exp: 0, real: 0 });
-        
         const current = rawMap.get(name)!;
         batch.materials.forEach(mat => {
             current.exp += mat.totalExpected;
             current.real += mat.totalReal;
         });
     });
-
-    // Calcular estatus
     const result: RecipeWasteStatus[] = [];
     rawMap.forEach((vals, name) => {
         const delta = vals.real - vals.exp;
         const pct = vals.exp > 0 ? (delta / vals.exp) * 100 : 0;
-        
         let status: RecipeWasteStatus["status"] = "good";
         if (vals.exp === 0) status = "no-data";
         else if (pct > 5) status = "danger";
         else if (pct > 2) status = "warning";
-
         result.push({
             name,
             totalExpected: vals.exp,
@@ -58,10 +49,8 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
             status
         });
     });
-
     return result.sort((a,b) => b.percentDeviation - a.percentDeviation);
   }, [data]);
-
   const getStatusColor = (status: RecipeWasteStatus["status"]) => {
       switch(status) {
           case "danger": return "bg-red-500/10 text-red-600 border-red-500/20";
@@ -70,7 +59,6 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
           default: return "bg-gray-500/10 text-gray-600 border-gray-500/20";
       }
   };
-
   const getStatusIcon = (status: RecipeWasteStatus["status"]) => {
       switch(status) {
           case "danger": return <AlertCircle className="w-5 h-5 text-red-500" />;
@@ -79,7 +67,6 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
           default: return null;
       }
   };
-
   return (
     <Card className="glass shadow-inner overflow-hidden border-t-4 border-t-amber-500/50">
         <CardHeader className="pb-4">
@@ -93,12 +80,12 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
         </CardHeader>
         <CardContent>
             <div className="flex flex-wrap gap-4">
-                {/* Botón para ver "Todo" */}
+                {}
                 <div 
-                    onClick={() => onSelectRecipe("ALL")}
+                    onClick={() => onSelectRecipe(FILTER_ALL)}
                     className={cn(
                         "cursor-pointer p-4 rounded-xl border transition-all hover:shadow-md flex items-center justify-between min-w-[200px]",
-                        selectedRecipe === "ALL" ? "ring-2 ring-primary bg-primary/5" : "bg-card"
+                        selectedRecipe === FILTER_ALL ? "ring-2 ring-primary bg-primary/5" : "bg-card"
                     )}
                 >
                     <div className="flex flex-col">
@@ -108,7 +95,6 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
                         </span>
                     </div>
                 </div>
-
                 {recipeData.map(r => (
                     <Tooltip key={r.name}>
                         <TooltipTrigger asChild>

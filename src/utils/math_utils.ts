@@ -5,107 +5,80 @@ export interface AlertData {
   stepName: string;
   slope: number;
   recentAvg: number;
-  percentIncrease: number; // vs initial avg
+  percentIncrease: number;
 }
 
-export function calculateDegradationAlerts(data: BatchRecord[]): AlertData[] {
-  // Sort data chronologically to analyze trends over time
-  const sortedData = [...data].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+const UNKNOWN_MACHINE = "Desconocida";
+const UNKNOWN_PRODUCT = "Desconocido";
+const KEY_DELIMITER = ":::";
 
-  // Map to store durations per Machine -> Step
+const sortChronologically = (data: BatchRecord[]) =>
+  [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+const buildMachineStepHistoryMap = (data: BatchRecord[]) => {
   const historyMap = new Map<string, number[]>();
-
-  sortedData.forEach((batch) => {
-    const machine = batch.TEILANL_GRUPO || "Desconocida";
-    
+  data.forEach((batch) => {
+    const machine = batch.TEILANL_GRUPO || UNKNOWN_MACHINE;
     batch.steps.forEach((step) => {
-      const key = `${machine}:::${step.stepName}`;
-      
-      if (!historyMap.has(key)) {
-        historyMap.set(key, []);
-      }
-      
+      const key = `${machine}${KEY_DELIMITER}${step.stepName}`;
+      if (!historyMap.has(key)) historyMap.set(key, []);
       historyMap.get(key)!.push(step.durationMin);
     });
   });
+  return historyMap;
+};
 
+const calculateLinearRegressionSlope = (durations: number[]) => {
+  const count = durations.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (let i = 0; i < count; i++) {
+    sumX += i;
+    sumY += durations[i];
+    sumXY += i * durations[i];
+    sumXX += i * i;
+  }
+  return (count * sumXY - sumX * sumY) / Math.max(1, count * sumXX - sumX * sumX);
+};
+
+const calculatePeriodAverages = (durations: number[]) => {
+  const count = durations.length;
+  const firstThirdEnd = Math.max(1, Math.floor(count / 3));
+  const lastThirdStart = count - firstThirdEnd;
+  
+  const sumFirst = durations.slice(0, firstThirdEnd).reduce((a, b) => a + b, 0);
+  const firstAverage = sumFirst / firstThirdEnd;
+  
+  const sumLast = durations.slice(lastThirdStart).reduce((a, b) => a + b, 0);
+  const lastAverage = sumLast / firstThirdEnd;
+  
+  const percentIncrease = firstAverage > 0 ? ((lastAverage - firstAverage) / firstAverage) * 100 : 0;
+  
+  return { lastAverage, percentIncrease };
+};
+
+export function calculateDegradationAlerts(data: BatchRecord[]): AlertData[] {
+  const sortedData = sortChronologically(data);
+  const historyMap = buildMachineStepHistoryMap(sortedData);
   const activeAlerts: AlertData[] = [];
 
   historyMap.forEach((durations, key) => {
-    // Need at least 5 points to determine a trend
     if (durations.length < 5) return;
+    
+    const slope = calculateLinearRegressionSlope(durations);
+    const { lastAverage, percentIncrease } = calculatePeriodAverages(durations);
 
-    // Simple linear regression to find slope
-    const dataPointsCount = durations.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-
-    for (let i = 0; i < dataPointsCount; i++) {
-      sumX += i;
-      sumY += durations[i];
-      sumXY += i * durations[i];
-      sumXX += i * i;
-    }
-
-    const slope =
-      (dataPointsCount * sumXY - sumX * sumY) / 
-      (dataPointsCount * sumXX - sumX * sumX);
-
-    // If slope is strongly positive, there is a degradation trend (increasing time)
-    // Compare the first third vs last third of the data for a percentage increase.
-    const firstThirdEnd = Math.max(1, Math.floor(dataPointsCount / 3));
-    const lastThirdStart = dataPointsCount - firstThirdEnd;
-
-    const firstAverage =
-      durations.slice(0, firstThirdEnd).reduce((a, b) => a + b, 0) /
-      firstThirdEnd;
-      
-    const lastAverage =
-      durations.slice(lastThirdStart).reduce((a, b) => a + b, 0) /
-      firstThirdEnd;
-
-    const percentIncrease = firstAverage > 0 
-      ? ((lastAverage - firstAverage) / firstAverage) * 100 
-      : 0;
-
-    // Flag if duration increased by more than 5% and slope is positive
     if (percentIncrease > 5 && slope > 0) {
-      const [machine, stepName] = key.split(":::");
-      
-      activeAlerts.push({
-        machine,
-        stepName,
-        slope,
-        recentAvg: lastAverage,
-        percentIncrease: percentIncrease,
-      });
+      const [machine, stepName] = key.split(KEY_DELIMITER);
+      activeAlerts.push({ machine, stepName, slope, recentAvg: lastAverage, percentIncrease });
     }
   });
 
-  // Sort alerts by highest percent increase
-  return activeAlerts
-    .sort((a, b) => b.percentIncrease - a.percentIncrease)
-    .slice(0, 6); // Max 6 alerts
+  return activeAlerts.sort((a, b) => b.percentIncrease - a.percentIncrease).slice(0, 6);
 }
 
-// ==========================================
-// EFFICIENCY CHART LOGIC
-// ==========================================
-
 export const PROCESS_ORDER = [
-  "molienda",
-  "grits",
-  "cocedor",
-  "macerador",
-  "filtro",
-  "olla",
-  "whirlpool",
-  "trub",
-  "enfriador",
-  "ve",
-  "tanque",
-  "linea"
+  "molienda", "grits", "cocedor", "macerador", "filtro", 
+  "olla", "whirlpool", "trub", "enfriador", "ve", "tanque", "linea"
 ];
 
 export function getSortIndex(name: string): number {
@@ -138,16 +111,12 @@ export function calculateEfficiencyData(
     }));
 }
 
-// ==========================================
-// QUALITY CONTROL CHART LOGIC (I-CHART)
-// ==========================================
-
-export function extractProductParams(data: BatchRecord[]) {
+const buildProductParamsSets = (data: BatchRecord[]) => {
   const productsSet = new Set<string>();
   const productParamsMap = new Map<string, Set<string>>();
 
   data.forEach((batch) => {
-    const prod = batch.productName || "Desconocido";
+    const prod = batch.productName || UNKNOWN_PRODUCT;
     productsSet.add(prod);
     
     if (!productParamsMap.has(prod)) {
@@ -156,15 +125,21 @@ export function extractProductParams(data: BatchRecord[]) {
     
     const currentParams = productParamsMap.get(prod)!;
     batch.parameters.forEach((p) => {
-      currentParams.add(`${p.name} ::: ${p.stepName}`);
+      currentParams.add(`${p.name} ${KEY_DELIMITER} ${p.stepName}`);
     });
   });
 
+  return { productsSet, productParamsMap };
+};
+
+export function extractProductParams(data: BatchRecord[]) {
+  const { productsSet, productParamsMap } = buildProductParamsSets(data);
   const processedMap = new Map<string, string[]>();
+  
   productParamsMap.forEach((params, prod) => {
     processedMap.set(prod, Array.from(params).sort());
   });
-
+  
   return {
     products: Array.from(productsSet).sort(),
     productParamsMap: processedMap
@@ -173,40 +148,18 @@ export function extractProductParams(data: BatchRecord[]) {
 
 export interface ControlChartResult {
   items: any[];
-  stats: {
-    mean: number;
-    sigma: number;
-    UCL: number;
-    LCL: number;
-    count: number;
-  } | null;
+  stats: { mean: number; sigma: number; UCL: number; LCL: number; count: number; } | null;
   outOfControlCount: number;
 }
 
-export function calculateControlChartData(
-  data: BatchRecord[],
-  selectedProduct: string,
-  selectedParam: string
-): ControlChartResult {
-  if (!selectedProduct || !selectedParam) {
-    return { items: [], stats: null, outOfControlCount: 0 };
-  }
-
-  const [paramName, paramStep] = selectedParam.split(" ::: ");
-  
-  const sortedData = [...data].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-
+const extractParamValues = (sortedData: BatchRecord[], selectedProduct: string, paramName: string, paramStep: string) => {
   const rawItems: any[] = [];
   const values: number[] = [];
 
   sortedData.forEach((batch) => {
     if (batch.productName !== selectedProduct) return;
     
-    const param = batch.parameters.find(
-      (p) => p.name === paramName && p.stepName === paramStep
-    );
+    const param = batch.parameters.find(p => p.name === paramName && p.stepName === paramStep);
     
     if (param && typeof param.value === 'number') {
       rawItems.push({
@@ -219,38 +172,59 @@ export function calculateControlChartData(
     }
   });
 
-  if (values.length === 0) {
-    return { items: [], stats: null, outOfControlCount: 0 };
-  }
+  return { rawItems, values };
+};
 
-  // Calculate Mean and Sigma
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
+const calculateStatisticalBounds = (values: number[]) => {
+  const count = values.length;
+  if (count === 0) return null;
+
+  const mean = values.reduce((a, b) => a + b, 0) / count;
+  const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / count;
   const sigma = Math.sqrt(variance);
+  
+  return { mean, sigma, UCL: mean + 3 * sigma, LCL: mean - 3 * sigma, count };
+};
 
-  // Six Sigma Limits (± 3 std dev)
-  const UCL = mean + 3 * sigma;
-  const LCL = mean - 3 * sigma;
-
+const mapControlChartItems = (rawItems: any[], bounds: { mean: number; UCL: number; LCL: number }) => {
   let outOfControlCount = 0;
-
+  
   const items = rawItems.map((item) => {
-    const isAnomaly = item.value > UCL || item.value < LCL;
+    const isAnomaly = item.value > bounds.UCL || item.value < bounds.LCL;
     if (isAnomaly) outOfControlCount++;
     
     return {
       ...item,
       "Valor Real": parseFloat(item.value.toFixed(2)),
-      "Media": parseFloat(mean.toFixed(2)),
-      "LCS (+3σ)": parseFloat(UCL.toFixed(2)),
-      "LCI (-3σ)": parseFloat(LCL.toFixed(2)),
+      "Media": parseFloat(bounds.mean.toFixed(2)),
+      "LCS (+3σ)": parseFloat(bounds.UCL.toFixed(2)),
+      "LCI (-3σ)": parseFloat(bounds.LCL.toFixed(2)),
       isAnomaly
     };
   });
 
-  return { 
-    items, 
-    stats: { mean, sigma, UCL, LCL, count: values.length },
-    outOfControlCount
-  };
+  return { items, outOfControlCount };
+};
+
+export function calculateControlChartData(
+  data: BatchRecord[],
+  selectedProduct: string,
+  selectedParam: string
+): ControlChartResult {
+  if (!selectedProduct || !selectedParam) {
+    return { items: [], stats: null, outOfControlCount: 0 };
+  }
+
+  const [paramName, paramStep] = selectedParam.split(` ${KEY_DELIMITER} `);
+  const sortedData = sortChronologically(data);
+  const { rawItems, values } = extractParamValues(sortedData, selectedProduct, paramName, paramStep);
+  
+  const stats = calculateStatisticalBounds(values);
+  if (!stats) {
+    return { items: [], stats: null, outOfControlCount: 0 };
+  }
+
+  const { items, outOfControlCount } = mapControlChartItems(rawItems, stats);
+
+  return { items, stats, outOfControlCount };
 }

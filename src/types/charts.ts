@@ -1,11 +1,9 @@
 export interface TemperaturePoint {
-  time: number; // Minutos desde el inicio
+  time: number; 
   stepName: string;
   [key: string]: number | string;
 }
-
 export type ChartType = "bar" | "line" | "area" | "radar" | "composed";
-
 export interface SeriesItem {
   id: string;
   recipe: string;

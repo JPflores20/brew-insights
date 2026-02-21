@@ -1,31 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll_area";
-import { AlertTriangle, Clock, ArrowRight, Timer } from "lucide-react"; // Usamos Timer para delays
+import { AlertTriangle, Clock, ArrowRight, Timer } from "lucide-react"; 
 import { getDelayAlerts, BatchRecord } from "@/data/mock_data";
 import { useNavigate } from "react-router-dom"; 
-
 interface AlertsWidgetProps {
   data: BatchRecord[];
 }
-
 export function AlertsWidget({ data }: AlertsWidgetProps) {
   const alerts = getDelayAlerts(data, 30);
   const navigate = useNavigate();
-
   const handleAlertClick = (batchId: string, machine: string) => {
-    // Guardamos la selección para que al entrar al detalle cargue este lote
     window.localStorage.setItem("detail-batch-selection-v2", JSON.stringify(batchId));
     window.localStorage.setItem("detail-machine-selection-v2", JSON.stringify(machine));
-    
     navigate("/machine");
   };
-
   return (
     <Card className="bg-card border-border h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-          {/* Cambiamos a Naranja para ser consistentes con "Retraso" en la otra vista */}
+          {}
           <Timer className="h-5 w-5 text-orange-500" />
           Alertas de Retraso
           <Badge variant="outline" className="ml-auto border-orange-500/50 text-orange-600 font-bold">
@@ -48,7 +42,6 @@ export function AlertsWidget({ data }: AlertsWidgetProps) {
               {alerts.map((alert, index) => (
                 <div 
                   key={`${alert.CHARG_NR}-${alert.TEILANL_GRUPO}-${index}`}
-                  // Estilos interactivos para indicar que es clicable
                   className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/20 group cursor-pointer hover:bg-orange-500/10 transition-all duration-200"
                   onClick={() => handleAlertClick(alert.CHARG_NR, alert.TEILANL_GRUPO)}
                 >
@@ -66,7 +59,6 @@ export function AlertsWidget({ data }: AlertsWidgetProps) {
                         {alert.TEILANL_GRUPO}
                       </p>
                     </div>
-                    
                     <div className="flex items-center gap-2">
                       <Badge 
                         variant="outline" 
@@ -78,7 +70,6 @@ export function AlertsWidget({ data }: AlertsWidgetProps) {
                       <ArrowRight className="h-4 w-4 text-orange-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
                     </div>
                   </div>
-                  
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground border-t border-orange-500/10 pt-2">
                     <span>Esperado: {alert.esperado_total_min}m</span>
                     <span className="font-medium text-orange-700/70">Real: {alert.real_total_min}m</span>

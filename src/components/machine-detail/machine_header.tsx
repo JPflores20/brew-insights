@@ -1,15 +1,12 @@
 import { Badge } from "@/components/ui/badge";
-
 interface MachineHeaderProps {
   selectedBatchId?: string;
   selectedMachine?: string;
   onExport?: () => void;
   onPrint?: () => void;
 }
-
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
-
 export function MachineHeader({ selectedBatchId, selectedMachine, onExport, onPrint }: MachineHeaderProps) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4 print:hidden">
@@ -21,7 +18,6 @@ export function MachineHeader({ selectedBatchId, selectedMachine, onExport, onPr
           Selecciona un lote o revisa las sugerencias automáticas
         </p>
       </div>
-
       <div className="flex items-center gap-2">
         {onPrint && (
            <Button variant="outline" size="sm" onClick={onPrint} className="h-8">

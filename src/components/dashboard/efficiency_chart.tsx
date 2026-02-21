@@ -35,32 +35,22 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll_area";
-
 interface EfficiencyChartProps {
   data: BatchRecord[];
   className?: string;
   titleClassName?: string;
 }
-
 import { calculateEfficiencyData } from "@/utils/math_utils";
-
 export function EfficiencyChart({ data, className, titleClassName }: EfficiencyChartProps) {
-  // 1. Preparamos los datos base ORDENADOS
   const allChartData = useMemo(() => {
     const rawAverages = getAveragesByMachine(data);
     return calculateEfficiencyData(rawAverages);
   }, [data]);
-
-  // 2. Estado para el Filtro de Equipos
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
-
-  // 3. Datos Filtrados
   const filteredData = useMemo(() => {
       if (selectedMachines.length === 0) return allChartData;
       return allChartData.filter(d => selectedMachines.includes(d.machine));
   }, [allChartData, selectedMachines]);
-
-  // Manejador de selección de equipos
   const toggleMachine = (machineName: string) => {
       setSelectedMachines(prev => 
           prev.includes(machineName) 
@@ -68,18 +58,15 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
               : [...prev, machineName]
       );
   };
-
   const clearFilter = () => setSelectedMachines([]);
-
   return (
     <Card className="bg-card border-border h-full flex flex-col overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className={cn("text-lg font-semibold text-foreground", titleClassName)}>
           Eficiencia Promedio por Grupo
         </CardTitle>
-        
         <div className="flex items-center gap-2">
-            {/* Filtro de Equipos */}
+            {}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-1 hidden sm:flex">
@@ -120,7 +107,6 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
             </DropdownMenu>
         </div>
       </CardHeader>
-      
       <CardContent className="flex-1 min-h-0 overflow-hidden p-0">
         <Tabs defaultValue="bar" className="h-full flex flex-col">
             <div className="px-6 pb-2 border-b">
@@ -130,9 +116,8 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                     <TabsTrigger value="table" className="text-xs"><TableIcon className="w-3 h-3 mr-2"/> Tabla</TabsTrigger>
                 </TabsList>
             </div>
-
             <div className={cn("flex-1 w-full min-h-0 relative p-4", className)}>
-                {/* VISTA BARRAS */}
+                {}
                 <TabsContent value="bar" className="h-full mt-0 data-[state=active]:flex flex-col">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
@@ -163,8 +148,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                     </BarChart>
                   </ResponsiveContainer>
                 </TabsContent>
-
-                {/* VISTA LINEAS */}
+                {}
                 <TabsContent value="line" className="h-full mt-0 data-[state=active]:flex flex-col">
                    <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -194,8 +178,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                     </LineChart>
                   </ResponsiveContainer>
                 </TabsContent>
-
-                {/* VISTA TABLA */}
+                {}
                 <TabsContent value="table" className="h-full mt-0 data-[state=active]:flex flex-col overflow-hidden">
                     <ScrollArea className="h-full w-full rounded-md border">
                         <Table>

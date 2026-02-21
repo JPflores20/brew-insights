@@ -7,11 +7,7 @@ import { exportToCSV } from "@/utils/export_utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use_toast";
 import { useReactToPrint } from "react-to-print";
-
-// Hook
 import { useMachineDetail } from "@/hooks/use_machine_detail";
-
-// Sub-components
 import { MachineHeader } from "@/components/machine-detail/machine_header";
 import { GlobalFilters } from "@/components/machine-detail/global_filters";
 import { MachineKPIs } from "@/components/machine-detail/machine_kpis";
@@ -20,13 +16,9 @@ import { AnomaliesList } from "@/components/machine-detail/anomalies_list";
 import { MachineHistoryChart } from "@/components/machine-detail/machine_history_chart";
 import { TemperatureTrendChart } from "@/components/machine-detail/temperature_trend_chart";
 import { GlobalTimeline } from "@/components/machine-detail/global_timeline";
-
 import { MachineryTab } from "@/components/machine-detail/machinery_tab";
-
-// UI Enhancements
 import { AnimatedPage } from "@/components/layout/animated_page";
 import { LoadingState } from "@/components/ui/loading_state";
-
 export default function MachineDetail() {
   const {
     data,
@@ -70,9 +62,7 @@ export default function MachineDetail() {
     loadSuggestion,
     isPending
   } = useMachineDetail();
-
   const componentRef = useRef<HTMLDivElement>(null);
-
   const handlePrint = useReactToPrint({
       contentRef: componentRef,
       documentTitle: `Detalle_Maquina_${selectedMachine || 'Global'}_${format(new Date(), 'yyyy-MM-dd_HHmm')}`,
@@ -84,22 +74,16 @@ export default function MachineDetail() {
         }
       `
   });
-
   const { toast } = useToast();
-
   const handleExport = () => {
     if (!data || data.length === 0) return;
-
-    // Filter by selected machine if filtered
     const dataToExport = selectedMachine
       ? data.filter(d => d.TEILANL_GRUPO === selectedMachine)
       : data;
-
     if (dataToExport.length === 0) {
       toast({ title: "Sin datos", description: "No hay datos para la selección actual.", variant: "destructive" });
       return;
     }
-
     const exportData = dataToExport.map(d => ({
       "Lote": d.CHARG_NR,
       "Grupo Equipo": d.TEILANL_GRUPO,
@@ -110,11 +94,9 @@ export default function MachineDetail() {
       "Delta (min)": d.delta_total_min,
       "Alertas": d.alerts.length
     }));
-
     exportToCSV(exportData, `BrewCycle_Machine_${selectedMachine || 'All'}_${format(new Date(), 'yyyyMMdd_HHmm')}`);
     toast({ title: "Exportación exitosa", description: "Datos exportados correctamente." });
   };
-
   if (!data) {
     return (
       <DashboardLayout>
@@ -122,7 +104,6 @@ export default function MachineDetail() {
       </DashboardLayout>
     );
   }
-
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -142,7 +123,6 @@ export default function MachineDetail() {
       </DashboardLayout>
     );
   }
-
   return (
     <DashboardLayout>
       <AnimatedPage className="space-y-6 pb-12">
@@ -152,7 +132,6 @@ export default function MachineDetail() {
           onExport={handleExport}
           onPrint={handlePrint}
         />
-
         <div className="print:hidden">
             <GlobalFilters
             selectedRecipe={selectedRecipe}
@@ -164,17 +143,15 @@ export default function MachineDetail() {
             batchProductMap={batchProductMap}
             />
         </div>
-
-        {/* Printable Content Wrapper */}
+        {}
         <div ref={componentRef}>
-            {/* Title for Print View Only */}
+            {}
             <div className="hidden print:block mb-6">
                 <h1 className="text-3xl font-bold text-black mb-2">Reporte de Detalle de Máquina</h1>
                 <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
                 {selectedMachine && <p className="text-lg mt-2 text-black">Equipo: <strong>{selectedMachine}</strong></p>}
                 {selectedBatchId && <p className="text-lg text-black">Lote: <strong>{selectedBatchId}</strong></p>}
             </div>
-
             <div className={isPending ? "opacity-50 pointer-events-none transition-opacity duration-200" : "transition-opacity duration-200"}>
             <Tabs
                 value={activeTab}
@@ -203,7 +180,6 @@ export default function MachineDetail() {
                     </TabsTrigger>
                 </TabsList>
                 </div>
-
                 <TabsContent
                 value="machine-view"
                 className="space-y-6 outline-none"
@@ -215,7 +191,6 @@ export default function MachineDetail() {
                     currentGap={currentGap}
                     currentIdle={currentIdle}
                 />
-
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                     <motion.div
                     className="xl:col-span-8 space-y-6"
@@ -230,7 +205,6 @@ export default function MachineDetail() {
                         selectedMachine={selectedMachine}
                     />
                     </motion.div>
-
                     <motion.div
                     className="xl:col-span-4"
                     initial={{ opacity: 0, x: 20 }}
@@ -242,7 +216,6 @@ export default function MachineDetail() {
                     </div>
                     </motion.div>
                 </div>
-
                 <motion.div
                     className="space-y-6"
                     initial={{ opacity: 0, y: 20 }}
@@ -256,7 +229,6 @@ export default function MachineDetail() {
                     trendBatch={trendBatch}
                     selectedMachine={selectedMachine}
                     />
-
                     <TemperatureTrendChart
                     data={tempTrendData}
                     trendBatch={trendBatch}
@@ -278,7 +250,6 @@ export default function MachineDetail() {
                     />
                 </motion.div>
                 </TabsContent>
-
                 <TabsContent
                 value="global-view"
                 className="space-y-6 outline-none"
@@ -294,7 +265,6 @@ export default function MachineDetail() {
                     />
                 </motion.div>
                 </TabsContent>
-
                 <TabsContent
                 value="machinery"
                 className="space-y-6 outline-none"
@@ -305,8 +275,6 @@ export default function MachineDetail() {
                   />
                 </TabsContent>
             </Tabs>
-
-
             </div>
         </div>
       </AnimatedPage>

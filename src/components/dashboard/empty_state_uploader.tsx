@@ -2,46 +2,32 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Beer, FileSpreadsheet, Files, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 interface EmptyStateUploaderProps {
     loading: boolean;
     uploadProgress: number;
     onFilesSelected: (files: File[]) => void;
 }
-
 export function EmptyStateUploader({
     loading,
     uploadProgress,
     onFilesSelected,
 }: EmptyStateUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
-
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (!loading) setIsDragging(true);
     };
-
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
     };
-
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
         if (loading) return;
-
         const droppedFiles = Array.from(e.dataTransfer.files);
-        // Filter logic can be done here or in parent. Let's pass all and let parent decide or filter here.
-        // Parent logic had filtering for .xlsx. I'll filter here to be safe or just pass.
-        // The original code filtered in handleDrop.
-        // Let's pass all files and let the parent handle validation/toasts?
-        // Actually better to keep validation in parent?
-        // Parent expects explicit calls.
-        // Let's filter here to match the "Drag and drop" experience, but maybe pass all to `onFilesSelected` and let parent validate.
         onFilesSelected(droppedFiles);
     };
-
     const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
@@ -49,7 +35,6 @@ export function EmptyStateUploader({
         }
         e.target.value = "";
     };
-
     return (
         <div
             className={cn(
@@ -83,7 +68,6 @@ export function EmptyStateUploader({
                             <div className="w-[200%] h-full bg-[radial-gradient(circle,white_60%,transparent_65%)] bg-[length:40px_50px] relative -top-2 -left-10 animate-[spin_3s_linear_reverse_infinite]"></div>
                         </div>
                     </div>
-
                     <div className="relative z-10 flex flex-col items-center space-y-4 p-8 rounded-2xl bg-background/20 backdrop-blur-md border border-white/20 shadow-2xl animate-in fade-in zoom-in duration-500">
                         <div className="relative">
                             <Beer
@@ -120,7 +104,6 @@ export function EmptyStateUploader({
                             <FileSpreadsheet className="h-16 w-16 text-primary" />
                         )}
                     </div>
-
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-tight">
                             Cargar Datos de Producción
@@ -131,7 +114,6 @@ export function EmptyStateUploader({
                                 : "Arrastra hasta 4 archivos DBF aquí, o selecciona para empezar."}
                         </p>
                     </div>
-
                     <div className="flex flex-col items-center gap-4">
                         <Button
                             size="lg"

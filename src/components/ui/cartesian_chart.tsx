@@ -6,7 +6,6 @@ import {
   ComposedChart, 
   AreaChart 
 } from "recharts";
-
 export interface CartesianChartProps {
   data: any[];
   chartType?: "bar" | "line" | "area" | "composed";
@@ -17,7 +16,6 @@ export interface CartesianChartProps {
   height?: string | number;
   children: ReactNode;
 }
-
 export function CartesianChart({
   data,
   chartType = "composed",
@@ -28,7 +26,6 @@ export function CartesianChart({
   height = "100%",
   children,
 }: CartesianChartProps) {
-  
   const renderChart = () => {
     switch (chartType) {
       case "bar":
@@ -58,7 +55,6 @@ export function CartesianChart({
         );
     }
   };
-
   return (
     <ResponsiveContainer width={width} height={height}>
       {renderChart()}

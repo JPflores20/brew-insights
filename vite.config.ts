@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -22,6 +23,11 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(process.cwd(), "./src"),
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.ts'],
+  },
   build: {
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
@@ -31,7 +37,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-recharts': ['recharts'],
           'vendor-ui': ['lucide-react', 'clsx', 'tailwind-merge', '@radix-ui/react-slot', '@radix-ui/react-toast', '@radix-ui/react-tooltip'],
           'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
-          'vendor-utils': ['date-fns', 'xlsx', 'framer-motion', '@tanstack/react-query'],
+          'vendor-utils': ['date-fns', 'framer-motion', '@tanstack/react-query'],
         },
       },
     },

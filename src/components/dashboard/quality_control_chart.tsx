@@ -16,57 +16,40 @@ import {
   ReferenceArea
 } from "recharts";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
-
 interface QualityControlChartProps {
   data: BatchRecord[];
 }
-
 import { extractProductParams, calculateControlChartData } from "@/utils/math_utils";
-
 export function QualityControlChart({ data }: QualityControlChartProps) {
-  // Extraer las combinaciones únicas de Receta -> Parámetros
   const { products, productParamsMap } = useMemo(() => {
     return extractProductParams(data);
   }, [data]);
-
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [selectedParam, setSelectedParam] = useState<string>("");
-
   useEffect(() => {
       if (!selectedProduct && products.length > 0) {
           setSelectedProduct(products[0]);
       }
   }, [products, selectedProduct]);
-
   const availableParams = useMemo(() => {
       if (!selectedProduct || !productParamsMap.has(selectedProduct)) return [];
       return productParamsMap.get(selectedProduct)!;
   }, [selectedProduct, productParamsMap]);
-
   useEffect(() => {
       if (selectedProduct && availableParams.length > 0) {
           if (!selectedParam || !availableParams.includes(selectedParam)) {
-              // try to default to something interesting like temp
               const match = availableParams.find(p => p.toLowerCase().includes('temp') || p.toLowerCase().includes('pres'));
               setSelectedParam(match || availableParams[0]);
           }
       }
   }, [selectedProduct, availableParams, selectedParam]);
-
-
-  // Calcular la data de control
   const chartInfo = useMemo(() => {
     return calculateControlChartData(data, selectedProduct, selectedParam);
   }, [data, selectedProduct, selectedParam]);
-
-
-  // Formateador para nombres de parámetros (remover el ::: visualmente)
   const formatParamName = (raw: string) => {
       if (!raw) return "";
       return raw.replace(" ::: ", " en ");
   }
-
-  // Custom dot para colorear rojo si está fuera de control
   const renderDot = (props: any) => {
       const { cx, cy, payload, key } = props;
       if (payload.isAnomaly) {
@@ -76,25 +59,18 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
       }
       return <circle key={key} cx={cx} cy={cy} r={4} fill="hsl(var(--primary))" stroke="none" />;
   };
-
-  // Calcular un dominio para Y axis que tenga un poco de padding
   const yDomain = useMemo(() => {
     if (!chartInfo.stats) return ['auto', 'auto'];
     const { UCL, LCL } = chartInfo.stats;
-    const padding = (UCL - LCL) * 0.2; // 20% padding
-    
-    // Si la varianza es extremadamente baja (ej. temperaturas exactas todas las veces), dar un padding artificial
+    const padding = (UCL - LCL) * 0.2; 
     const safePad = padding === 0 ? 5 : padding;
-
     return [
         (dataMin: number) => Math.floor(Math.min(dataMin, LCL - safePad)),
         (dataMax: number) => Math.ceil(Math.max(dataMax, UCL + safePad))
     ];
   }, [chartInfo.stats]);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
         <div className="lg:col-span-1 space-y-6">
             <Card className="bg-card shadow-sm border-border">
                 <CardHeader>
@@ -117,7 +93,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                             </SelectContent>
                         </Select>
                     </div>
-
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">Parámetro DFM (Paso)</label>
                         <Select value={selectedParam} onValueChange={setSelectedParam}>
@@ -133,7 +108,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                     </div>
                 </CardContent>
             </Card>
-
             {chartInfo.stats && (
                 <Card className="bg-card shadow-sm border-border">
                     <CardHeader className="pb-2">
@@ -165,7 +139,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                                 </div>
                             </div>
                         </div>
-
                         {chartInfo.outOfControlCount > 0 ? (
                             <Badge variant="outline" className="w-full justify-center bg-red-500/10 text-red-600 border-red-500/20 py-1">
                                 Proceso Fuera de Control
@@ -179,7 +152,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                 </Card>
             )}
         </div>
-
         <div className="lg:col-span-3">
             <Card className="bg-card shadow-sm border-border h-full flex flex-col">
             <CardHeader>
@@ -188,7 +160,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                     Monitoreo de la estabilidad del proceso. Puntos rojos indican lotes fuera del rango ±3 Sigma (Límites Estadísticos).
                 </CardDescription>
             </CardHeader>
-            
             <CardContent className="flex-1 min-h-[400px]">
                 {chartInfo.items.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -211,7 +182,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                             />
                             <Tooltip content={<ChartTooltip indicator="line" />} cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 1 }} />
                             <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                            
                             <ReferenceArea 
                                 y1={chartInfo.stats?.LCL} 
                                 y2={chartInfo.stats?.UCL} 
@@ -219,8 +189,7 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                                 fillOpacity={0.03} 
                                 strokeOpacity={0} 
                             />
-
-                            {/* Líneas de Control */}
+                            {}
                             <Line
                                 type="step"
                                 dataKey="Media"
@@ -247,8 +216,7 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                                 dot={false}
                                 activeDot={false}
                             />
-                            
-                            {/* Datos Reales */}
+                            {}
                             <Line
                                 type="monotone"
                                 dataKey="Valor Real"
@@ -257,7 +225,6 @@ export function QualityControlChart({ data }: QualityControlChartProps) {
                                 dot={renderDot}
                                 activeDot={{ r: 6, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
                             />
-
                         </ComposedChart>
                     </ResponsiveContainer>
                 ) : (

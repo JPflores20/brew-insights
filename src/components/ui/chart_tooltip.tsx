@@ -1,9 +1,5 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
-
-/** Resuelve el color real de una serie del payload de Recharts.
- *  Para Line/Area, Recharts puede pasar fill="none" o fill="url(#...)"
- *  así que priorizamos stroke primero y filtramos valores inválidos. */
 function resolveColor(item: any): string | undefined {
     const isValid = (c: unknown) =>
         typeof c === 'string' && c.length > 0 && c !== 'none' && !c.startsWith('url(');
@@ -14,7 +10,6 @@ function resolveColor(item: any): string | undefined {
         undefined
     );
 }
-
 interface ChartTooltipProps {
     active?: boolean;
     payload?: any[];
@@ -24,7 +19,6 @@ interface ChartTooltipProps {
     hideLabel?: boolean;
     valueSuffix?: string | ((value: any, name: string) => string);
 }
-
 export const ChartTooltip = memo(function ChartTooltip({
     active,
     payload,
@@ -37,7 +31,6 @@ export const ChartTooltip = memo(function ChartTooltip({
     if (!active || !payload || payload.length === 0) {
         return null;
     }
-
     return (
         <div
             className={cn(
@@ -72,7 +65,6 @@ export const ChartTooltip = memo(function ChartTooltip({
                                     {typeof item.value === 'number'
                                         ? item.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
                                         : item.value}
-                                    
                                     {(item.unit || item.payload?.unit) ? (
                                         <span className="text-xs ml-0.5 text-muted-foreground">{item.unit || item.payload?.unit}</span>
                                     ) : valueSuffix ? (

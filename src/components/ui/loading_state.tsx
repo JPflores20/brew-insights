@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
-
 export function LoadingState({ message = "Cargando datos..." }: { message?: string }) {
     return (
         <div className="flex flex-col items-center justify-center p-12 h-full min-h-[300px]">

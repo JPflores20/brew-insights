@@ -9,7 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll_area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Timer, Clock, ArrowRight } from "lucide-react";
-
 interface ProblematicBatch {
     batch: string;
     product: string;
@@ -19,18 +18,15 @@ interface ProblematicBatch {
     isDelay: boolean;
     timestamp: string;
 }
-
 interface ProblemsPanelProps {
     problematicBatches: ProblematicBatch[];
     loadSuggestion: (batch: string, machine: string) => void;
 }
-
 export function ProblemsPanel({
     problematicBatches,
     loadSuggestion,
 }: ProblemsPanelProps) {
     if (problematicBatches.length === 0) return null;
-
     return (
         <Card className="bg-card border-border border-l-4 border-l-orange-500 mt-8">
             <CardHeader className="pb-3">
@@ -85,7 +81,6 @@ export function ProblemsPanel({
                                             : `Espera: ${issue.totalWait} min`}
                                     </p>
                                 </div>
-
                                 <Button
                                     size="sm"
                                     variant="outline"

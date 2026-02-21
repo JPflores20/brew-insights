@@ -16,12 +16,10 @@ import {
 } from "recharts";
 import { Layers } from "lucide-react";
 import { CSSProperties } from "react";
-
 interface GlobalTimelineProps {
-    fullProcessData: any[]; // Define specific type if possible
+    fullProcessData: any[]; 
     fullProcessChartHeight: number;
 }
-
 const themedTooltipContentStyle: CSSProperties = {
     backgroundColor: "hsl(var(--popover))",
     borderColor: "hsl(var(--border))",
@@ -29,7 +27,6 @@ const themedTooltipContentStyle: CSSProperties = {
     color: "hsl(var(--popover-foreground))",
     fontSize: "14px",
 };
-
 export function GlobalTimeline({
     fullProcessData,
     fullProcessChartHeight,
@@ -43,7 +40,6 @@ export function GlobalTimeline({
             </div>
         );
     }
-
     return (
         <Card className="bg-card border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-6">
@@ -57,8 +53,7 @@ export function GlobalTimeline({
                     </p>
                 </div>
             </div>
-
-            {/* WRAPPER CON SCROLL */}
+            {}
             <ScrollArea className="h-[600px] w-full pr-4 border rounded-md bg-background/50">
                 <div
                     style={{
@@ -124,7 +119,7 @@ export function GlobalTimeline({
                             <Bar
                                 dataKey="expectedDurationMin"
                                 name="Duración Esperada (min)"
-                                fill="#3b82f6" // COLOR AZUL
+                                fill="#3b82f6" 
                                 radius={[0, 4, 4, 0]}
                                 barSize={12}
                             />

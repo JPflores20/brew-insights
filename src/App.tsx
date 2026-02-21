@@ -1,4 +1,4 @@
-// src/App.tsx
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,11 +8,8 @@ import { DataProvider } from "./context/data_context";
 import { AuthProvider } from "./context/auth_context"; 
 import { ProtectedRoute } from "./components/protected_route"; 
 import Login from "./pages/Login"; 
-
-// Importar nuevas páginas
 import MainMenu from "./pages/main_menu";
 import ColdBlock from "./pages/cold_block";
-
 import Overview from "./pages/Overview";
 import MachineDetail from "./pages/machine_detail";
 import BatchComparison from "./pages/batch_comparison";
@@ -21,9 +18,7 @@ import RecipeAnalysis from "./pages/recipe_analysis";
 import PredictiveMaintenance from "./pages/predictive_maintenance";
 import QualityConsistency from "./pages/quality_consistency";
 import NotFound from "./pages/not_found";
-
 const queryClient = new QueryClient();
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -33,10 +28,9 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Login Público */}
+              {}
               <Route path="/login" element={<Login />} />
-
-              {/* Ruta Raíz Protegida: Ahora es el Menú Principal */}
+              {}
               <Route
                 path="/"
                 element={
@@ -45,8 +39,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-
-              {/* Ruta Bloque Frío */}
+              {}
               <Route
                 path="/bloque-frio"
                 element={
@@ -55,8 +48,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-
-              {/* Rutas de Cocimientos (Hot Block) */}
+              {}
               <Route
                 path="/cocimientos"
                 element={
@@ -113,15 +105,13 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              
-              {/* Redirecciones de compatibilidad (por si alguien entra con la url vieja) */}
+              {}
               <Route path="/machine-detail" element={<Navigate to="/cocimientos/maquinaria" replace />} />
               <Route path="/batch-comparison" element={<Navigate to="/cocimientos/comparacion" replace />} />
               <Route path="/cycle-analysis" element={<Navigate to="/cocimientos/ciclos" replace />} />
               <Route path="/machine" element={<Navigate to="/cocimientos/maquinaria" replace />} />
               <Route path="/comparison" element={<Navigate to="/cocimientos/comparacion" replace />} />
               <Route path="/cycles" element={<Navigate to="/cocimientos/ciclos" replace />} />
-
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
@@ -130,5 +120,4 @@ const App = () => (
     </AuthProvider>
   </QueryClientProvider>
 );
-
 export default App;

@@ -1,5 +1,3 @@
-// src/components/batch-comparison/BatchSelectorCard.tsx
-// Card de selección de dos lotes para comparación directa
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,7 +8,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight } from "lucide-react";
-
 interface BatchSelectorCardProps {
   batchIds: string[];
   batchA: string;
@@ -19,7 +16,6 @@ interface BatchSelectorCardProps {
   onChangeBatchA: (val: string) => void;
   onChangeBatchB: (val: string) => void;
 }
-
 export function BatchSelectorCard({
   batchIds,
   batchA,

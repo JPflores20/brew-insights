@@ -23,6 +23,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomDot } from "./custom_dot";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
 import { useState } from "react";
+import { FILTER_ALL } from "@/lib/constants";
 
 interface MachineHistoryChartProps {
     data: any[];
@@ -31,7 +32,6 @@ interface MachineHistoryChartProps {
     trendBatch: string;
     selectedMachine: string;
 }
-
 export function MachineHistoryChart({
     data,
     selectedHistoryIndices,
@@ -40,9 +40,7 @@ export function MachineHistoryChart({
     selectedMachine,
 }: MachineHistoryChartProps) {
     const [chartType, setChartType] = useState<"area" | "bar" | "line" | "scatter" | "composed">("area");
-
     if (data.length === 0) return null;
-
     const renderChart = () => {
         const commonProps = {
             data: data,
@@ -58,7 +56,6 @@ export function MachineHistoryChart({
                 }
             },
         };
-
         const commonAxes = (
             <>
                 <CartesianGrid
@@ -67,7 +64,7 @@ export function MachineHistoryChart({
                     vertical={false}
                 />
                 <XAxis
-                    dataKey={trendBatch && trendBatch !== "ALL" ? "date" : "batchId"}
+                    dataKey={trendBatch && trendBatch !== FILTER_ALL ? "date" : "batchId"}
                     tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={{ stroke: "hsl(var(--border))" }}
                 />
@@ -87,7 +84,6 @@ export function MachineHistoryChart({
                 />
             </>
         );
-
         if (chartType === "bar") {
             return (
                 <BarChart {...commonProps}>
@@ -101,7 +97,6 @@ export function MachineHistoryChart({
                 </BarChart>
             );
         }
-
         if (chartType === "line") {
             return (
                 <LineChart {...commonProps}>
@@ -123,9 +118,6 @@ export function MachineHistoryChart({
                 </LineChart>
             );
         }
-
-
-
         if (chartType === "scatter") {
             return (
                 <ScatterChart {...commonProps}>
@@ -138,7 +130,6 @@ export function MachineHistoryChart({
                 </ScatterChart>
             );
         }
-
         if (chartType === "composed") {
             return (
                 <ComposedChart {...commonProps}>
@@ -162,8 +153,6 @@ export function MachineHistoryChart({
                 </ComposedChart>
             );
         }
-
-        // Default to Area
         return (
             <AreaChart {...commonProps}>
                 <defs>
@@ -192,7 +181,6 @@ export function MachineHistoryChart({
             </AreaChart>
         );
     };
-
     return (
         <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
@@ -204,7 +192,6 @@ export function MachineHistoryChart({
                         </span>
                     </div>
                 </CardTitle>
-
                 <Tabs value={chartType} onValueChange={(v) => setChartType(v as any)} className="w-[200px]">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="area" title="Área">
@@ -225,7 +212,6 @@ export function MachineHistoryChart({
                     </TabsList>
                 </Tabs>
             </div>
-
             <div className="h-[340px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     {renderChart()}

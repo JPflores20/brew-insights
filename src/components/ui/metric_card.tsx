@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 interface MetricCardProps {
     title: string;
     value: string | number;
@@ -13,7 +12,6 @@ interface MetricCardProps {
     className?: string;
     delay?: number;
 }
-
 export function MetricCard({
     title,
     value,
@@ -56,8 +54,8 @@ export function MetricCard({
                                 <span
                                     className={cn(
                                         "font-medium mr-2",
-                                        trend === "up" && "text-red-500", // En producción, subir el tiempo suele ser malo? O bueno si es eficiencia?
-                                        trend === "down" && "text-green-500", // Depende del KPI. Asumiremos colores semánticos genéricos o pasados par la prop.
+                                        trend === "up" && "text-red-500",
+                                        trend === "down" && "text-green-500",
                                         trend === "neutral" && "text-muted-foreground"
                                     )}
                                 >

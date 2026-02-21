@@ -7,7 +7,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll_area";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
-
 interface Anomaly {
     id: number;
     type: "gap" | "delay";
@@ -19,11 +18,9 @@ interface Anomaly {
     prevStep: string;
     nextStep: string;
 }
-
 interface AnomaliesListProps {
     anomaliesReport: Anomaly[];
 }
-
 export function AnomaliesList({ anomaliesReport }: AnomaliesListProps) {
     return (
         <Card className="bg-card border-border flex flex-col h-[520px] xl:h-[calc(100vh-260px)] overflow-hidden">
@@ -38,7 +35,6 @@ export function AnomaliesList({ anomaliesReport }: AnomaliesListProps) {
                         : "Sin ineficiencias detectadas"}
                 </p>
             </CardHeader>
-
             <CardContent className="flex-1 p-0 min-h-0">
                 {anomaliesReport.length > 0 ? (
                     <ScrollArea className="h-full w-full p-4">
@@ -71,12 +67,10 @@ export function AnomaliesList({ anomaliesReport }: AnomaliesListProps) {
                                                 : `+${item.delta} min`}
                                         </span>
                                     </div>
-
                                     <div className="text-xs text-muted-foreground space-y-1">
                                         <p className="font-medium text-foreground text-sm mb-1">
                                             {item.name}
                                         </p>
-
                                         {item.type === "delay" && (
                                             <div className="flex justify-between text-xs px-2 py-1 bg-background/50 rounded border border-border/50 mb-2">
                                                 <span>
@@ -87,7 +81,6 @@ export function AnomaliesList({ anomaliesReport }: AnomaliesListProps) {
                                                 </span>
                                             </div>
                                         )}
-
                                         <div className="flex items-center gap-1 opacity-80">
                                             <Clock className="h-3 w-3" />
                                             <span>Inicio: {item.startTime}</span>

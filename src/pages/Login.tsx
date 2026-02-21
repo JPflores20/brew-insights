@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Loader2, Beer, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,17 +15,14 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
-      // Configurar persistencia de sesión (solo mientras la pestaña esté abierta)
       await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); // Redirigir al dashboard
+      navigate("/"); 
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
@@ -40,20 +36,17 @@ export default function Login() {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0f1c] relative overflow-hidden">
-      {/* Fondo decorativo (Spots de luz) */}
+      {}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-amber-900/10 rounded-full blur-[120px]" />
-
       <Card className="w-full max-w-md border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl relative z-10">
         <CardHeader className="space-y-3 text-center pb-8 pt-10">
-          {/* Logo animado y estilizado */}
+          {}
           <div className="mx-auto bg-gradient-to-tr from-amber-500 to-orange-600 p-4 rounded-2xl shadow-lg shadow-amber-500/20 mb-2 transform transition-transform hover:scale-105 duration-300">
             <Beer className="h-8 w-8 text-white" />
           </div>
-          
           <div className="space-y-1">
             <CardTitle className="text-3xl font-bold tracking-tight text-white">
               Brew Insights
@@ -63,7 +56,6 @@ export default function Login() {
             </CardDescription>
           </div>
         </CardHeader>
-
         <CardContent className="px-8 pb-8">
           <form onSubmit={handleLogin} className="space-y-5">
             {error && (
@@ -72,7 +64,6 @@ export default function Login() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300 font-medium ml-1">
                 Correo Corporativo
@@ -89,7 +80,6 @@ export default function Login() {
                 />
               </div>
             </div>
-            
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <Label htmlFor="password" className="text-slate-300 font-medium">
@@ -121,7 +111,6 @@ export default function Login() {
                 </button>
               </div>
             </div>
-
             <Button 
               type="submit" 
               className="w-full h-11 font-semibold text-base bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 shadow-lg shadow-amber-900/20 mt-2 transition-all duration-300 hover:shadow-amber-900/40"
@@ -138,7 +127,6 @@ export default function Login() {
             </Button>
           </form>
         </CardContent>
-
         <CardFooter className="flex flex-col justify-center py-6 bg-white/5 border-t border-white/5 rounded-b-xl gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Lock className="h-3 w-3" />

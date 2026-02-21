@@ -1,11 +1,9 @@
-// src/pages/ColdBlock.tsx
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, HardHat } from "lucide-react";
-
 export default function ColdBlock() {
   const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-[#0a0f1c] flex flex-col items-center justify-center text-white p-4">
       <div className="bg-slate-900/50 border border-slate-800 p-12 rounded-2xl text-center max-w-lg shadow-2xl">

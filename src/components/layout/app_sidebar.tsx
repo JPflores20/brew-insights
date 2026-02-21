@@ -30,8 +30,6 @@ import { useData } from "@/context/data_context";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
-
-// Menu items
 const navItems = [
     {
         title: "Resumen",
@@ -73,13 +71,11 @@ const navItems = [
         badge: "Nuevo"
     },
 ];
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const location = useLocation();
     const { user } = useAuth();
     const { data } = useData();
     const hasData = data && data.length > 0;
-
     const handleLogout = async () => {
         try {
             await signOut(auth);
@@ -87,7 +83,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             console.error("Error al cerrar sesión:", error);
         }
     };
-
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
@@ -112,7 +107,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarGroupLabel>Navegación</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild tooltip="Volver al Menú">
                                     <Link to="/">
@@ -121,11 +115,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-
                             {navItems.map((item) => {
                                 const isDisabled = item.url !== "/cocimientos" && !hasData;
                                 const isActive = location.pathname === item.url;
-
                                 if (isDisabled) {
                                     return (
                                         <SidebarMenuItem key={item.title}>
@@ -145,7 +137,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         </SidebarMenuItem>
                                     )
                                 }
-
                                 return (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton asChild isActive={isActive} tooltip={item.title} className={cn(isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_0_15px_rgba(234,88,12,0.15)]")}>

@@ -10,20 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { MetricCard } from "@/components/ui/metric_card";
 import { RecipeWasteTrafficLight } from "@/components/dashboard/recipe_waste_traffic_light";
 import { RecipeDeviationChart } from "@/components/dashboard/recipe_deviation_chart";
+import { FILTER_ALL } from "@/lib/constants";
 
 export default function RecipeAnalysis() {
   const { data } = useData();
   const { loading, uploadProgress, processFiles } = useFileUpload();
-
-  // Selected Recipe for detailed chart
-  const [selectedRecipe, setSelectedRecipe] = useState<string | "ALL">("ALL");
-  const [selectedMaterialName, setSelectedMaterialName] = useState<string>("ALL");
-
-  const handleSelectRecipe = (recipe: string | "ALL") => {
+  const [selectedRecipe, setSelectedRecipe] = useState<string | FILTER_ALL>(FILTER_ALL);
+  const [selectedMaterialName, setSelectedMaterialName] = useState<string>(FILTER_ALL);
+  const handleSelectRecipe = (recipe: string | FILTER_ALL) => {
       setSelectedRecipe(recipe);
-      setSelectedMaterialName("ALL"); // Reset material filter when recipe changes
+      setSelectedMaterialName(FILTER_ALL); 
   };
-
   const recipeNames = useMemo(() => {
     const names = new Set<string>();
     data.forEach(d => {
@@ -31,21 +28,17 @@ export default function RecipeAnalysis() {
     });
     return Array.from(names).sort();
   }, [data]);
-
   const totalWasteStats = useMemo(() => {
       let totalReal = 0;
       let totalExpected = 0;
-
       data.forEach(batch => {
           batch.materials.forEach(mat => {
               totalReal += mat.totalReal;
               totalExpected += mat.totalExpected;
           });
       });
-
       const delta = totalReal - totalExpected;
       const percent = totalExpected > 0 ? (delta / totalExpected) * 100 : 0;
-
       return {
           totalReal,
           totalExpected,
@@ -53,7 +46,6 @@ export default function RecipeAnalysis() {
           percent
       };
   }, [data]);
-
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -61,7 +53,6 @@ export default function RecipeAnalysis() {
       </DashboardLayout>
     );
   }
-
   if (loading) {
     return (
       <DashboardLayout>
@@ -69,19 +60,17 @@ export default function RecipeAnalysis() {
       </DashboardLayout>
     );
   }
-
   return (
     <DashboardLayout>
       <AnimatedPage>
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Análisis de Desviación de Recetas</h1>
             <p className="text-muted-foreground mt-1">Comparación de uso de materia prima: Esperado (SW) vs Real (IW).</p>
           </div>
         </div>
-
-        {/* Global KPIs */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <MetricCard 
                 title="Desviación Global de Materiales" 
@@ -102,13 +91,11 @@ export default function RecipeAnalysis() {
                 className="border-l-4 border-l-blue-500" 
             />
         </div>
-
-        {/* Semáforo Components */}
+        {}
         <div className="mb-8">
             <RecipeWasteTrafficLight data={data} onSelectRecipe={handleSelectRecipe} selectedRecipe={selectedRecipe} />
         </div>
-
-        {/* Detailed Chart */}
+        {}
         <div className="mb-8">
             <RecipeDeviationChart 
               data={data} 
@@ -119,7 +106,6 @@ export default function RecipeAnalysis() {
               setSelectedMaterialName={setSelectedMaterialName}
             />
         </div>
-
       </AnimatedPage>
     </DashboardLayout>
   );

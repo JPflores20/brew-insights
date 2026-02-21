@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
-
 interface KPICardProps {
   title: string;
   value: string | number;
@@ -10,9 +9,8 @@ interface KPICardProps {
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
   variant?: "default" | "success" | "warning" | "danger";
-  onClick?: () => void; // <--- Nuevo prop opcional
+  onClick?: () => void; 
 }
-
 export function KPICard({ 
   title, 
   value, 
@@ -21,7 +19,7 @@ export function KPICard({
   trend,
   trendValue,
   variant = "default",
-  onClick // <--- Recibimos la función
+  onClick 
 }: KPICardProps) {
   const iconColors = {
     default: "text-muted-foreground",
@@ -29,16 +27,13 @@ export function KPICard({
     warning: "text-chart-real",
     danger: "text-chart-delay",
   };
-
   const trendColors = {
     up: "text-chart-delay",
     down: "text-primary",
     neutral: "text-muted-foreground",
   };
-
   return (
     <Card 
-      // Agregamos clases para feedback visual (cursor y hover) si hay onClick
       className={cn(
         "bg-card border-border transition-all duration-200",
         onClick && "cursor-pointer hover:bg-accent/50 hover:border-primary/50 active:scale-[0.99]"

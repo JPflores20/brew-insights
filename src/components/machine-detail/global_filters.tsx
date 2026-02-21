@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { memo, useState, useMemo, useDeferredValue } from "react";
+import { FILTER_ALL } from "@/lib/constants";
 
 interface GlobalFiltersProps {
     selectedRecipe: string;
@@ -38,7 +39,6 @@ interface GlobalFiltersProps {
     filteredBatches: string[];
     batchProductMap: Map<string, string>;
 }
-
 export const GlobalFilters = memo(function GlobalFilters({
     selectedRecipe,
     setSelectedRecipe,
@@ -50,14 +50,10 @@ export const GlobalFilters = memo(function GlobalFilters({
 }: GlobalFiltersProps) {
     const [openBatch, setOpenBatch] = useState(false);
     const [openRecipe, setOpenRecipe] = useState(false);
-
     const [batchSearchTerm, setBatchSearchTerm] = useState("");
     const deferredBatchSearch = useDeferredValue(batchSearchTerm);
-
     const [recipeSearchTerm, setRecipeSearchTerm] = useState("");
     const deferredRecipeSearch = useDeferredValue(recipeSearchTerm);
-
-    // --- OPTIMIZACIÓN DE RECETAS (COMBOBOX) ---
     const displayedRecipes = useMemo(() => {
         let filtered = uniqueRecipes;
         if (deferredRecipeSearch) {
@@ -66,14 +62,11 @@ export const GlobalFilters = memo(function GlobalFilters({
         }
         return filtered.slice(0, 50);
     }, [uniqueRecipes, deferredRecipeSearch]);
-
-    // --- OPTIMIZACIÓN DE LOTES (COMBOBOX) ---
     const displayedBatches = useMemo(() => {
         let filtered = filteredBatches;
         if (deferredBatchSearch) {
             const lower = deferredBatchSearch.toLowerCase();
             filtered = filtered.filter(batch => {
-                // Optimización: Chequeo rápido primero
                 if (batch.toLowerCase().includes(lower)) return true;
                 const product = batchProductMap.get(batch);
                 return product ? product.toLowerCase().includes(lower) : false;
@@ -81,10 +74,9 @@ export const GlobalFilters = memo(function GlobalFilters({
         }
         return filtered.slice(0, 50);
     }, [filteredBatches, batchProductMap, deferredBatchSearch]);
-
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 1. SELECCIONAR RECETA (Combobox Optimizado) */}
+            {}
             <Card className="bg-card border-border">
                 <CardHeader className="pb-2 pt-4">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -103,7 +95,7 @@ export const GlobalFilters = memo(function GlobalFilters({
                                 aria-expanded={openRecipe}
                                 className="w-full justify-between font-normal"
                             >
-                                {selectedRecipe === "ALL"
+                                {selectedRecipe === FILTER_ALL
                                     ? "Todas las recetas"
                                     : selectedRecipe}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -120,16 +112,16 @@ export const GlobalFilters = memo(function GlobalFilters({
                                     <CommandEmpty>No hay recetas.</CommandEmpty>
                                     <CommandGroup>
                                         <CommandItem
-                                            value="ALL"
+                                            value={FILTER_ALL}
                                             onSelect={() => {
-                                                setSelectedRecipe("ALL");
+                                                setSelectedRecipe(FILTER_ALL);
                                                 setOpenRecipe(false);
                                             }}
                                         >
                                             <Check
                                                 className={cn(
                                                     "mr-2 h-4 w-4",
-                                                    selectedRecipe === "ALL" ? "opacity-100" : "opacity-0"
+                                                    selectedRecipe === FILTER_ALL ? "opacity-100" : "opacity-0"
                                                 )}
                                             />
                                             Todas las recetas
@@ -139,7 +131,7 @@ export const GlobalFilters = memo(function GlobalFilters({
                                                 key={r}
                                                 value={r}
                                                 onSelect={(currentValue) => {
-                                                    setSelectedRecipe(currentValue === selectedRecipe ? "ALL" : currentValue);
+                                                    setSelectedRecipe(currentValue === selectedRecipe ? FILTER_ALL : currentValue);
                                                     setOpenRecipe(false);
                                                 }}
                                             >
@@ -159,8 +151,7 @@ export const GlobalFilters = memo(function GlobalFilters({
                     </Popover>
                 </CardContent>
             </Card>
-
-            {/* 2. SELECCIONAR LOTE (Combobox Optimizado) */}
+            {}
             <Card className="bg-card border-border">
                 <CardHeader className="pb-2 pt-4">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">

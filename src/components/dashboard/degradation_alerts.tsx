@@ -4,17 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AlertTriangle, TrendingUp, Info, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { calculateDegradationAlerts } from "@/utils/math_utils";
-
 interface DegradationAlertsProps {
   data: BatchRecord[];
   onSelectAlert?: (machine: string, stepName: string) => void;
 }
-
 export function DegradationAlerts({ data, onSelectAlert }: DegradationAlertsProps) {
   const alerts = useMemo(() => {
      return calculateDegradationAlerts(data);
   }, [data]);
-
   if (alerts.length === 0) {
       return (
           <Card className="bg-card shadow-sm border-border border-l-4 border-l-green-500">
@@ -30,7 +27,6 @@ export function DegradationAlerts({ data, onSelectAlert }: DegradationAlertsProp
           </Card>
       );
   }
-
   return (
     <Card className="bg-card shadow-sm border-border overflow-hidden border-t-4 border-t-red-500">
       <CardHeader className="pb-4">
@@ -43,7 +39,6 @@ export function DegradationAlerts({ data, onSelectAlert }: DegradationAlertsProp
             Haz clic en un equipo de la lista para ver su detalle en la gráfica de abajo.
         </CardDescription>
       </CardHeader>
-      
       <CardContent className="p-0">
           <Table>
               <TableHeader>

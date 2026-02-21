@@ -27,6 +27,7 @@ import { Thermometer, Plus, Trash2 } from "lucide-react";
 import { CustomDot } from "./custom_dot";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
 import { Button } from "@/components/ui/button";
+import { FILTER_ALL } from "@/lib/constants";
 
 export interface SeriesConfig {
     id: string;
@@ -42,43 +43,32 @@ export interface SeriesConfig {
     setBatch: (val: string) => void;
     onRemove?: () => void;
 }
-
 interface TemperatureTrendChartProps {
     data: any[];
-    // Single-series props (optional for backward compatibility)
     trendBatch?: string;
     trendRecipe?: string;
     trendMachine?: string;
     uniqueRecipes?: string[];
     machinesWithTemps?: string[];
     availableTrendBatches?: string[];
-    
-    // Shared
     availableTempParams: string[];
     selectedTempParam: string;
     setSelectedTempParam: (val: string) => void;
-
-    // Single-series setters (optional)
     setTrendRecipe?: (val: string) => void;
     setTrendMachine?: (val: string) => void;
     setTrendBatch?: (val: string) => void;
-
     selectedTempIndices: number[];
     setSelectedTempIndices: React.Dispatch<React.SetStateAction<number[]>>;
     chartType?: "area" | "line";
     title?: string;
     hideParamSelector?: boolean;
-
-    // Multi-series props
     series?: SeriesConfig[];
     onAddSeries?: () => void;
 }
-
 const truncateLabel = (v: any, max = 18) => {
     const s = String(v ?? "");
     return s.length > max ? s.slice(0, max - 1) + "…" : s;
 };
-
 export function TemperatureTrendChart({
     data,
     trendBatch,
@@ -101,9 +91,7 @@ export function TemperatureTrendChart({
     series,
     onAddSeries,
 }: TemperatureTrendChartProps) {
-    
     const isMultiSeries = series && series.length > 0;
-
     return (
         <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
             <CardHeader className="px-0 pt-0 pb-6">
@@ -111,21 +99,20 @@ export function TemperatureTrendChart({
                     <div className="space-y-1">
                         <CardTitle className="text-lg font-semibold flex items-center gap-2">
                             <Thermometer className="h-5 w-5 text-red-500" />
-                            {title || (trendBatch && trendBatch !== "ALL"
+                            {title || (trendBatch && trendBatch !== FILTER_ALL
                                 ? "Perfil de Temperatura del Lote"
                                 : "Tendencia Histórica de Temperaturas")}
                         </CardTitle>
                         <CardDescription>
                             {isMultiSeries 
                                 ? "Comparación de múltiples series de temperatura"
-                                : (trendBatch && trendBatch !== "ALL"
+                                : (trendBatch && trendBatch !== FILTER_ALL
                                     ? `Visualizando evolución paso a paso del lote ${trendBatch}`
                                     : "Análisis histórico por equipo y receta")
                             }
                         </CardDescription>
                     </div>
-
-                    {/* CONTROLES DE FILTRADO */}
+                    {}
                     {isMultiSeries ? (
                         <div className="flex flex-col gap-3 w-full print:hidden">
                             {series.map((s) => (
@@ -135,43 +122,39 @@ export function TemperatureTrendChart({
                                         style={{ backgroundColor: s.color }}
                                         title={`Serie ${s.id}`}
                                     />
-                                    
                                     <Select value={s.recipe} onValueChange={s.setRecipe}>
                                         <SelectTrigger className="w-full sm:w-[180px] h-8 text-xs">
                                             <SelectValue placeholder="Receta" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="ALL">Todas</SelectItem>
+                                            <SelectItem value={FILTER_ALL}>Todas</SelectItem>
                                             {s.availableRecipes.map((r) => (
                                                 <SelectItem key={r} value={r}>{r}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-
                                     <Select value={s.machine} onValueChange={s.setMachine}>
                                         <SelectTrigger className="w-full sm:w-[180px] h-8 text-xs">
                                             <SelectValue placeholder="Equipo" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="ALL">Todos</SelectItem>
+                                            <SelectItem value={FILTER_ALL}>Todos</SelectItem>
                                             {s.availableMachines.map((m) => (
                                                 <SelectItem key={m} value={m}>{m}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-
                                     <Select value={s.batch} onValueChange={s.setBatch}>
                                         <SelectTrigger className="w-full sm:w-[180px] h-8 text-xs">
                                             <SelectValue placeholder="Lote" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="ALL">Histórico</SelectItem>
+                                            <SelectItem value={FILTER_ALL}>Histórico</SelectItem>
                                             {s.availableBatches.map((b) => (
                                                 <SelectItem key={b} value={b}>{b}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-
                                     {s.onRemove && (
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={s.onRemove}>
                                             <Trash2 className="h-4 w-4" />
@@ -179,14 +162,12 @@ export function TemperatureTrendChart({
                                     )}
                                 </div>
                             ))}
-                            
                             <div className="flex flex-col sm:flex-row gap-2 justify-between items-center mt-2">
                                 {onAddSeries && (
                                     <Button variant="outline" size="sm" onClick={onAddSeries} className="w-full sm:w-auto">
                                         <Plus className="mr-2 h-4 w-4" /> Añadir Serie
                                     </Button>
                                 )}
-
                                 {!hideParamSelector && (
                                     <Select
                                         value={selectedTempParam}
@@ -207,19 +188,17 @@ export function TemperatureTrendChart({
                             </div>
                         </div>
                     ) : (
-                        // SINGLE SERIES (LEGACY/DEFAULT) MODE
                         <div className="flex flex-col sm:flex-row gap-2 w-full items-center">
                             <div 
                                 className="w-4 h-4 rounded-full bg-red-500 shrink-0 border border-border" 
                                 title="Color de la serie actual"
                             />
-
                             <Select value={trendRecipe} onValueChange={setTrendRecipe}>
                                 <SelectTrigger className="w-full sm:w-[180px]">
                                     <SelectValue placeholder="Receta" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ALL">Todas las recetas</SelectItem>
+                                    <SelectItem value={FILTER_ALL}>Todas las recetas</SelectItem>
                                     {uniqueRecipes.map((r) => (
                                         <SelectItem key={r} value={r}>
                                             {r}
@@ -227,13 +206,12 @@ export function TemperatureTrendChart({
                                     ))}
                                 </SelectContent>
                             </Select>
-
                             <Select value={trendMachine} onValueChange={setTrendMachine}>
                                 <SelectTrigger className="w-full sm:w-[180px]">
                                     <SelectValue placeholder="Equipo" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ALL">Todos los equipos</SelectItem>
+                                    <SelectItem value={FILTER_ALL}>Todos los equipos</SelectItem>
                                     {machinesWithTemps.map((m) => (
                                         <SelectItem key={m} value={m}>
                                             {m}
@@ -241,13 +219,12 @@ export function TemperatureTrendChart({
                                     ))}
                                 </SelectContent>
                             </Select>
-
                             <Select value={trendBatch} onValueChange={setTrendBatch}>
                                 <SelectTrigger className="w-full sm:w-[180px]">
                                     <SelectValue placeholder="Lote" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ALL">Todos los lotes (Histórico)</SelectItem>
+                                    <SelectItem value={FILTER_ALL}>Todos los lotes (Histórico)</SelectItem>
                                     {availableTrendBatches.map((b) => (
                                         <SelectItem key={b} value={b}>
                                             {b}
@@ -255,7 +232,6 @@ export function TemperatureTrendChart({
                                     ))}
                                 </SelectContent>
                             </Select>
-
                             {!hideParamSelector && (
                                 <Select
                                     value={selectedTempParam}
@@ -314,7 +290,7 @@ export function TemperatureTrendChart({
                             />
                             <YAxis
                                 label={{
-                                    value: data[0]?.unit || "Valor", // Fallback unit if possible, usually defined in data
+                                    value: data[0]?.unit || "Valor", 
                                     angle: -90,
                                     position: "insideLeft",
                                     fill: "hsl(var(--muted-foreground))",
@@ -339,7 +315,7 @@ export function TemperatureTrendChart({
                                         <CustomDot
                                             {...props}
                                             selectedIndices={selectedTempIndices}
-                                            fill={s.color} // Ensure dot matches line color
+                                            fill={s.color} 
                                         />
                                     )}
                                     activeDot={{ r: 6, strokeWidth: 0 }}
@@ -347,7 +323,6 @@ export function TemperatureTrendChart({
                             ))}
                         </LineChart>
                     ) : (
-                        // SINGLE SERIES RENDER
                         chartType === "area" ? (
                             <AreaChart
                                 data={data}
@@ -371,15 +346,15 @@ export function TemperatureTrendChart({
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
                                 <XAxis
-                                    dataKey={trendBatch && trendBatch !== "ALL" ? "stepName" : "date"}
+                                    dataKey={trendBatch && trendBatch !== FILTER_ALL ? "stepName" : "date"}
                                     tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                                     axisLine={{ stroke: "hsl(var(--border))" }}
-                                    interval={trendBatch && trendBatch !== "ALL" ? 0 : "preserveStartEnd"}
-                                    angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
-                                    textAnchor={trendBatch && trendBatch !== "ALL" ? "end" : "middle"}
-                                    height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
+                                    interval={trendBatch && trendBatch !== FILTER_ALL ? 0 : "preserveStartEnd"}
+                                    angle={trendBatch && trendBatch !== FILTER_ALL ? -20 : 0}
+                                    textAnchor={trendBatch && trendBatch !== FILTER_ALL ? "end" : "middle"}
+                                    height={trendBatch && trendBatch !== FILTER_ALL ? 60 : 30}
                                     tickFormatter={(val) => {
-                                        if (trendBatch && trendBatch !== "ALL") return truncateLabel(val, 15);
+                                        if (trendBatch && trendBatch !== FILTER_ALL) return truncateLabel(val, 15);
                                         return val;
                                     }}
                                 />
@@ -421,15 +396,15 @@ export function TemperatureTrendChart({
                             >
                                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
                                 <XAxis
-                                    dataKey={trendBatch && trendBatch !== "ALL" ? "stepName" : "date"}
+                                    dataKey={trendBatch && trendBatch !== FILTER_ALL ? "stepName" : "date"}
                                     tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                                     axisLine={{ stroke: "hsl(var(--border))" }}
-                                    interval={trendBatch && trendBatch !== "ALL" ? 0 : "preserveStartEnd"}
-                                    angle={trendBatch && trendBatch !== "ALL" ? -20 : 0}
-                                    textAnchor={trendBatch && trendBatch !== "ALL" ? "end" : "middle"}
-                                    height={trendBatch && trendBatch !== "ALL" ? 60 : 30}
+                                    interval={trendBatch && trendBatch !== FILTER_ALL ? 0 : "preserveStartEnd"}
+                                    angle={trendBatch && trendBatch !== FILTER_ALL ? -20 : 0}
+                                    textAnchor={trendBatch && trendBatch !== FILTER_ALL ? "end" : "middle"}
+                                    height={trendBatch && trendBatch !== FILTER_ALL ? 60 : 30}
                                     tickFormatter={(val) => {
-                                        if (trendBatch && trendBatch !== "ALL") return truncateLabel(val, 15);
+                                        if (trendBatch && trendBatch !== FILTER_ALL) return truncateLabel(val, 15);
                                         return val;
                                     }}
                                 />
@@ -454,7 +429,6 @@ export function TemperatureTrendChart({
                             </LineChart>
                         )
                     )}
-
                 </ResponsiveContainer>
                 )}
             </div>

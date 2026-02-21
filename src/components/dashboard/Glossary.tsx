@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Clock, AlertTriangle, Info } from "lucide-react";
-
 export function Glossary() {
     return (
         <div>
@@ -31,7 +30,6 @@ export function Glossary() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-3 opacity-5">
                         <Clock className="h-24 w-24" />
@@ -54,7 +52,6 @@ export function Glossary() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-3 opacity-5">
                         <AlertTriangle className="h-24 w-24" />

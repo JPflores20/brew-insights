@@ -19,67 +19,41 @@ import { Badge } from "@/components/ui/badge";
 import { BatchRecord } from "@/data/mock_data";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
-
 interface MachineryTabProps {
   data: BatchRecord[];
   selectedBatchId: string;
 }
-
 export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
-  // 1. Filtrar los registros del lote seleccionado
   const batchRecords = useMemo(() => {
     return data.filter((d) => d.CHARG_NR === selectedBatchId);
   }, [data, selectedBatchId]);
-
-  // 2. Encontrar Equipos Específicos (Filtro y Macerador)
-  // NOTA: Ajusta los nombres "Filtro" y "Macerador" según tus datos reales si es necesario.
   const filterRecord = batchRecords.find((r) =>
     r.TEILANL_GRUPO.toLowerCase().includes("filtro")
   );
   const maceratorRecord = batchRecords.find((r) =>
     r.TEILANL_GRUPO.toLowerCase().includes("macerador")
   );
-
-  // --- LÓGICA FILTRO ---
   const filterSteps = filterRecord?.steps || [];
   const startStepName = "PRIMER MOSTO new";
-
-  // Encontrar el índice del paso inicial
   const startIndex = filterSteps.findIndex((s) => s.stepName.toLowerCase() === startStepName.toLowerCase());
-
-  // Opciones para el paso final (solo pasos posteriores al inicial)
   const endStepOptions = useMemo(() => {
     if (startIndex === -1) return [];
-    // Retornamos los pasos DESPUÉS del inicial para que el usuario elija hasta dónde calcular
     return filterSteps.slice(startIndex + 1).map((s, idx) => ({
         stepName: s.stepName,
-        index: startIndex + 1 + idx // Índice absoluto en el array filterSteps
+        index: startIndex + 1 + idx 
     }));
   }, [filterSteps, startIndex]);
-
-  // Estado para el índice del paso seleccionado por el usuario.
   const [selectedEndStepIndex, setSelectedEndStepIndex] = useState<string>("");
-
-  // Calcular el tiempo total real del filtro
   const filterTotalTime = useMemo(() => {
     if (startIndex === -1 || !selectedEndStepIndex) return 0;
-    
     const endIndex = parseInt(selectedEndStepIndex, 10);
-
     if (isNaN(endIndex) || endIndex <= startIndex) return 0;
-
-    // Sumar duraciones desde startStep hasta endStep (inclusive)
     let total = 0;
-    // Iteramos desde el paso inicial hasta el seleccionado
     for (let i = startIndex; i <= endIndex; i++) {
         total += filterSteps[i].durationMin;
     }
     return total;
   }, [filterSteps, startIndex, selectedEndStepIndex]);
-
-
-  // --- LÓGICA MACERADOR ---
-  // 1. Tiempo "Recibir Cocedor"
   const recibirCocedorTime = useMemo(() => {
     if (!maceratorRecord?.steps) return "N/A";
     const step = maceratorRecord.steps.find(
@@ -87,16 +61,11 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
     );
     return step ? `${step.durationMin} min` : "N/A"; 
   }, [maceratorRecord]);
-
-  // 2. Pausa Macerador: Entre "Control Temp" y "Cont. Conversión" (AUTOMÁTICO)
   const pauseDetails = useMemo(() => {
     const steps = maceratorRecord?.steps || [];
-    
     const normalize = (s: string) => s.toLowerCase().trim();
-    
     const startPauseIndex = steps.findIndex((s) => normalize(s.stepName).includes("control temp"));
     const endPauseIndex = steps.findIndex((s) => normalize(s.stepName).includes("cont. conversion") || normalize(s.stepName).includes("cont. conversión"));
-
     if (startPauseIndex === -1 || endPauseIndex === -1 || startPauseIndex >= endPauseIndex) {
         return {
             duration: 0,
@@ -107,16 +76,13 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
             includedSteps: []
         };
     }
-    
     let targetStep = null;
-    
     for (let i = startPauseIndex + 1; i < endPauseIndex; i++) {
         if (normalize(steps[i].stepName).includes("pausa")) {
             targetStep = steps[i];
             break; 
         }
     }
-
     if (!targetStep) {
          return {
             duration: 0,
@@ -128,7 +94,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
             includedSteps: []
         };
     }
-
     return {
         duration: targetStep.durationMin,
         valid: true,
@@ -137,13 +102,8 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
         includedSteps: [{ name: targetStep.stepName, dur: targetStep.durationMin }]
     };
   }, [maceratorRecord]);
-
-  // 3. Selección de Rango MANUAL
-  // Estado para selección manual
   const [maceratorStartIndex, setMaceratorStartIndex] = useState<string>("");
   const [maceratorEndIndex, setMaceratorEndIndex] = useState<string>("");
-
-  // Opciones de pasos para Macerador
   const maceratorSteps = maceratorRecord?.steps || [];
   const maceratorStepOptions = useMemo(() => {
      return maceratorSteps.map((s, idx) => ({
@@ -151,40 +111,27 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
          index: idx
      }));
   }, [maceratorSteps]);
-
-  // Cálculo del tiempo basado en el rango seleccionado
   const maceratorCalculatedTime = useMemo(() => {
       const start = parseInt(maceratorStartIndex, 10);
       const end = parseInt(maceratorEndIndex, 10);
-
       if (isNaN(start) || isNaN(end) || start > end) {
           return { duration: 0, valid: false };
       }
-
       let total = 0;
       for (let i = start; i <= end; i++) {
         total += maceratorSteps[i].durationMin;
       }
-
       return { duration: total, valid: true };
   }, [maceratorSteps, maceratorStartIndex, maceratorEndIndex]);
-
-
-  // 3. Temperatura "Cont. Conversión"
   const conversionTemp = useMemo(() => {
       if (!maceratorRecord?.parameters) return "N/A";
-
       const normalize = (s: string) => s.toLowerCase().trim();
-
       const param = maceratorRecord.parameters.find(p => 
           (normalize(p.stepName).includes("cont. conversion") || normalize(p.stepName).includes("cont. conversión")) && 
           (p.name.toLowerCase().includes("temp") || p.unit.toLowerCase().includes("c"))
       );
-
       return param ? `${param.value} ${param.unit}` : "N/A";
   }, [maceratorRecord]);
-
-
   if (!selectedBatchId) {
       return (
           <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/20 rounded-lg border border-dashed">
@@ -192,7 +139,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
           </div>
       )
   }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -201,7 +147,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
       className="space-y-6"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* TARJETA FILTRO */}
+        {}
         <Card>
           <CardHeader className="pb-4">
              <div className="flex justify-between items-center">
@@ -215,7 +161,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
             </p>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
-            
             <div className="space-y-3">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Hasta el paso:
@@ -242,7 +187,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="bg-muted/30 p-4 rounded-lg border flex items-baseline justify-between">
                 <span className="text-sm font-medium text-muted-foreground">Tiempo Calculado</span>
                 <div className="flex items-baseline gap-1">
@@ -252,7 +196,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                     <span className="text-sm font-medium text-muted-foreground">min</span>
                 </div>
             </div>
-            
              {startIndex === -1 && (
                  <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                  ⚠️ El paso inicial "{startStepName}" no se encontró en este lote.
@@ -260,8 +203,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
             )}
           </CardContent>
         </Card>
-
-        {/* TARJETA MACERADOR */}
+        {}
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -273,13 +215,11 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
             </p>
           </CardHeader>
           <CardContent className="p-4 space-y-6">
-            
-            {/* Sección Cálculo Personalizado Macerador */}
+            {}
             <div className="space-y-4 border rounded-md p-4 bg-background/50">
                 <h4 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
                     <Clock className="w-4 h-4" /> Cálculo de Tiempo (Rango)
                 </h4>
-                
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-xs font-medium">Desde:</label>
@@ -318,7 +258,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                         </Select>
                     </div>
                 </div>
-
                 <div className="flex justify-between items-center pt-2 border-t mt-2">
                     <span className="text-sm font-medium">Tiempo Calculado:</span>
                     <span className="font-mono font-bold text-lg text-primary">
@@ -326,7 +265,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                     </span>
                 </div>
             </div>
-
             <Table>
                 <TableBody>
                     <TableRow>
@@ -347,7 +285,6 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                     </TableRow>
                 </TableBody>
             </Table>
-            
              {(!maceratorRecord) && (
                  <div className="rounded-md bg-muted p-3 text-sm text-center text-muted-foreground">
                  No se encontraron datos para el Macerador en este lote.
@@ -356,8 +293,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* TABLA RESUMEN UNIFICADA */}
+      {}
       <Card>
           <CardHeader className="bg-muted/50 pb-4">
               <CardTitle className="text-lg">Resumen General de Maquinaria</CardTitle>
@@ -373,7 +309,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                       </TableRow>
                   </TableHeader>
                   <TableBody>
-                      {/* FILTRO */}
+                      {}
                       <TableRow>
                           <TableCell className="font-medium">Filtro</TableCell>
                           <TableCell>Tiempo Total Real</TableCell>
@@ -384,8 +320,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                               Desde "{startStepName}" hasta "{selectedEndStepIndex ? endStepOptions.find(o => o.index.toString() === selectedEndStepIndex)?.stepName : '...'}"
                           </TableCell>
                       </TableRow>
-
-                      {/* MACERADOR - Recibir Cocedor */}
+                      {}
                       <TableRow>
                           <TableCell className="font-medium">Macerador</TableCell>
                           <TableCell>Tiempo "Recibir Cocedor"</TableCell>
@@ -396,8 +331,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                               Duración del paso específico
                           </TableCell>
                       </TableRow>
-
-                      {/* MACERADOR - Pausa */}
+                      {}
                       <TableRow>
                           <TableCell className="font-medium">Macerador</TableCell>
                           <TableCell>Pausa Macerador</TableCell>
@@ -412,8 +346,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                                )}
                           </TableCell>
                       </TableRow>
-
-                       {/* MACERADOR - Manual */}
+                       {}
                        <TableRow>
                           <TableCell className="font-medium">Macerador</TableCell>
                           <TableCell>Cálculo Manual (Rango)</TableCell>
@@ -424,8 +357,7 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                                Rango seleccionado manualmente
                           </TableCell>
                       </TableRow>
-
-                      {/* MACERADOR - Temperatura */}
+                      {}
                       <TableRow>
                           <TableCell className="font-medium">Macerador</TableCell>
                           <TableCell>Temp. "Cont. Conversión"</TableCell>
@@ -436,17 +368,14 @@ export function MachineryTab({ data, selectedBatchId }: MachineryTabProps) {
                               Parámetro registrado en el paso
                           </TableCell>
                       </TableRow>
-
-                      {/* GRADO PLATO (DFM8) */}
+                      {}
                       <TableRow>
                           <TableCell className="font-medium">Macerador / Cocimiento</TableCell>
                           <TableCell>Grado Plato (DFM8)</TableCell>
                           <TableCell className="text-right font-mono font-bold">
                               {(() => {
-                                  // Buscar valor en todo el lote, priorizando Macerador
                                   const allParams = batchRecords.flatMap(r => r.parameters || []);
                                   const platoParam = allParams.find(p => p.dfmCode === "DFM8" && p.value > 0);
-                                  
                                   if (!platoParam) return "N/A";
                                   return `${platoParam.value} ${platoParam.unit || ""}`;
                               })()}

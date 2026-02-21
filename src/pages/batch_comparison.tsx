@@ -1,5 +1,3 @@
-// src/pages/BatchComparison.tsx  (REFACTORIZADO)
-// La página ahora es un orquestador fino — toda la lógica vive en useBatchComparison
 
 import { useRef } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard_layout";
@@ -18,19 +16,12 @@ import { useReactToPrint } from "react-to-print";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use_toast";
 import { exportToCSV } from "@/utils/export_utils";
-
-// Hook de lógica
 import { useBatchComparison } from "@/hooks/use_batch_comparison";
-
-// Componentes atómicos
 import { BatchSelectorCard } from "@/components/batch-comparison/batch_selector_card";
 import { BatchComparisonChart } from "@/components/batch-comparison/batch_comparison_chart";
 import { TemperatureTrendChart } from "@/components/machine-detail/temperature_trend_chart";
-
-// Helpers de datos
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
-
 export default function BatchComparison() {
   const { toast } = useToast();
   const {
@@ -47,15 +38,11 @@ export default function BatchComparison() {
     seriesOptions,
     addSeries,
   } = useBatchComparison();
-
-  // ── Datos para el gráfico de barras superiores ─────────────────────────────
   const batchAData = getBatchById(data, batchA);
   const batchBData = getBatchById(data, batchB);
-
   const machinesA = batchAData.map((d) => d.TEILANL_GRUPO);
   const machinesB = batchBData.map((d) => d.TEILANL_GRUPO);
   const relevantMachines = Array.from(new Set([...machinesA, ...machinesB])).sort();
-
   const comparisonData = relevantMachines.map((machineName) => {
     const recordA = batchAData.find((d) => d.TEILANL_GRUPO === machineName);
     const recordB = batchBData.find((d) => d.TEILANL_GRUPO === machineName);
@@ -65,16 +52,12 @@ export default function BatchComparison() {
       [batchB || "Lote B"]: recordB?.real_total_min || 0,
     };
   });
-
-  // ── Impresión ──────────────────────────────────────────────────────────────
   const componentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
     documentTitle: `Reporte_Comparacion_${format(new Date(), "yyyy-MM-dd_HHmm")}`,
     pageStyle: `@page{size:auto;margin:15mm;}@media print{body{-webkit-print-color-adjust:exact;}}`,
   });
-
-  // ── Estado vacío ──────────────────────────────────────────────────────────
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -84,11 +67,10 @@ export default function BatchComparison() {
       </DashboardLayout>
     );
   }
-
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        {/* Header */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Comparación de Lotes</h1>
@@ -122,10 +104,9 @@ export default function BatchComparison() {
             </Button>
           </div>
         </div>
-
-        {/* Contenido imprimible */}
+        {}
         <div ref={componentRef} className="space-y-6">
-          {/* Encabezado sólo para impresión */}
+          {}
           <div className="hidden print:block mb-6">
             <h1 className="text-3xl font-bold text-black mb-2">Reporte de Comparación de Lotes</h1>
             <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
@@ -135,8 +116,7 @@ export default function BatchComparison() {
               </p>
             )}
           </div>
-
-          {/* Selector de lotes */}
+          {}
           <BatchSelectorCard
             batchIds={batchIds}
             batchA={batchA}
@@ -145,8 +125,7 @@ export default function BatchComparison() {
             onChangeBatchA={setBatchA}
             onChangeBatchB={setBatchB}
           />
-
-          {/* Gráfico de comparación directa */}
+          {}
           {batchA && batchB && (
             <BatchComparisonChart
               data={comparisonData as Record<string, unknown>[]}
@@ -156,8 +135,7 @@ export default function BatchComparison() {
               batchProductMap={batchProductMap}
             />
           )}
-
-          {/* Gráfico de tendencias multi-serie */}
+          {}
           <div className="space-y-6 mt-6">
             <TemperatureTrendChart
               data={chartData}

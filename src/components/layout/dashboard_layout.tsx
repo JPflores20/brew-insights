@@ -11,28 +11,22 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useLocation, Link } from "react-router-dom";
-
 interface DashboardLayoutProps {
   children: ReactNode;
 }
-
 const routeNames: Record<string, string> = {
   "cocimientos": "Resumen",
   "comparacion": "Comparación",
   "maquinaria": "Maquinaria",
   "ciclos": "Ciclos & Gantt"
 };
-
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean);
-
-  // Generar breadcrumbs dinámicos
   const breadcrumbs = pathSegments.map((segment, index) => {
     const url = `/${pathSegments.slice(0, index + 1).join("/")}`;
     const isLast = index === pathSegments.length - 1;
     const name = routeNames[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
-
     return (
       <div key={url} className="flex items-center">
         <BreadcrumbItem className="hidden md:block">
@@ -48,7 +42,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
     );
   });
-
   return (
     <SidebarProvider>
       <AppSidebar />

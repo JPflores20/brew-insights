@@ -27,31 +27,26 @@ import {
     ListFilter,
 } from "lucide-react";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
-
 const COLOR_PRIMARY = "hsl(var(--primary))";
 const COLOR_SECONDARY = "#3b82f6";
 const COLOR_ERROR = "#ef4444";
 const COLOR_MUTED = "hsl(var(--muted-foreground))";
 const COLOR_WARNING = "text-yellow-500";
-
 const TICK_STYLE = { fontSize: 11, fill: COLOR_MUTED };
 const AXIS_LABEL_STYLE = { fill: COLOR_MUTED, fontSize: 10 };
 const LEGEND_PROPS = { wrapperStyle: { paddingTop: "10px" } };
-
 interface StepData {
     stepName: string;
     durationMin: number;
     expectedDurationMin: number;
     startTime: string | Date;
 }
-
 interface SequenceChartProps {
     selectedRecord: any;
     stepsData: StepData[];
     selectedBatchId: string;
     selectedMachine: string;
 }
-
 export const SequenceChart = memo(function SequenceChart({
     selectedRecord,
     stepsData,
@@ -70,7 +65,6 @@ export const SequenceChart = memo(function SequenceChart({
             </Card>
         );
     }
-
     return (
         <Card className="bg-card border-border p-6 border-l-4 border-l-primary h-[580px]">
             <Tabs defaultValue="bar" className="h-full flex flex-col">
@@ -92,7 +86,6 @@ export const SequenceChart = memo(function SequenceChart({
                         <TabsTrigger value="radar">Radar</TabsTrigger>
                     </TabsList>
                 </div>
-
                 <div className="flex-1 w-full min-h-0">
                     <TabsContent value="bar" className="h-full mt-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -122,7 +115,6 @@ export const SequenceChart = memo(function SequenceChart({
                             </BarChart>
                         </ResponsiveContainer>
                     </TabsContent>
-
                     <TabsContent value="line" className="h-full mt-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={stepsData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
@@ -143,7 +135,6 @@ export const SequenceChart = memo(function SequenceChart({
                             </LineChart>
                         </ResponsiveContainer>
                     </TabsContent>
-
                     <TabsContent value="radar" className="h-full mt-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={stepsData}>

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { BatchRecord, SeriesItem } from "@/types";
 import { calculateTrendData } from "./bc_utils";
+import { FILTER_ALL } from "@/lib/constants";
 
 export function useBcChart(
   data: BatchRecord[], 
@@ -9,7 +10,6 @@ export function useBcChart(
 ) {
   const chartData = useMemo(() => {
     const dataMap = new Map<string, Record<string, unknown>>();
-
     seriesList.forEach((series) => {
       const points = calculateTrendData(
         data, 
@@ -18,11 +18,9 @@ export function useBcChart(
         series.batch, 
         selectedTempParam
       );
-      
       points.forEach((p, index) => {
-        const isBatchMode = series.batch && series.batch !== "ALL";
+        const isBatchMode = series.batch && series.batch !== FILTER_ALL;
         const key = isBatchMode ? index.toString() : p.stepName;
-
         if (!dataMap.has(key)) {
           dataMap.set(key, {
             originalIndex: index,
@@ -31,19 +29,15 @@ export function useBcChart(
             unit: (p as { unit?: string }).unit,
           });
         }
-        
         const entry = dataMap.get(key)!;
         entry[`value_${series.id}`] = p.value;
-        
         if ((p as { unit?: string }).unit) {
           entry.unit = (p as { unit?: string }).unit;
         }
       });
     });
-
     const result = Array.from(dataMap.values());
-    const isBatchModeGlobal = seriesList.some((s) => s.batch && s.batch !== "ALL");
-
+    const isBatchModeGlobal = seriesList.some((s) => s.batch && s.batch !== FILTER_ALL);
     if (isBatchModeGlobal) {
       result.sort((a, b) => 
         (a.originalIndex as number) - (b.originalIndex as number)
@@ -55,9 +49,7 @@ export function useBcChart(
         return dA - dB;
       });
     }
-
     return result;
   }, [seriesList, selectedTempParam, data]);
-
   return { chartData };
 }

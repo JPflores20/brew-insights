@@ -31,7 +31,6 @@ import { memo, useState, useMemo, useDeferredValue } from "react";
 import { AlertTriangle, Clock, Settings } from "lucide-react";
 import { MetricCard } from "@/components/ui/metric_card";
 import { motion } from "framer-motion";
-
 interface MachineKPIsProps {
     selectedMachine: string;
     setSelectedMachine: (value: string) => void;
@@ -39,7 +38,6 @@ interface MachineKPIsProps {
     currentGap: number;
     currentIdle: number;
 }
-
 export const MachineKPIs = memo(function MachineKPIs({
     selectedMachine,
     setSelectedMachine,
@@ -50,8 +48,6 @@ export const MachineKPIs = memo(function MachineKPIs({
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const deferredSearch = useDeferredValue(searchTerm);
-
-    // Filter optimization
     const displayedMachines = useMemo(() => {
         let filtered = availableMachinesForBatch;
         if (deferredSearch) {
@@ -60,10 +56,9 @@ export const MachineKPIs = memo(function MachineKPIs({
         }
         return filtered.slice(0, 50);
     }, [availableMachinesForBatch, deferredSearch]);
-
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* 1. SELECCIÓN DE EQUIPO (Mantenemos Card estándar para el input) */}
+            {}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -132,7 +127,6 @@ export const MachineKPIs = memo(function MachineKPIs({
                                 </Command>
                             </PopoverContent>
                         </Popover>
-
                         <div className="mt-4 text-xs text-muted-foreground flex justify-between">
                             <span>Total Equipos: {availableMachinesForBatch.length}</span>
                             <span className="text-primary/80">{selectedMachine ? 'Activo' : 'Pendiente'}</span>
@@ -140,8 +134,7 @@ export const MachineKPIs = memo(function MachineKPIs({
                     </CardContent>
                 </Card>
             </motion.div>
-
-            {/* 2. KPI GAP */}
+            {}
             <MetricCard
                 title="Mayor Gap Detectado"
                 value={`${currentGap} min`}
@@ -152,8 +145,7 @@ export const MachineKPIs = memo(function MachineKPIs({
                 trend="down"
                 trendValue={currentGap > 5 ? "Crítico" : "Normal"}
             />
-
-            {/* 3. KPI TIEMPO MUERTO */}
+            {}
             <MetricCard
                 title="Tiempo Muerto Total"
                 value={`${currentIdle} min`}

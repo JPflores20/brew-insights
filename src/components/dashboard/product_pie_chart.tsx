@@ -8,15 +8,12 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
-
 interface ProductPieChartProps {
     data: { name: string; value: number }[];
     totalBatches: number;
     expanded?: boolean;
 }
-
 const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
-
 export function ProductPieChart({ data, totalBatches, expanded = false }: ProductPieChartProps) {
     return (
         <ResponsiveContainer width="100%" height="100%">
@@ -36,7 +33,6 @@ export function ProductPieChart({ data, totalBatches, expanded = false }: Produc
                     {data.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2} />
                     ))}
-
                     <Label
                         content={({ viewBox }) => {
                             if (viewBox && "cx" in viewBox && "cy" in viewBox) {

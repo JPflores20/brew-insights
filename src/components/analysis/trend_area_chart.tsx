@@ -10,12 +10,10 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
-
 interface TrendAreaChartProps {
     data: any[];
     theoreticalDuration: number;
 }
-
 export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProps) {
     return (
         <Card className="col-span-4">
@@ -43,7 +41,6 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
                                 <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-
                         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                         <XAxis
                             dataKey="id"
@@ -66,12 +63,10 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
                                 position: "insideLeft",
                             }}
                         />
-
                         <Tooltip
                             content={<ChartTooltip valueSuffix="min" />}
                             cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                         />
-
                         <ReferenceLine
                             y={theoreticalDuration}
                             stroke="red"
@@ -83,7 +78,6 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
                                 fontSize: 10,
                             }}
                         />
-
                         <Area
                             type="monotone"
                             dataKey="expectedDuration"
@@ -92,7 +86,6 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
                             fill="url(#colorIdeal)"
                             name="Duración Ideal"
                         />
-
                         <Area
                             type="monotone"
                             dataKey="duration"

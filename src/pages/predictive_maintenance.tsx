@@ -9,23 +9,16 @@ import { MetricCard } from "@/components/ui/metric_card";
 import { Wrench, ShieldAlert } from "lucide-react";
 import { DegradationAlerts } from "@/components/dashboard/degradation_alerts";
 import { DegradationTrendChart } from "@/components/dashboard/degradation_trend_chart";
-
 export default function PredictiveMaintenance() {
   const { data } = useData();
   const { loading, uploadProgress, processFiles } = useFileUpload();
-
-  // State to sync the selected alert card with the chart below it
   const [selectedMachine, setSelectedMachine] = useState<string>("");
   const [selectedStep, setSelectedStep] = useState<string>("");
-
   const handleSelectAlert = (machine: string, stepName: string) => {
       setSelectedMachine(machine);
       setSelectedStep(stepName);
-      
-      // Optionally scroll to the chart when an alert is clicked
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
-
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -33,7 +26,6 @@ export default function PredictiveMaintenance() {
       </DashboardLayout>
     );
   }
-
   if (loading) {
     return (
       <DashboardLayout>
@@ -41,7 +33,6 @@ export default function PredictiveMaintenance() {
       </DashboardLayout>
     );
   }
-
   return (
     <DashboardLayout>
       <AnimatedPage>
@@ -51,11 +42,9 @@ export default function PredictiveMaintenance() {
             <p className="text-muted-foreground mt-1">Monitoreo de degradación de equipos mediante análisis de tendencia en tiempos reales (IW).</p>
           </div>
         </div>
-
         <div className="mb-8">
             <DegradationAlerts data={data} onSelectAlert={handleSelectAlert} />
         </div>
-
         <div className="mb-8">
             <DegradationTrendChart 
                data={data} 
@@ -65,7 +54,6 @@ export default function PredictiveMaintenance() {
                setSelectedStep={setSelectedStep}
             />
         </div>
-
       </AnimatedPage>
     </DashboardLayout>
   );

@@ -9,13 +9,11 @@ import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
 import { CartesianChart } from "@/components/ui/cartesian_chart";
-
 interface GanttChartProps {
     data: any[];
     minTime: number;
     maxTime: number;
 }
-
 export function GanttChart({ data, minTime, maxTime }: GanttChartProps) {
     return (
         <Card className="col-span-4">

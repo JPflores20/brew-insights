@@ -6,11 +6,9 @@ import { useFileUpload } from "@/hooks/use_file_upload";
 import { EmptyStateUploader } from "@/components/dashboard/empty_state_uploader";
 import { LoadingState } from "@/components/ui/loading_state";
 import { QualityControlChart } from "@/components/dashboard/quality_control_chart";
-
 export default function QualityConsistency() {
   const { data } = useData();
   const { loading, uploadProgress, processFiles } = useFileUpload();
-
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -18,7 +16,6 @@ export default function QualityConsistency() {
       </DashboardLayout>
     );
   }
-
   if (loading) {
     return (
       <DashboardLayout>
@@ -26,7 +23,6 @@ export default function QualityConsistency() {
       </DashboardLayout>
     );
   }
-
   return (
     <DashboardLayout>
       <AnimatedPage>
@@ -36,11 +32,9 @@ export default function QualityConsistency() {
             <p className="text-muted-foreground mt-1">Análisis Six Sigma de parámetros físicos (DFM) y control de proceso por lote y receta.</p>
           </div>
         </div>
-
         <div className="mb-8">
             <QualityControlChart data={data} />
         </div>
-
       </AnimatedPage>
     </DashboardLayout>
   );
