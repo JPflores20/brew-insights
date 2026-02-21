@@ -12,7 +12,6 @@ import { AlertCircle, Clock, TrendingUp, Activity, CheckCircle, Printer } from "
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { calculateMergedDuration } from "@/utils/timeUtils";
 import { TrendAreaChart } from "@/components/analysis/TrendAreaChart";
-import { GanttChart } from "@/components/analysis/GanttChart";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -208,14 +207,6 @@ export default function CycleAnalysis() {
     };
   }, [chartData]);
 
-  // Ajuste para Gantt
-  const minTime = chartData.length > 0 ? Math.min(...chartData.map(d => d.startTime)) : 0;
-  const maxTime = chartData.length > 0 ? Math.max(...chartData.map(d => d.endTime)) : 0;
-
-  const ganttData = chartData.map(d => ({
-    ...d,
-    startOffset: d.startTime - minTime
-  }));
 
   if (!data) {
     return (
@@ -364,15 +355,6 @@ export default function CycleAnalysis() {
             <TrendAreaChart data={chartData} theoreticalDuration={theoreticalDuration} />
             </motion.div>
 
-            {/* 2. GANTT: Secuencia Global */}
-            <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-6"
-            >
-            <GanttChart data={ganttData} minTime={minTime} maxTime={maxTime} />
-            </motion.div>
         </div>
 
       </AnimatedPage>
