@@ -8,6 +8,7 @@ export function useMdProcess(
   const selectedRecord = data.find(
     (d) => d.CHARG_NR === selectedBatchId && d.TEILANL_GRUPO === selectedMachine
   );
+
   const stepsData = useMemo(() => {
     if (!selectedRecord?.steps) return [];
     const merged: typeof selectedRecord.steps = [];
@@ -22,11 +23,13 @@ export function useMdProcess(
     }
     return merged;
   }, [selectedRecord]);
+
   const fullProcessData = useMemo(() => {
     if (!selectedBatchId) return [];
     const records = data
       .filter((d) => d.CHARG_NR === selectedBatchId)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
     let allSteps: any[] = [];
     records.forEach((record) => {
       if (record.steps) {
@@ -49,15 +52,19 @@ export function useMdProcess(
     });
     return allSteps;
   }, [data, selectedBatchId]);
+
   const fullProcessChartHeight = useMemo(() => {
     return Math.max(500, fullProcessData.length * 50);
   }, [fullProcessData]);
+
   const anomaliesReport = useMemo(() => {
     if (!stepsData.length) return [];
     const issues = stepsData.map((step, index) => {
       const isGap = step.stepName.includes("Espera");
       const isSlow = !isGap && step.expectedDurationMin > 0 && step.durationMin > step.expectedDurationMin + 1;
+      
       if (!isGap && !isSlow) return null;
+      
       return {
         id: index,
         type: isGap ? "gap" : "delay",
@@ -70,6 +77,7 @@ export function useMdProcess(
         nextStep: index < stepsData.length - 1 ? stepsData[index + 1].stepName : "Fin",
       };
     });
+
     return issues
       .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => {
@@ -78,6 +86,7 @@ export function useMdProcess(
         return valueB - valueA;
       });
   }, [stepsData]);
+
   return { 
     selectedRecord, 
     stepsData, 
@@ -86,3 +95,4 @@ export function useMdProcess(
     anomaliesReport 
   };
 }
+

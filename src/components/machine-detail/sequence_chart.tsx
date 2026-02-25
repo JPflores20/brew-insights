@@ -47,6 +47,7 @@ interface SequenceChartProps {
     selectedBatchId: string;
     selectedMachine: string;
 }
+
 export const SequenceChart = memo(function SequenceChart({
     selectedRecord,
     stepsData,

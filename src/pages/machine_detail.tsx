@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard_layout";
-import { Clock, LayoutDashboard, Layers, Printer } from "lucide-react";
+import { Clock, LayoutDashboard, Layers, Printer, BarChart3, Cog } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { exportToCSV } from "@/utils/export_utils";
@@ -19,6 +19,7 @@ import { GlobalTimeline } from "@/components/machine-detail/global_timeline";
 import { MachineryTab } from "@/components/machine-detail/machinery_tab";
 import { AnimatedPage } from "@/components/layout/animated_page";
 import { LoadingState } from "@/components/ui/loading_state";
+import { SequenceComparisonTab } from "@/components/machine-detail/sequence_comparison_tab";
 export default function MachineDetail() {
   const {
     data,
@@ -59,6 +60,14 @@ export default function MachineDetail() {
     tempTrendData,
     selectedTempIndices,
     setSelectedTempIndices,
+    compareBatchIds,
+    setCompareBatchIds,
+    compSelectedRecipe,
+    setCompSelectedRecipe,
+    compCompareBatchIds,
+    setCompCompareBatchIds,
+    compSelectedMachineGroup,
+    setCompSelectedMachineGroup,
     loadSuggestion,
     isPending
   } = useMachineDetail();
@@ -134,13 +143,13 @@ export default function MachineDetail() {
         />
         <div className="print:hidden">
             <GlobalFilters
-            selectedRecipe={selectedRecipe}
-            setSelectedRecipe={setSelectedRecipe}
-            uniqueRecipes={uniqueRecipes}
-            selectedBatchId={selectedBatchId}
-            setSelectedBatchId={setSelectedBatchId}
-            filteredBatches={filteredBatches}
-            batchProductMap={batchProductMap}
+              selectedRecipe={selectedRecipe}
+              setSelectedRecipe={setSelectedRecipe}
+              uniqueRecipes={uniqueRecipes}
+              selectedBatchId={selectedBatchId}
+              setSelectedBatchId={setSelectedBatchId}
+              filteredBatches={filteredBatches}
+              batchProductMap={batchProductMap}
             />
         </div>
         {}
@@ -159,24 +168,30 @@ export default function MachineDetail() {
                 className="space-y-4"
             >
                 <div className="flex items-center justify-between print:hidden">
-                <TabsList className="grid w-full max-w-[600px] grid-cols-3 bg-muted/50 p-1 rounded-lg">
+                 <TabsList className="grid w-full max-w-[800px] grid-cols-4 bg-muted/50 p-1 rounded-lg">
                     <TabsTrigger
                     value="machine-view"
                     className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                     >
-                    <LayoutDashboard className="h-4 w-4" /> Detalle por Equipo
+                    <LayoutDashboard className="h-4 w-4" /> Detalle
+                    </TabsTrigger>
+                    <TabsTrigger
+                    value="sequence-compare"
+                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                    >
+                    <BarChart3 className="h-4 w-4" /> Comparativa
                     </TabsTrigger>
                     <TabsTrigger
                     value="global-view"
                     className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                     >
-                    <Layers className="h-4 w-4" /> Cronología Global
+                    <Layers className="h-4 w-4" /> Línea Tiempo
                     </TabsTrigger>
                     <TabsTrigger
                     value="machinery"
                     className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                     >
-                    <Layers className="h-4 w-4" /> Maquinaria
+                    <Cog className="h-4 w-4" /> Maquinaria
                     </TabsTrigger>
                 </TabsList>
                 </div>
@@ -251,6 +266,21 @@ export default function MachineDetail() {
                 </motion.div>
                 </TabsContent>
                 <TabsContent
+                value="sequence-compare"
+                className="space-y-6 outline-none"
+                >
+                  <SequenceComparisonTab 
+                    data={data}
+                    initialMachine={selectedMachine}
+                    compSelectedRecipe={compSelectedRecipe}
+                    setCompSelectedRecipe={setCompSelectedRecipe}
+                    compCompareBatchIds={compCompareBatchIds}
+                    setCompCompareBatchIds={setCompCompareBatchIds}
+                    compSelectedMachineGroup={compSelectedMachineGroup}
+                    setCompSelectedMachineGroup={setCompSelectedMachineGroup}
+                  />
+                </TabsContent>
+                <TabsContent
                 value="global-view"
                 className="space-y-6 outline-none"
                 >
@@ -272,6 +302,8 @@ export default function MachineDetail() {
                   <MachineryTab
                     data={data}
                     selectedBatchId={selectedBatchId}
+                    compareBatchIds={compareBatchIds}
+                    setCompareBatchIds={setCompareBatchIds}
                   />
                 </TabsContent>
             </Tabs>
