@@ -1,0 +1,39 @@
+NAME: 21/653FV04 | UNIT: %
+NAME: 21/683PT02 | UNIT: mbar
+NAME: 22/1090QT01 | UNIT: ¬P
+NAME: 22/653FV04 | UNIT: %
+NAME: 23/1090QT01 | UNIT: ░P
+NAME: 23/653FV04 | UNIT: %
+NAME: 24/1090QT01 | UNIT: ░P
+NAME: 24/653FV04 | UNIT: %
+NAME: 620P03 | UNIT: HL/H
+NAME: 620P03 | UNIT: hl/h
+NAME: 622P04 | UNIT: HL/H
+NAME: 622P04 | UNIT: hl/h
+NAME: 624P05 | UNIT: HL/H
+NAME: 624P05 | UNIT: hl/h
+NAME: 626P06 | UNIT: HL/H
+NAME: 626P06 | UNIT: hl/h
+NAME: Bomba 1 | UNIT: hl/h
+NAME: Bomba 2 | UNIT: hl/h
+NAME: Bomba 3 | UNIT: hl/h
+NAME: Bomba 4 | UNIT: hl/h
+NAME: Cantidad agua | UNIT: hl
+NAME: Cantidad mosto | UNIT: hl
+NAME: Caudal mosto | UNIT: hl/h
+NAME: Nivel maquina | UNIT: mm
+NAME: Presion absoluta | UNIT: mmWs
+NAME: Presion de asp. | UNIT: mbar
+NAME: Turbidez | UNIT: EBC
+NAME: bomba 1 | UNIT: hl/h
+NAME: bomba 2 | UNIT: hl/h
+NAME: bomba 3 | UNIT: hl/h
+NAME: bomba 4 | UNIT: hl/h
+NAME: cantidad agua | UNIT: hl
+NAME: cantidad mosto | UNIT: hl
+NAME: caudal mosto | UNIT: hl/h
+NAME: indice | UNIT: no.
+NAME: indice cadena 1 | UNIT: No.
+NAME: indice cadena 1 | UNIT: no.
+NAME: nivel maquina | UNIT: mm
+NAME: presion de asp. | UNIT: mbar

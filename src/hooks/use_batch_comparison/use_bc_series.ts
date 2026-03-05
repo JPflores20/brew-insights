@@ -9,7 +9,9 @@ export function useBcSeries(data: BatchRecord[]) {
       id: "1", 
       recipe: FILTER_ALL, 
       machine: FILTER_ALL, 
-      batch: FILTER_ALL, 
+      batch: FILTER_ALL,
+      step: FILTER_ALL,
+      parameter: FILTER_ALL,
       color: COLORS[0] 
     },
   ]);
@@ -23,6 +25,8 @@ export function useBcSeries(data: BatchRecord[]) {
         recipe: lastSeries?.recipe ?? FILTER_ALL,
         machine: lastSeries?.machine ?? FILTER_ALL,
         batch: lastSeries?.batch ?? FILTER_ALL,
+        step: lastSeries?.step ?? FILTER_ALL,
+        parameter: lastSeries?.parameter ?? FILTER_ALL,
         color: COLORS[(nextId - 1) % COLORS.length],
       },
     ]);
@@ -30,7 +34,10 @@ export function useBcSeries(data: BatchRecord[]) {
   const removeSeries = (id: string) => {
     setSeriesList(seriesList.filter((s) => s.id !== id));
   };
-  const updateSeries = (index: number, field: string, value: string) => {
+  const updateSeries = (id: string, field: string, value: string) => {
+    const index = seriesList.findIndex(s => s.id === id);
+    if (index === -1) return;
+    
     const newList = [...seriesList];
     newList[index] = { 
       ...newList[index], 
@@ -39,15 +46,27 @@ export function useBcSeries(data: BatchRecord[]) {
     if (field === "recipe" || field === "machine") {
       newList[index].batch = FILTER_ALL;
     }
+    if (field === "machine") {
+      newList[index].parameter = FILTER_ALL;
+      newList[index].step = FILTER_ALL;
+    }
     setSeriesList(newList);
   };
-  const seriesOptions = seriesList.map((s, index) => ({
+  const seriesOptions = seriesList.map((s) => ({
     ...s,
     ...computeOptions(data, s.recipe, s.machine),
-    setRecipe: (val: string) => updateSeries(index, "recipe", val),
-    setMachine: (val: string) => updateSeries(index, "machine", val),
-    setBatch: (val: string) => updateSeries(index, "batch", val),
+    setRecipe: (val: string) => updateSeries(s.id, "recipe", val),
+    setMachine: (val: string) => updateSeries(s.id, "machine", val),
+    setBatch: (val: string) => updateSeries(s.id, "batch", val),
+    setStep: (val: string) => updateSeries(s.id, "step", val),
+    setParameter: (val: string) => updateSeries(s.id, "parameter", val),
     onRemove: seriesList.length > 1 ? () => removeSeries(s.id) : undefined,
   }));
-  return { seriesList, addSeries, seriesOptions };
+  return { 
+    seriesList, 
+    addSeries, 
+    updateSeries, 
+    removeSeries, 
+    seriesOptions 
+  };
 }

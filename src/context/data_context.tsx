@@ -1,15 +1,16 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { BatchRecord } from "@/data/mock_data";
-import { useLocalStorage } from "@/hooks/use_local_storage"; 
+import { useIndexedDB } from "@/hooks/use_indexed_db"; 
 interface DataContextType {
   data: BatchRecord[];
   setData: (data: BatchRecord[]) => void;
+  isLoaded: boolean;
 }
 const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useLocalStorage<BatchRecord[]>("brew-insights-data", []);
+  const [data, setData, isLoaded] = useIndexedDB<BatchRecord[]>("brew-insights-data", []);
   return (
-    <DataContext.Provider value={{ data, setData }}>
+    <DataContext.Provider value={{ data, setData, isLoaded }}>
       {children}
     </DataContext.Provider>
   );

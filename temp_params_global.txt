@@ -1,0 +1,39 @@
+EV:TempAgua
+Enf1:TempMosto
+Enf4:TempMosto
+Enf5:TempMosto
+Enf6:TempMosto
+Temp. TQ 1 (L1)
+Temp. TQ 1 (L2)
+Temp. TQ 1 (L3)
+Temp. TQ 1 (L4)
+Temp. TQ 2 (L1)
+Temp. TQ 2 (L2)
+Temp. TQ 2 (L3)
+Temp. TQ 2 (L4)
+Temp. agua 1
+Temp. agua 2
+Temp. agua 3
+Temp. agua 4
+Temp. agua A3
+Temp. agua A4
+Temp. agua M3
+Temp. agua M4
+Temp. lavado
+Temperatura
+Temperatura Coc.
+VE:WaterTemp
+WC2:Temperature
+WC3:Temperature
+temp. agua  M 1
+temp. agua C 1
+temp. agua C 2
+temp. agua M 2
+temp. lavado
+temp_TQ_max
+temp_TQ_min
+temp_agua
+temp_olla
+temperatura
+temperatura c4
+temperatura m4

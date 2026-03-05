@@ -9,5 +9,7 @@ export interface SeriesItem {
   recipe: string;
   machine: string;
   batch: string;
+  step: string;
+  parameter: string;
   color: string;
 }

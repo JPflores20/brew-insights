@@ -22,7 +22,8 @@ import {
     User,
     Lock,
     Wrench,
-    Activity
+    Activity,
+    Trash2
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth_context";
@@ -70,11 +71,17 @@ const navItems = [
         icon: Activity,
         badge: "Nuevo"
     },
+    {
+        title: "Indicadores",
+        url: "/cocimientos/indicadores",
+        icon: LayoutDashboard,
+        badge: "Nuevo"
+    },
 ];
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const location = useLocation();
     const { user } = useAuth();
-    const { data } = useData();
+    const { data, setData } = useData();
     const hasData = data && data.length > 0;
     const handleLogout = async () => {
         try {
@@ -169,6 +176,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </div>
                     </div>
                     <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                variant="outline"
+                                className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/20 mb-2"
+                                onClick={() => {
+                                    if (confirm("¿Estás seguro de que deseas limpiar todos los datos cargados? Esta acción no se puede deshacer.")) {
+                                        setData([]);
+                                    }
+                                }}
+                            >
+                                <Trash2 className="size-4" />
+                                <span>Limpiar Base de Datos</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 variant="outline"

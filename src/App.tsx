@@ -17,6 +17,7 @@ import CycleAnalysis from "./pages/cycle_analysis";
 import RecipeAnalysis from "./pages/recipe_analysis";
 import PredictiveMaintenance from "./pages/predictive_maintenance";
 import QualityConsistency from "./pages/quality_consistency";
+import Indicadores from "./pages/indicadores";
 import NotFound from "./pages/not_found";
 const queryClient = new QueryClient();
 const App = () => (
@@ -102,6 +103,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <QualityConsistency />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cocimientos/indicadores"
+                element={
+                  <ProtectedRoute>
+                    <Indicadores />
                   </ProtectedRoute>
                 }
               />

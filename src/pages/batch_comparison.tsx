@@ -20,8 +20,18 @@ import { useBatchComparison } from "@/hooks/use_batch_comparison";
 import { BatchSelectorCard } from "@/components/batch-comparison/batch_selector_card";
 import { BatchComparisonChart } from "@/components/batch-comparison/batch_comparison_chart";
 import { TemperatureTrendChart } from "@/components/machine-detail/temperature_trend_chart";
+import { SicTemperatureChart } from "@/components/batch-comparison/sic_temperature_chart";
+import { SicAguaAdjuntosChart } from "@/components/batch-comparison/sic_agua_adjuntos_chart";
+import { SicAguaMaltaChart } from "@/components/batch-comparison/sic_agua_malta_chart";
+import { SicMaltaCarameloChart } from "@/components/batch-comparison/sic_malta_caramelo_chart";
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
+import { useBcSeries } from "@/hooks/use_batch_comparison/use_bc_series";
+import { useSicChart } from "@/hooks/use_batch_comparison/use_sic_chart";
+import { useSicAguaAdjuntos } from "@/hooks/use_batch_comparison/use_sic_agua_adjuntos";
+import { useSicAguaMalta } from "@/hooks/use_batch_comparison/use_sic_agua_malta";
+import { useSicMaltaCaramelo } from "@/hooks/use_batch_comparison/use_sic_malta_caramelo";
+
 export default function BatchComparison() {
   const { toast } = useToast();
   const {
@@ -38,6 +48,44 @@ export default function BatchComparison() {
     seriesOptions,
     addSeries,
   } = useBatchComparison();
+
+  // Series management and data for SIC Chart
+  const { 
+    seriesList: sicSeriesList, 
+    addSeries: addSicSeries, 
+    seriesOptions: sicSeriesOptions 
+  } = useBcSeries(data);
+  const { chartData: sicChartData } = useSicChart(data, sicSeriesList);
+
+  // Series management and data for Water/Adjuncts SIC Chart
+  const {
+    seriesList: wSeriesList,
+    addSeries: addWSeries,
+    seriesOptions: wSeriesOptions
+  } = useBcSeries(data);
+  const { chartData: wChartData } = useSicAguaAdjuntos(data, wSeriesList);
+
+  // Series management and data for Water/Malt SIC Chart
+  const {
+      seriesList: amSeriesList,
+      addSeries: addAmSeries,
+      seriesOptions: amSeriesOptions
+  } = useBcSeries(data);
+  const { chartData: amChartData } = useSicAguaMalta(data, amSeriesList);
+
+  // Series management and data for Malta Caramelo SIC Chart
+  const {
+    seriesList: mSeriesList,
+    addSeries: addMSeries,
+    updateSeries: updateMSeries,
+    removeSeries: removeMSeries,
+  } = useBcSeries(data);
+
+  // Extract unique recipes for the Malt Chart filter
+  const uniqueRecipes = Array.from(new Set(data.map(d => d.productName).filter(Boolean))).sort();
+
+
+
   const batchAData = getBatchById(data, batchA);
   const batchBData = getBatchById(data, batchB);
   const machinesA = batchAData.map((d) => d.TEILANL_GRUPO);
@@ -150,6 +198,37 @@ export default function BatchComparison() {
               series={seriesOptions}
               onAddSeries={addSeries}
             />
+            
+            <SicTemperatureChart
+              data={sicChartData}
+              selectedTempIndices={selectedTempIndices}
+              setSelectedTempIndices={setSelectedTempIndices}
+              series={sicSeriesOptions}
+              onAddSeries={addSicSeries}
+            />
+            
+            <SicAguaAdjuntosChart
+              data={wChartData}
+              series={wSeriesOptions}
+              onAddSeries={addWSeries}
+            />
+
+            <SicAguaMaltaChart
+              data={amChartData}
+              series={amSeriesOptions}
+              onAddSeries={addAmSeries}
+            />
+
+            <SicMaltaCarameloChart
+              data={data}
+              series={mSeriesList}
+              addSeries={addMSeries}
+              updateSeries={updateMSeries}
+              removeSeries={removeMSeries}
+              uniqueRecipes={uniqueRecipes}
+            />
+
+
           </div>
         </div>
       </div>

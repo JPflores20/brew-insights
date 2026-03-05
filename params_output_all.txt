@@ -1,0 +1,39 @@
+21/653FV04 | %
+21/683PT02 | mbar
+22/1090QT01 | ¬P
+22/653FV04 | %
+23/1090QT01 | ░P
+23/653FV04 | %
+24/1090QT01 | ░P
+24/653FV04 | %
+620P03 | HL/H
+620P03 | hl/h
+622P04 | HL/H
+622P04 | hl/h
+624P05 | HL/H
+624P05 | hl/h
+626P06 | HL/H
+626P06 | hl/h
+Bomba 1 | hl/h
+Bomba 2 | hl/h
+Bomba 3 | hl/h
+Bomba 4 | hl/h
+Cantidad agua | hl
+Cantidad mosto | hl
+Caudal mosto | hl/h
+Nivel maquina | mm
+Presion absoluta | mmWs
+Presion de asp. | mbar
+Turbidez | EBC
+bomba 1 | hl/h
+bomba 2 | hl/h
+bomba 3 | hl/h
+bomba 4 | hl/h
+cantidad agua | hl
+cantidad mosto | hl
+caudal mosto | hl/h
+indice | no.
+indice cadena 1 | No.
+indice cadena 1 | no.
+nivel maquina | mm
+presion de asp. | mbar

@@ -1,0 +1,13 @@
+indice | no. | 00000000 00000000
+Cantidad mosto | hl | 31
+Caudal mosto | hl/h | 21.0
+Nivel maquina | mm | 488.0
+Turbidez | EBC | 0.0
+Presion absoluta | mmWs | -1602
+Bomba 1 | hl/h | 0
+Bomba 2 | hl/h | 0.0
+Bomba 3 | hl/h | 0.0
+Bomba 4 | hl/h | 0.0
+cantidad agua | hl | 0.0
+21/653FV04 | % | 75.0
+21/683PT02 | mbar | 0.0

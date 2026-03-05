@@ -1,6 +1,8 @@
 import { BatchRecord } from "@/types";
 import { FILTER_ALL } from "@/lib/constants";
 
+export const PARAM_TIME = "Tiempo";
+
 const THEME_COLORS = {
   red: "#ef4444",
   blue: "#3b82f6",
@@ -36,19 +38,75 @@ export function computeOptions(
   const availableRecipes = getUniqueValues(recipeSource.map((d) => d.productName));
   const machineSource = filterByRecipe(data, currentRecipe);
   const availableMachines = getUniqueValues(
-    machineSource.filter(hasTemperatureParam).map((d) => d.TEILANL_GRUPO)
+    machineSource.map((d) => d.TEILANL_GRUPO)
   );
   const batchSource = filterByMachine(filterByRecipe(data, currentRecipe), currentMachine);
   const availableBatches = getUniqueValues(
-    batchSource.filter(hasTemperatureParam).map((d) => d.CHARG_NR)
+    batchSource.map((d) => d.CHARG_NR)
   );
-  return { availableRecipes, availableMachines, availableBatches };
+  let availableParameters: string[] = [];
+  let availableSteps: string[] = [];
+
+  if (isValidSelection(currentMachine)) {
+    const sampleRecord = recipeSource.find((r) => r.parameters && r.parameters.length > 0) || machineSource.find((r) => r.parameters && r.parameters.length > 0);
+    if (sampleRecord && sampleRecord.parameters) {
+      availableParameters = getUniqueValues(
+        sampleRecord.parameters.map((p) => p.name)
+      );
+    }
+    
+    // Extract available steps for this machine across all matching records
+    // to ensure we capture the complete process flow, especially if recipes vary slightly
+    const allSteps: string[] = [];
+    batchSource.forEach((r) => {
+      if (r.steps && r.steps.length > 0) {
+        r.steps.forEach(s => {
+          if (s.stepName && !allSteps.includes(s.stepName)) {
+            allSteps.push(s.stepName);
+          }
+        });
+      }
+    });
+    
+    // We already collected them in order of appearance, so we don't need to re-sort
+    availableSteps = allSteps;
+    
+    // Inject pseudo-parameter for plotting step duration
+    if (availableSteps.length > 0 && !availableParameters.includes(PARAM_TIME)) {
+      availableParameters.push(PARAM_TIME);
+    }
+  }
+
+  return { availableRecipes, availableMachines, availableBatches, availableParameters, availableSteps };
 }
-const getParamValue = (record: BatchRecord | undefined, paramName: string) => {
-  if (!record?.parameters) return null;
+const getParamValue = (record: BatchRecord | undefined, paramName: string, stepName?: string) => {
+  if (!record) return null;
+
+  // Intercept Pseudo-parameter: 'Tiempo'
+  if (paramName === PARAM_TIME) {
+    if (stepName && stepName !== FILTER_ALL && record.steps) {
+      const stepMatch = record.steps.find((s) => s.stepName === stepName);
+      if (stepMatch) {
+        return { name: PARAM_TIME, value: stepMatch.durationMin, unit: "min" };
+      }
+    } else {
+      // If "Todos los pasos" is selected, return the total batch expected duration or sum of real durations
+      const totalMins = record.real_total_min || (record.steps ? record.steps.reduce((sum, s) => sum + (s.durationMin || 0), 0) : 0);
+      return { name: PARAM_TIME, value: totalMins, unit: "min" };
+    }
+    return null;
+  }
+
+  if (!record.parameters) return null;
+  
+  let sourceParams = record.parameters;
+  if (stepName && stepName !== FILTER_ALL) {
+    sourceParams = sourceParams.filter(p => p.stepName === stepName);
+  }
+
   return (
-    record.parameters.find((p) => p.name === paramName) ||
-    record.parameters.find((p) => isTemperatureParam(p.name, p.unit || ""))
+    sourceParams.find((p) => p.name === paramName) ||
+    sourceParams.find((p) => isTemperatureParam(p.name, p.unit || ""))
   );
 };
 const formatShortDate = (timestamp: string) => {
@@ -71,19 +129,30 @@ const extractBatchTrendData = (data: BatchRecord[], machine: string, batchId: st
     date: record.timestamp,
   }));
 };
-const extractHistoricalTrendData = (data: BatchRecord[], machine: string, recipe: string, param: string) => {
+const extractHistoricalTrendData = (data: BatchRecord[], machine: string, recipe: string, param: string, stepName?: string) => {
   const records = filterByRecipe(filterByMachine(data, machine), recipe);
   return records
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map((record) => {
-      const pVal = getParamValue(record, param);
+      const pVal = getParamValue(record, param, stepName);
       const dateLabel = formatShortDate(record.timestamp);
+      
+      let duration = null;
+      if (stepName && stepName !== FILTER_ALL && record.steps) {
+        const stepMatch = record.steps.find((s) => s.stepName === stepName);
+        if (stepMatch) {
+          duration = stepMatch.durationMin;
+        }
+      }
+
       return {
         batchId: record.CHARG_NR,
         value: pVal ? Number(pVal.value) : null,
+        duration: duration,
         date: dateLabel,
         machine: record.TEILANL_GRUPO,
         stepName: dateLabel,
+        unit: pVal ? pVal.unit : undefined,
       };
     })
     .filter((d): d is typeof d & { value: number } => 
@@ -95,10 +164,11 @@ export function calculateTrendData(
   tMachine: string,
   tRecipe: string,
   tBatch: string,
-  param: string
+  param: string,
+  stepName?: string
 ) {
   if (isValidSelection(tBatch)) {
     return extractBatchTrendData(data, tMachine, tBatch, param);
   }
-  return extractHistoricalTrendData(data, tMachine, tRecipe, param);
+  return extractHistoricalTrendData(data, tMachine, tRecipe, param, stepName);
 }

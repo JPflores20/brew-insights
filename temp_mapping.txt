@@ -1,0 +1,57 @@
+cantidad agua -> {'Trub 3', 'Filtro_Mosto 4', 'Olla de Coctos 2', 'Macerador 2', 'Tanque Buffer 2', 'Olla de Coctos 3', 'Tanque Buffer 1', 'Filtro mosto 1', 'T. Grits linea 2', 'Tanque de Trub 1', 'T. Grits linea 3', 'T. Grits linea 1', 'T. Grits linea 4', 'Filtro Mosto 2', 'Olla de Coctos 1', 'Cocedor 2'}
+Temp. agua 1 -> {'T. Grits linea 1'}
+Caudal agua 1 -> {'T. Grits linea 1'}
+cantidad agua C1 -> {'Macerar Arroz 1', 'Cocedor 1'}
+caudal agua C 1 -> {'Macerar Arroz 1'}
+temp. agua C 1 -> {'Macerar Arroz 1'}
+temperatura -> {'Cocedor 1', 'Macerador 2', 'Olla de Coctos 2', 'Olla de Coctos 4', 'Macerador 1', 'Olla de Coctos 1', 'Cocedor 2'}
+Temp. agua 2 -> {'T. Grits linea 2'}
+Caudal agua 2 -> {'T. Grits linea 2'}
+Temp. agua 3 -> {'T. Grits linea 3'}
+Caudal agua 3 -> {'T. Grits linea 3'}
+cantidad agua M1 -> {'Macerar Malta 1', 'Macerador 1'}
+caudal agua M 1 -> {'Macerar Malta 1'}
+temp. agua  M 1 -> {'Macerar Malta 1'}
+cantidad agua C2 -> {'Macerar Arroz 2'}
+caudal agua C 2 -> {'Macerar Arroz 2'}
+temp. agua C 2 -> {'Macerar Arroz 2'}
+Cantidad agua A3 -> {'Macerar Arroz 3'}
+Caudal agua A3 -> {'Macerar Arroz 3'}
+Temp. agua A3 -> {'Macerar Arroz 3'}
+Temperatura Coc. -> {'Cocedor 3'}
+Cantidad agua C3 -> {'Cocedor 3'}
+Temp. agua 4 -> {'T. Grits linea 4'}
+Caudal agua 4 -> {'T. Grits linea 4'}
+cantidad agua M2 -> {'Macerar Malta 2'}
+caudal agua M 2 -> {'Macerar Malta 2'}
+temp. agua M 2 -> {'Macerar Malta 2'}
+Cantidad agua A4 -> {'Macerar Arroz 4'}
+Caudal agua A4 -> {'Macerar Arroz 4'}
+Temp. agua A4 -> {'Macerar Arroz 4'}
+temperatura c4 -> {'Cocedor 4'}
+cantidad agua c4 -> {'Cocedor 4'}
+temp. lavado -> {'Lavado 4', 'Lavado 1', 'Lavado 2'}
+Temperatura -> {'Olla de Coctos 3', 'Macerador 3'}
+Cantid.agua Mac. -> {'Macerador 3'}
+Cantidad agua M3 -> {'Macerar Malta 3'}
+Caudal agua M3 -> {'Macerar Malta 3'}
+Temp. agua M3 -> {'Macerar Malta 3'}
+temp_agua -> {'Lupulo pre-iso.1', 'Lupulo pre-iso.4', 'Lupulo pre-iso.2', 'Lupulo pre-iso.3'}
+cant_agua -> {'Lupulo pre-iso.1', 'Lupulo pre-iso.4', 'Lupulo pre-iso.2', 'Lupulo pre-iso.3'}
+LPP1_Agua -> {'Lupulo pre-iso.1'}
+temperatura m4 -> {'Macerador 4'}
+cantid.agua m4 -> {'Macerador 4'}
+Cantidad agua M4 -> {'Macerar Malta 4'}
+Caudal agua M4 -> {'Macerar Malta 4'}
+Temp. agua M4 -> {'Macerar Malta 4'}
+LPP2_Agua -> {'Lupulo pre-iso.2'}
+Temp. lavado -> {'Lavado 3'}
+Cantidad agua -> {'Filtro Mosto 3'}
+LPP3_AGUA -> {'Lupulo pre-iso.3'}
+Volumen de agua -> {'Rotapool 2', 'Rotapool 3', 'Rotapool 1'}
+Totalizado agua caliente L2 -> {'Rotapool 4', 'Rotapool 3'}
+Totalizado agua caliente L1 -> {'Rotapool 1'}
+EV:TempAgua -> {'VE 02'}
+EV:VolumenAgua -> {'VE 02'}
+Totalizado agua caliente L-1 -> {'Rotapool 2'}
+LPP4_AGUA -> {'Lupulo pre-iso.4'}

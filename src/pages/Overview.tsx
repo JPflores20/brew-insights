@@ -26,9 +26,9 @@ import { DatePickerWithRange } from "@/components/ui/date_range_picker";
 import { DateRange } from "react-day-picker";
 import { useFileUpload } from "@/hooks/use_file_upload";
 export default function Overview() {
-  const { data, setData } = useData();
+  const { data, setData, isLoaded } = useData();
   const { toast } = useToast();
-  const { loading, uploadProgress, processFiles } = useFileUpload();
+  const { loading, uploadProgress, processFiles, loadDemoData } = useFileUpload();
   const [expandedChart, setExpandedChart] = useState<"efficiency" | "distribution" | null>(null);
   const [distributionDateRange, setDistributionDateRange] = useState<DateRange | undefined>();
   const handleExport = () => {
@@ -93,17 +93,23 @@ export default function Overview() {
         .sort((a, b) => b.value - a.value),
     [filteredRecipeStats]
   );
-  if (data.length === 0) {
+  if (!isLoaded || loading) {
     return (
       <DashboardLayout>
-        <EmptyStateUploader loading={loading} uploadProgress={uploadProgress} onFilesSelected={processFiles} />
+        <LoadingState message={!isLoaded ? "Restaurando datos locales..." : "Procesando archivos..."} />
       </DashboardLayout>
     );
   }
-  if (loading) {
+
+  if (data.length === 0) {
     return (
       <DashboardLayout>
-        <LoadingState message="Procesando archivos..." />
+        <EmptyStateUploader 
+          loading={loading} 
+          uploadProgress={uploadProgress} 
+          onFilesSelected={processFiles} 
+          onLoadDemo={loadDemoData}
+        />
       </DashboardLayout>
     );
   }

@@ -311,8 +311,9 @@ export function TemperatureTrendChart({
                                     stroke={s.color}
                                     strokeWidth={2}
                                     name={`Lote ${s.batch} (${s.recipe})`}
-                                    dot={(props) => (
+                                    dot={({key, ...props}: any) => (
                                         <CustomDot
+                                            key={key}
                                             {...props}
                                             selectedIndices={selectedTempIndices}
                                             fill={s.color} 
@@ -375,7 +376,7 @@ export function TemperatureTrendChart({
                                     fillOpacity={1}
                                     fill="url(#colorTemp)"
                                     name="Temperatura"
-                                    dot={(props) => <CustomDot {...props} selectedIndices={selectedTempIndices} />}
+                                    dot={({key, ...props}: any) => <CustomDot key={key} {...props} selectedIndices={selectedTempIndices} />}
                                     activeDot={{ r: 6, strokeWidth: 0 }}
                                 />
                             </AreaChart>
@@ -423,7 +424,7 @@ export function TemperatureTrendChart({
                                     stroke="#ef4444"
                                     strokeWidth={2}
                                     name="Temperatura"
-                                    dot={(props) => <CustomDot {...props} selectedIndices={selectedTempIndices} />}
+                                    dot={({key, ...props}: any) => <CustomDot key={key} {...props} selectedIndices={selectedTempIndices} />}
                                     activeDot={{ r: 6, strokeWidth: 0 }}
                                 />
                             </LineChart>

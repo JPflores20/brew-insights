@@ -12,6 +12,9 @@ export interface BatchRecord {
   max_gap_min: number;
   timestamp: string;
   startHour: number;
+  malta_caramelo_clo?: number;
+  descarga_am_m2b?: number;
+  agua_malta_points?: { aguaHl: number; maltaKg: number; stepName: string }[];
   steps: BatchStep[];
   materials: BatchMaterial[];
   parameters: BatchParameter[];

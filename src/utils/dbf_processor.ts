@@ -93,7 +93,14 @@ function teilGroup(teil: string): string {
   let base = match ? match[1].trim() : s;
   const num = match ? match[2] : null;
   base = base.replace(/\s+/g, ' ').trim();
-  if (base.startsWith('reclamo ')) return titleKeepAcronyms(base);
+  
+  // Unify any Reclamo, Descarga or Malta related records into a single "Malta [Index]" group
+  const lowBase = base.toLowerCase();
+  if (lowBase.includes('malta') || lowBase.includes('reclamo') || lowBase.includes('descarga')) {
+    const suffix = num ? ` ${num}` : '';
+    return `Malta${suffix}`;
+  }
+
   const keepNumPrefixes = ['cocedor', 'macerador', 'enfriador', 'rotapool', 'olla', 'tanque', 'tq', 'filtro', 'lavado', 'trub', 've', 'molienda', 'grits', 'linea'];
   if (num && keepNumPrefixes.some((p) => base.startsWith(p))) {
     return `${titleKeepAcronyms(base)} ${parseInt(num)}`;
@@ -113,6 +120,12 @@ function buildDateFromFields(row: Record<string, unknown>, prefix: string): Date
 }
 export async function processDbfFile(file: File): Promise<BatchRecord[]> {
   const buffer = await file.arrayBuffer();
+  return processDbfBuffer(buffer);
+}
+
+export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord[]> {
+  alert('PROCESANDO VERSIÓN 6.0 - SINCRONIZACIÓN DE CRITERIOS');
+  console.log('[DBF_PROCESSOR] VERSION 6.0 - SYNC CRITERIA');
   const view = new DataView(buffer);
   let encoding = 'windows-1252';
   try {
@@ -120,10 +133,13 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
     if (codePageByte === 0x4b) encoding = 'cp866';
     else if (codePageByte === 0x77 || codePageByte === 0x78) encoding = 'windows-1252';
   } catch {  }
+
   const header = parseDbfHeader(view);
   const rawData = parseDbfRecords(buffer, header, encoding);
   console.log(`[DBF] Leídos ${rawData.length} registros. Campos: ${header.fields.map(f => f.name).join(', ')}`);
+  
   if (!rawData || rawData.length === 0) return [];
+  
   const events = rawData.map((row) => {
     const chargNr = String(row['CHARG_NR'] ?? row['COCIMIENTO'] ?? '').trim();
     const teilanl = String(row['TEILANL'] ?? '').trim();
@@ -135,6 +151,38 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
     const gopName = String(row['GOP_NAME'] ?? '').trim();
     const gopNr = String(row['GOP_NR'] ?? '').trim();
     const productName = String(row['REZEPT'] ?? row['PRODUCT'] ?? '').trim();
+    
+    // IW_DFM2 identifies the material/movement type ('CLO' for caramel malt, 'AM M2B' for discharge)
+    // IW_DFM3 is the numeric value (kilograms)
+    const raw_dfm2_class = String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '').trim().toUpperCase();
+    const raw_dfm3_val = parseFloat(String(row['IW_DFM3'] ?? row['IWDFM3'] ?? '')) || 0;
+    const gopNameUpper = gopName.toUpperCase();
+
+    let row_clo_val = 0;
+    let row_am_m2b_val = 0;
+    let row_premacerar_hl = 0;
+    let row_descarga_kg = 0;
+
+    // Numerator/Denominator: Caramel Malta Differentiation (Version 5.8)
+    // Both CLO, CPLS and AM M2B are valid for numerator if under RECLAMO step
+    const codesMalta = ['CLO', 'AM M28', 'CPLS', 'AM M2B'];
+    
+    if (codesMalta.includes(raw_dfm2_class) && gopNameUpper.includes('RECLAMO')) {
+      row_clo_val = raw_dfm3_val;
+    }
+    if (codesMalta.includes(raw_dfm2_class) && gopNameUpper.includes('DESCARGA')) {
+      row_am_m2b_val = raw_dfm3_val;
+    }
+
+    // New: Water/Malt Ratio specific extraction
+    if (gopNameUpper === 'PREMACERAR MALTA') {
+      row_premacerar_hl = raw_dfm3_val;
+    }
+    // Sincronización: Usar los mismos criterios de Malta Caramelo para los Kg
+    if (codesMalta.includes(raw_dfm2_class) && gopNameUpper.includes('DESCARGA')) {
+      row_descarga_kg = raw_dfm3_val;
+    }
+
     const rowMaterials: { name: string; val: number; exp: number; unit: string }[] = [];
     const rowParams: { name: string; val: number; target: number; unit: string; dfmCode: string }[] = [];
     for (let i = 1; i <= 24; i++) {
@@ -152,15 +200,16 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
         }
       }
     }
-    return { CHARG_NR: chargNr, TEILANL_GRUPO: teilGroup(teilanl), GOP_NAME: gopName, GOP_NR: gopNr, productName, start, end, startHour, swMin, iwMin, materials: rowMaterials, parameters: rowParams };
+    return { CHARG_NR: chargNr, TEILANL_GRUPO: teilGroup(teilanl), GOP_NAME: gopName, GOP_NR: gopNr, productName, start, end, startHour, swMin, iwMin, row_clo_val, row_am_m2b_val, row_premacerar_hl, row_descarga_kg, materials: rowMaterials, parameters: rowParams };
   }).filter((e) => e.CHARG_NR && e.TEILANL_GRUPO !== 'SIN_TEILANL');
+
   const groupedEvents = new Map<string, typeof events>();
   events.forEach((evt) => {
     const key = `${evt.CHARG_NR}|${evt.TEILANL_GRUPO}`;
     if (!groupedEvents.has(key)) groupedEvents.set(key, []);
     groupedEvents.get(key)!.push(evt);
   });
-  return Array.from(groupedEvents.values()).map((group) => {
+  const results = Array.from(groupedEvents.values()).map((group) => {
     group.sort((a, b) => (a.start?.getTime() || 0) - (b.start?.getTime() || 0));
     let real_total = 0, esperado_total = 0, total_idle = 0, max_gap = 0;
     const steps: BatchRecord['steps'] = [];
@@ -169,6 +218,13 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
     const parametersList: BatchRecord['parameters'] = [];
     let lastEnd = group[0].end?.getTime() ?? group[0].start?.getTime() ?? 0;
     let waitCounter = 0;
+    
+    let malta_caramelo_clo = 0;
+    let descarga_am_m2b = 0;
+    let foundNumerator = false;
+    let lastPremacerarHl = 0;
+    const aguaMaltaPoints: BatchRecord['agua_malta_points'] = [];
+
     group.forEach((evt, index) => {
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
@@ -197,6 +253,22 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
       });
       steps.push({ stepName: evt.GOP_NAME || `Paso ${index + 1}`, stepNr: evt.GOP_NR, durationMin: +evt.iwMin.toFixed(2), expectedDurationMin: +evt.swMin.toFixed(2), startTime: evt.start?.toISOString() ?? '', endTime: evt.end?.toISOString() ?? '' });
       if (evt.end && evt.end.getTime() > lastEnd) lastEnd = evt.end.getTime();
+      
+      // RULE: Only take the FIRST non-zero occurrence for Reclamo Malta per group
+      if (!foundNumerator && (evt.row_clo_val || 0) > 0) {
+        malta_caramelo_clo = evt.row_clo_val;
+        foundNumerator = true;
+      }
+      
+      descarga_am_m2b += (evt.row_am_m2b_val || 0);
+
+      // New: Collect Water/Malt Ratio points
+      if (evt.row_premacerar_hl > 0) {
+        lastPremacerarHl = evt.row_premacerar_hl;
+      }
+      if (evt.row_descarga_kg > 0 && lastPremacerarHl > 0) {
+        aguaMaltaPoints.push({ aguaHl: lastPremacerarHl, maltaKg: evt.row_descarga_kg, stepName: evt.GOP_NAME });
+      }
     });
     return {
       CHARG_NR: group[0].CHARG_NR,
@@ -209,10 +281,21 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
       max_gap_min: +(max_gap.toFixed(2)),
       timestamp: group[0].start?.toISOString() ?? new Date().toISOString(),
       startHour: group[0].startHour,
+      malta_caramelo_clo,
+      descarga_am_m2b,
+      agua_malta_points: aguaMaltaPoints,
       steps,
       materials: Array.from(materialsMap.values()),
       parameters: parametersList,
       alerts,
     } satisfies BatchRecord;
   });
+
+  const validCount = results.filter(r => (r.malta_caramelo_clo || 0) > 0 && (r.descarga_am_m2b || 0) > 0).length;
+  console.log(`[DBF_FINAL] processed=${results.length} withMaltaData=${validCount}`);
+  if (validCount > 0) {
+    const sample = results.find(r => (r.malta_caramelo_clo || 0) > 0 && (r.descarga_am_m2b || 0) > 0);
+    console.log(`[DBF_SAMPLE] Batch=${sample?.CHARG_NR} Recipe=${sample?.productName} CLO=${sample?.malta_caramelo_clo} M2B=${sample?.descarga_am_m2b}`);
+  }
+  return results;
 }
