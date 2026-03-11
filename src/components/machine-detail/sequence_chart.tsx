@@ -112,7 +112,7 @@ export const SequenceChart = memo(function SequenceChart({
                                         <Cell key={`cell-${index}`} fill={entry.stepName.includes("Espera") ? COLOR_ERROR : COLOR_PRIMARY} />
                                     ))}
                                 </Bar>
-                                <Bar dataKey="expectedDurationMin" name="Duración Esperada (min)" fill={COLOR_SECONDARY} radius={[0, 4, 4, 0]} barSize={10} />
+                                <Bar dataKey="expectedDurationMin" name="Setpoint (min)" fill={COLOR_SECONDARY} radius={[0, 4, 4, 0]} barSize={10} />
                             </BarChart>
                         </ResponsiveContainer>
                     </TabsContent>
@@ -131,7 +131,7 @@ export const SequenceChart = memo(function SequenceChart({
                                 <YAxis label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }} />
                                 <Tooltip content={<ChartTooltip indicator="line" valueSuffix="min" />} />
                                 <Legend {...LEGEND_PROPS} />
-                                <Line type="monotone" dataKey="expectedDurationMin" name="Esperado" stroke={COLOR_SECONDARY} strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                                <Line type="monotone" dataKey="expectedDurationMin" name="Setpoint" stroke={COLOR_SECONDARY} strokeWidth={2} dot={false} strokeDasharray="5 5" />
                                 <Line type="monotone" dataKey="durationMin" name="Real" stroke={COLOR_PRIMARY} strokeWidth={2} activeDot={{ r: 8 }} />
                             </LineChart>
                         </ResponsiveContainer>
@@ -144,7 +144,7 @@ export const SequenceChart = memo(function SequenceChart({
                                 <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
                                 <Tooltip content={<ChartTooltip valueSuffix="min" />} />
                                 <Radar name="Real" dataKey="durationMin" stroke={COLOR_PRIMARY} fill={COLOR_PRIMARY} fillOpacity={0.3} />
-                                <Radar name="Esperado" dataKey="expectedDurationMin" stroke={COLOR_SECONDARY} fill={COLOR_SECONDARY} fillOpacity={0.3} />
+                                <Radar name="Setpoint" dataKey="expectedDurationMin" stroke={COLOR_SECONDARY} fill={COLOR_SECONDARY} fillOpacity={0.3} />
                                 <Legend {...LEGEND_PROPS} />
                             </RadarChart>
                         </ResponsiveContainer>

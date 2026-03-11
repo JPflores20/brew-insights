@@ -1,0 +1,994 @@
+[
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Arroz 3",
+    "gopName": "Molienda Arroz 3",
+    "nameDfm2": "cant.arroz 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14421"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Arr.Premacer.A 3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "35"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Arroz 3",
+    "gopName": "Vaciar Equip. A3",
+    "nameDfm2": "cant.arroz 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14472"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Aforo Arroz 3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "200"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Aforo Cocedor",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Arroz 3",
+    "gopName": "Espera Cocedor 3",
+    "nameDfm2": "cant.arroz 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14472"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Premacer.Arroz 3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "320"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Premacerar Arroz",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Arroz 3",
+    "gopName": "Prem. arroz 3",
+    "nameDfm2": "cant.arroz 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14472"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Arroz 3",
+    "gopName": "Fin Mol.Arroz 3",
+    "nameDfm2": "cant.arroz 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14472"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Calentar Coc.",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Calentar Coc.",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Calentar Coc.",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Cerrar Registro",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Calentar Coc.",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Malta 3",
+    "gopName": "Molienda Malta 3",
+    "nameDfm2": "cant.malta 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14458"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Malta 3",
+    "gopName": "Vaciar Equip. M3",
+    "nameDfm2": "cant.malta 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14502"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Arr.Premacer.M3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "41"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Arr.Premacer.M3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "41"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Pausa",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Calentar a pres.",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "70.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Aforo 3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "140"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Aforo Macerador",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Arr.Macerador 3",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "70.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Malta 3",
+    "gopName": "Espera Macerad.3",
+    "nameDfm2": "cant.malta 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14502"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Calentar a pres.",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "70.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Hervir",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "70.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Premacer.Malta 3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "641"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Malta 3",
+    "gopName": "Prem. malta 3",
+    "nameDfm2": "cant.malta 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14502"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Premacerar Malta",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Calentar",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Despresurizar",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "60.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Molienda Malta 3",
+    "gopName": "Fin Mol.Malta 3",
+    "nameDfm2": "cant.malta 3",
+    "dimDfm2": "kg",
+    "iwDfm2": "14502"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Pausa atemperar 3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "320"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Pausa Macerador",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Atemperar 3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "100"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Atemperar 3",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "60.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cocedor 3",
+    "gopName": "Espera Macerador",
+    "nameDfm2": "Agitator Coc.",
+    "dimDfm2": "%",
+    "iwDfm2": "60.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Esperar Cocedor",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Dosif Enzima 3",
+    "gopName": "Enzima PMZ 3",
+    "nameDfm2": "Cantidad M3",
+    "dimDfm2": "Lts",
+    "iwDfm2": "182"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Dosif Enzima 3",
+    "gopName": "Enjuague Mac 3",
+    "nameDfm2": "Cantidad M3",
+    "dimDfm2": "Lts",
+    "iwDfm2": "81"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Dosif Enzima 3",
+    "gopName": "Fin Enzima 3",
+    "nameDfm2": "Cantidad M3",
+    "dimDfm2": "Lts",
+    "iwDfm2": "81"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Pausa enjuague 3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "100"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Arroz 3",
+    "gopName": "Fin Premacer. A3",
+    "nameDfm2": "Cantidad agua A3",
+    "dimDfm2": "hl",
+    "iwDfm2": "100"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Recibir Cocedor",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Control Temp.",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Pausa Macerador",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Pausa Macerador",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "38.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Pausa Macerador",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Calentar",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Cont.Conversion",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "60.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Calentar",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerador 3",
+    "gopName": "Pausa Macerador",
+    "nameDfm2": "Agitator",
+    "dimDfm2": "%",
+    "iwDfm2": "50.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Pausa enjuag. M3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "641"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Agua enjuag. M3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "40"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Macerar Malta 3",
+    "gopName": "Fin Premacer.M3",
+    "nameDfm2": "Cantidad agua M3",
+    "dimDfm2": "hl",
+    "iwDfm2": "41"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "PRIMER MOSTO new",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Arr. Olla Coctos",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "69.1"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Tanque Buffer 3",
+    "gopName": "Recibir Mosto",
+    "nameDfm2": "Entrada",
+    "dimDfm2": "%",
+    "iwDfm2": "100.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Tanque Buffer 3",
+    "gopName": "Agua > Mosto",
+    "nameDfm2": "Entrada",
+    "dimDfm2": "%",
+    "iwDfm2": "50.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Arr. Lupulo PI",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "86.8"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "SALTAR",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "86.8"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Agua->MgO",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "86.8"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Precalentar agua",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "78.6"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "DLM PRIMER MOSTO",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "980"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Pausa Lav.",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "980"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cortar 3",
+    "gopName": "Remover Lecho",
+    "nameDfm2": "Cantidad_mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "980"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Llenar con agua",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "77.4"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Llenar con agua",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "76.5"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cortar 3",
+    "gopName": "Remover Lecho",
+    "nameDfm2": "Cantidad_mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "980"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "DLM FOCRCED DEEPCUT",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "980"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Lavado>C.F.",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "989"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Lavado>C.F.",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "989"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "LAVADO new",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1020"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Recibir_Mosto",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "73.3"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Calentar_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "73.3"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Lavado>C.F.",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1220"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Calentar_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "73.4"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Lavado>C.F.",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1298"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Calentar_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "77.8"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Lavado>C.F.",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1374"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lavado 3",
+    "gopName": "Fin Lavado",
+    "nameDfm2": "cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1378"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Cortar 3",
+    "gopName": "Fin Remov.Lecho",
+    "nameDfm2": "Cantidad_mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1393"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "DLM LAVADO CF",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1470"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "LAVADO new",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1490"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Calentar_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "90.4"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "AG.Ultimo Lavado",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1580"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Hervir_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "93.7"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Acondicionamient",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "87.6"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Esp. Temp. olla",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "87.6"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Vaciar",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "87.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "AG.Ultimo Lavado",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1672"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "Vaciar",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1681"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "Arr.Bagazo",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1681"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Recircul. a olla",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "90.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Empujar",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "90.1"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Vaciar",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "90.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Enjuagar",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "90.0"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "Remover Bagazo",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1686"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Filtro Mosto 3",
+    "gopName": "Enj.Falso Fondo",
+    "nameDfm2": "Cantidad mosto",
+    "dimDfm2": "hl",
+    "iwDfm2": "1686"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Vaciar",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "89.4"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Drenar",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "89.4"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Hervir_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "93.8"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Hervir_Flujo",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "93.7"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Control de Nivel",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "93.7"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Esper. fin ebull",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "89.3"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Arr. Rotapool",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "25"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Lupulo pre-iso.3",
+    "gopName": "Fin Lupulo PI",
+    "nameDfm2": "temp_agua",
+    "dimDfm2": "°C",
+    "iwDfm2": "89.3"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Arranca Rotapool",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "93.7"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Bombeo_Mosto",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "80.6"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Agua_de_Enjuague",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "78.1"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Llenar Rotapool",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "1407"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Bombeo_Enjuague",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "77.3"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Olla de Coctos 3",
+    "gopName": "Fin Olla Coctos",
+    "nameDfm2": "Temperatura",
+    "dimDfm2": "´C",
+    "iwDfm2": "77.2"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Reposo",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "1404"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Arr.Enfriadores",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "1404"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Bombear Mosto",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "445"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Bombear Mosto",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "31"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Agua>Mosto",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "31"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Recuperar Mosto",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "31"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Recuperar Mosto",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "31"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Recuperar Trub",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "32"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Agua de Enjuague",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "31"
+  },
+  {
+    "batch": "1442",
+    "teilanl": "Rotapool 3",
+    "gopName": "Fin Rotapool",
+    "nameDfm2": "Contenido_Rotap.",
+    "dimDfm2": "hl",
+    "iwDfm2": "31"
+  }
+]

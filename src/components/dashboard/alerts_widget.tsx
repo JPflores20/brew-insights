@@ -71,7 +71,7 @@ export function AlertsWidget({ data }: AlertsWidgetProps) {
                     </div>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground border-t border-orange-500/10 pt-2">
-                    <span>Esperado: {alert.esperado_total_min}m</span>
+                    <span>Setpoint: {alert.esperado_total_min}m</span>
                     <span className="font-medium text-orange-700/70">Real: {alert.real_total_min}m</span>
                   </div>
                 </div>

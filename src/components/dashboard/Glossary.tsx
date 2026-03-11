@@ -47,7 +47,7 @@ export function Glossary() {
                         </p>
                         <div className="bg-secondary/50 p-2 rounded-md border border-border/50">
                             <code className="text-xs font-mono text-foreground">
-                                Tiempo Real - Tiempo Esperado
+                                Tiempo Real - Setpoint
                             </code>
                         </div>
                     </CardContent>

@@ -90,7 +90,7 @@ export function getSortIndex(name: string): number {
 export interface EfficiencyDataPoint {
   machine: string;
   displayMachine: string;
-  "Tiempo Esperado": number;
+  "Setpoint": number;
   "Tiempo Real": number;
   "Desviación": number;
   "Tiempo Muerto": number;
@@ -104,7 +104,7 @@ export function calculateEfficiencyData(
     .map((item) => ({
       machine: item.machine,
       displayMachine: item.machine.replace(/(\d)/, '\n$1'),
-      "Tiempo Esperado": item.avgExpected,
+      "Setpoint": item.avgExpected,
       "Tiempo Real": item.avgReal,
       "Desviación": item.avgDelta,
       "Tiempo Muerto": item.avgIdle

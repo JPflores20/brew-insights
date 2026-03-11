@@ -3,6 +3,8 @@ import { DashboardLayout } from "@/components/layout/dashboard_layout";
 import { useData } from "@/context/data_context";
 import { EmptyStateUploader } from "@/components/dashboard/empty_state_uploader";
 import { LoadingState } from "@/components/ui/loading_state";
+import { BetaPageBanner } from "@/components/ui/beta_page_banner";
+import { motion } from "framer-motion";
 import { useFileUpload } from "@/hooks/use_file_upload";
 import { AnimatedPage } from "@/components/layout/animated_page";
 import { BookOpen, AlertTriangle } from "lucide-react";
@@ -15,12 +17,15 @@ import { FILTER_ALL } from "@/lib/constants";
 export default function RecipeAnalysis() {
   const { data } = useData();
   const { loading, uploadProgress, processFiles } = useFileUpload();
-  const [selectedRecipe, setSelectedRecipe] = useState<string | FILTER_ALL>(FILTER_ALL);
-  const [selectedMaterialName, setSelectedMaterialName] = useState<string>(FILTER_ALL);
-  const handleSelectRecipe = (recipe: string | FILTER_ALL) => {
+  
+  const [selectedRecipe, setSelectedRecipe] = useState<string | typeof FILTER_ALL>(FILTER_ALL);
+  const [selectedMaterialNames, setSelectedMaterialNames] = useState<string[]>([]);
+
+  const handleSelectRecipe = (recipe: string | typeof FILTER_ALL) => {
       setSelectedRecipe(recipe);
-      setSelectedMaterialName(FILTER_ALL); 
+      setSelectedMaterialNames([]); 
   };
+
   const recipeNames = useMemo(() => {
     const names = new Set<string>();
     data.forEach(d => {
@@ -28,6 +33,7 @@ export default function RecipeAnalysis() {
     });
     return Array.from(names).sort();
   }, [data]);
+
   const totalWasteStats = useMemo(() => {
       let totalReal = 0;
       let totalExpected = 0;
@@ -46,6 +52,7 @@ export default function RecipeAnalysis() {
           percent
       };
   }, [data]);
+
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -53,6 +60,7 @@ export default function RecipeAnalysis() {
       </DashboardLayout>
     );
   }
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -60,22 +68,23 @@ export default function RecipeAnalysis() {
       </DashboardLayout>
     );
   }
+
   return (
     <DashboardLayout>
       <AnimatedPage>
-        {}
+        <BetaPageBanner />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Análisis de Desviación de Recetas</h1>
-            <p className="text-muted-foreground mt-1">Comparación de uso de materia prima: Esperado (SW) vs Real (IW).</p>
+            <p className="text-muted-foreground mt-1">Comparación de uso de materia prima: Setpoint (SW) vs Real (IW).</p>
           </div>
         </div>
-        {}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <MetricCard 
                 title="Desviación Global de Materiales" 
                 value={`${totalWasteStats.delta > 0 ? "+" : ""}${totalWasteStats.percent.toFixed(2)}%`}
-                subtitle={`Desviado vs Esperado (Todas las recetas)`}
+                subtitle={`Desviado vs Setpoint (Todas las recetas)`}
                 icon={AlertTriangle} 
                 delay={0.1} 
                 trend={totalWasteStats.percent > 2 ? "down" : "up"}
@@ -91,19 +100,19 @@ export default function RecipeAnalysis() {
                 className="border-l-4 border-l-blue-500" 
             />
         </div>
-        {}
+
         <div className="mb-8">
             <RecipeWasteTrafficLight data={data} onSelectRecipe={handleSelectRecipe} selectedRecipe={selectedRecipe} />
         </div>
-        {}
+
         <div className="mb-8">
             <RecipeDeviationChart 
               data={data} 
               recipeNames={recipeNames} 
               selectedRecipe={selectedRecipe} 
               setSelectedRecipe={handleSelectRecipe} 
-              selectedMaterialName={selectedMaterialName}
-              setSelectedMaterialName={setSelectedMaterialName}
+              selectedMaterialNames={selectedMaterialNames}
+              setSelectedMaterialNames={setSelectedMaterialNames}
             />
         </div>
       </AnimatedPage>

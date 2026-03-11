@@ -5,6 +5,7 @@ import { useData } from "@/context/data_context";
 import { useFileUpload } from "@/hooks/use_file_upload";
 import { EmptyStateUploader } from "@/components/dashboard/empty_state_uploader";
 import { LoadingState } from "@/components/ui/loading_state";
+import { BetaPageBanner } from "@/components/ui/beta_page_banner";
 import { QualityControlChart } from "@/components/dashboard/quality_control_chart";
 export default function QualityConsistency() {
   const { data } = useData();
@@ -26,6 +27,7 @@ export default function QualityConsistency() {
   return (
     <DashboardLayout>
       <AnimatedPage>
+        <BetaPageBanner />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Consistencia de Calidad</h1>

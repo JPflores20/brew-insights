@@ -118,7 +118,7 @@ export function GlobalTimeline({
                             </Bar>
                             <Bar
                                 dataKey="expectedDurationMin"
-                                name="Duración Esperada (min)"
+                                name="Setpoint (min)"
                                 fill="#3b82f6" 
                                 radius={[0, 4, 4, 0]}
                                 barSize={12}

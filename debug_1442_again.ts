@@ -1,5 +1,4 @@
 import { readFile, writeFile } from 'fs/promises';
-global.alert = console.log;
 
 function parseRawDBF(buffer) {
   const view = new DataView(buffer);
@@ -48,25 +47,35 @@ async function test() {
     try {
         const buffer = await readFile('public/S2600009.DBF');
         const records = parseRawDBF(buffer.buffer);
-        const b1442 = records.filter(r => String(r.CHARG_NR).includes('1442'));
+        
+        const b1442 = records.filter(r => String(r.CHARG_NR) === '1442');
+        
         const output = b1442
             .filter(row => {
-               const val = parseFloat(String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '')) || 0;
-               return val > 0;
+               for (let i=1; i<=24; i++) {
+                   const val = parseFloat(row[`IW_DFM${i}`]) || 0;
+                   if (val > 1000) return true;
+               }
+               return false;
             })
-            .map(row => ({
-                batch: row.CHARG_NR,
-                teilanl: row.TEILANL,
-                gopName: row.GOP_NAME,
-                nameDfm2: row.NAME_DFM2,
-                dimDfm2: row.DIM_DFM2,
-                iwDfm2: row.IW_DFM2
-            }));
+            .map(row => {
+                const dfms = {};
+                for (let i=1; i<=24; i++) {
+                    const val = parseFloat(row[`IW_DFM${i}`]) || 0;
+                    if (val > 0) {
+                        dfms[`DFM${i}`] = { val, unit: row[`DIM_DFM${i}`], name: row[`NAME_DFM${i}`] };
+                    }
+                }
+                return {
+                    teilanl: row.TEILANL,
+                    gop: row.GOP_BEZ,
+                    dfms
+                };
+            });
         
-        await writeFile('test_1442_arroz.json', JSON.stringify(output, null, 2));
-        console.log("Written to test_1442_arroz.json");
+        console.log("Batch 1442 Details:", JSON.stringify(output, null, 2));
     } catch (e) {
-        console.error("No file found or error", e.message, "\n", e.stack);
+        console.error("Error", e.message, "\n", e.stack);
     }
 }
 test();

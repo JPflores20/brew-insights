@@ -1,5 +1,4 @@
 import { readFile, writeFile } from 'fs/promises';
-global.alert = console.log;
 
 function parseRawDBF(buffer) {
   const view = new DataView(buffer);
@@ -48,25 +47,43 @@ async function test() {
     try {
         const buffer = await readFile('public/S2600009.DBF');
         const records = parseRawDBF(buffer.buffer);
-        const b1442 = records.filter(r => String(r.CHARG_NR).includes('1442'));
-        const output = b1442
-            .filter(row => {
-               const val = parseFloat(String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '')) || 0;
-               return val > 0;
-            })
-            .map(row => ({
-                batch: row.CHARG_NR,
-                teilanl: row.TEILANL,
-                gopName: row.GOP_NAME,
-                nameDfm2: row.NAME_DFM2,
-                dimDfm2: row.DIM_DFM2,
-                iwDfm2: row.IW_DFM2
-            }));
         
-        await writeFile('test_1442_arroz.json', JSON.stringify(output, null, 2));
-        console.log("Written to test_1442_arroz.json");
+        const corona = records.filter(r => 
+            String(r.REZEPT).toUpperCase().includes('CORO') || 
+            String(r.PRODUCT).toUpperCase().includes('CORO')
+        );
+        
+        const results = [];
+        
+        corona.forEach(r => {
+            const lowTeil = String(r.TEILANL).toLowerCase();
+            const isAdj = lowTeil.includes('arroz') || lowTeil.includes('adjunto') || lowTeil.includes('grits') || lowTeil.includes('cocedor');
+            
+            if (isAdj) {
+                for (let i = 1; i <= 24; i++) {
+                    const unit = String(r[`DIM_DFM${i}`]).toLowerCase();
+                    const val = parseFloat(r[`IW_DFM${i}`]);
+                    if (unit === 'kg' && val > 500) { // Looking for large weights
+                        results.push({
+                            batch: r.CHARG_NR,
+                            teilanl: r.TEILANL,
+                            gop: r.GOP_BEZ,
+                            dfm: `DFM${i}`,
+                            name: r[`NAME_DFM${i}`],
+                            val
+                        });
+                    }
+                }
+            }
+        });
+        
+        console.log(`Found ${results.length} large weight records for CORONA adjunto machines`);
+        if (results.length > 0) {
+            console.log("Sample:", JSON.stringify(results.slice(0, 5), null, 2));
+        }
+        
     } catch (e) {
-        console.error("No file found or error", e.message, "\n", e.stack);
+        console.error("Error", e.message, "\n", e.stack);
     }
 }
 test();

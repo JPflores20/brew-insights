@@ -57,25 +57,25 @@ const navItems = [
         title: "Análisis de Recetas",
         url: "/cocimientos/recetas",
         icon: Beer,
-        badge: "Nuevo"
+        badge: "Beta"
     },
     {
         title: "Mantenimiento",
         url: "/cocimientos/mantenimiento",
         icon: Wrench,
-        badge: "Nuevo"
+        badge: "Beta"
     },
     {
         title: "Calidad del Producto",
         url: "/cocimientos/calidad",
         icon: Activity,
-        badge: "Nuevo"
+        badge: "Beta"
     },
     {
         title: "Indicadores",
         url: "/cocimientos/indicadores",
         icon: LayoutDashboard,
-        badge: "Nuevo"
+        badge: "Beta"
     },
 ];
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -181,9 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 variant="outline"
                                 className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/20 mb-2"
                                 onClick={() => {
-                                    if (confirm("¿Estás seguro de que deseas limpiar todos los datos cargados? Esta acción no se puede deshacer.")) {
-                                        setData([]);
-                                    }
+                                    setData([]);
                                 }}
                             >
                                 <Trash2 className="size-4" />

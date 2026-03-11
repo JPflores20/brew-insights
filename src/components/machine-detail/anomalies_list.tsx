@@ -77,7 +77,7 @@ export function AnomaliesList({ anomaliesReport }: AnomaliesListProps) {
                                                     Real: <strong>{item.duration}m</strong>
                                                 </span>
                                                 <span>
-                                                    Esperado: <strong>{item.expected}m</strong>
+                                                    Setpoint: <strong>{item.expected}m</strong>
                                                 </span>
                                             </div>
                                         )}

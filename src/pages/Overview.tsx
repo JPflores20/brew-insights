@@ -42,7 +42,7 @@ export default function Overview() {
       "Producto": d.productName || "Desconocido",
       "Inicio": d.timestamp ? format(new Date(d.timestamp), "dd/MM/yyyy HH:mm:ss") : "",
       "Duración Real (min)": d.real_total_min,
-      "Duración Esperada (min)": d.esperado_total_min,
+      "Setpoint (min)": d.esperado_total_min,
       "Delta (min)": d.delta_total_min,
       "Tiempo Muerto (min)": d.idle_wall_minus_sumsteps_min,
       "Pasos": d.steps.length,
@@ -148,7 +148,7 @@ export default function Overview() {
             <MetricCard
               title="Desviación Promedio"
               value={`${avgDeviation > 0 ? "+" : ""}${avgDeviation}%`}
-              subtitle="Vs. Tiempo Esperado Total"
+              subtitle="Vs. Setpoint Total"
               icon={TrendingUp}
               delay={0.2}
               trend={avgDeviation > 10 ? "down" : "up"}

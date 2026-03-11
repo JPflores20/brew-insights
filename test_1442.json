@@ -1,0 +1,128 @@
+[
+  {
+    "batch": "1442",
+    "machine": "Malta 3",
+    "agua": 641,
+    "adjunto": 14502
+  },
+  {
+    "batch": "1442",
+    "machine": "Molienda Arroz 3",
+    "agua": 0,
+    "adjunto": 14472
+  },
+  {
+    "batch": "1442",
+    "machine": "Select Lines",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Tq. De Grits L 3",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "T. Grits Linea",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Macerar Arroz",
+    "agua": 320,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Dosificacion",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Cocedor 3",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Macerador 3",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Dosif Enzima",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Lavado 3",
+    "agua": 1378,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Cortar",
+    "agua": 1393,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Filtro Mosto 3",
+    "agua": 1686,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Tanque Buffer 3",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Olla De Coctos 3",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Lupulo Pre Iso.3",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Transp Bagazo",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Rotapool 3",
+    "agua": 1407,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "VE 2",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Enfriador 5",
+    "agua": 0,
+    "adjunto": 0
+  },
+  {
+    "batch": "1442",
+    "machine": "Enfriador 6",
+    "agua": 0,
+    "adjunto": 0
+  }
+]

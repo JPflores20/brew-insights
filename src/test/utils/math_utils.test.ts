@@ -99,7 +99,7 @@ describe('math_utils.ts Pure Logic Tests', () => {
       expect(result).toHaveLength(2);
       expect(result[0].machine).toBe('molienda');
       expect(result[1].machine).toBe('olla');
-      expect(result[0]['Tiempo Esperado']).toBe(50);
+      expect(result[0]['Setpoint']).toBe(50);
     });
   });
 

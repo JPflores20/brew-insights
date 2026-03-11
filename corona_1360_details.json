@@ -1,0 +1,6892 @@
+[
+  {
+    "teilanl": "Select lines",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.:",
+        "name": "indice cadena 12"
+      }
+    }
+  },
+  {
+    "teilanl": "Select lines",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.:",
+        "name": "indice cadena 12"
+      }
+    }
+  },
+  {
+    "teilanl": "Select lines",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.:",
+        "name": "indice cadena 12"
+      }
+    }
+  },
+  {
+    "teilanl": "Tq. de Grits L-4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "sel.",
+        "name": "indice cadena 18"
+      }
+    }
+  },
+  {
+    "teilanl": "Tq. de Grits L-4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "sel.",
+        "name": "indice cadena 18"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM4": {
+        "val": "280",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "54.6",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM7": {
+        "val": "20.1",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "18.9",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "Tq. de Grits L-4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "sel.",
+        "name": "indice cadena 18"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "70",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM5": {
+        "val": "58.3",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM6": {
+        "val": "1357",
+        "unit": "hl/h",
+        "name": "Caudal agua 4"
+      },
+      "DFM7": {
+        "val": "20.0",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "18.9",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "232",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "58.6",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM7": {
+        "val": "19.6",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "42.3",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001110",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "241",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "49.9",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM6": {
+        "val": "676",
+        "unit": "hl/h",
+        "name": "Caudal agua 4"
+      },
+      "DFM7": {
+        "val": "19.6",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "42.5",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "241",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "60.7",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM6": {
+        "val": "1048",
+        "unit": "hl/h",
+        "name": "Caudal agua 4"
+      },
+      "DFM7": {
+        "val": "42.3",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "42.7",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000100",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "241",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "60.7",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM6": {
+        "val": "1257",
+        "unit": "hl/h",
+        "name": "Caudal agua 4"
+      },
+      "DFM7": {
+        "val": "42.5",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "42.7",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "Dosificacion 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM3": {
+        "val": "28.5",
+        "unit": "l",
+        "name": "cantidad acido 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Arroz 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 8"
+      },
+      "DFM2": {
+        "val": "35",
+        "unit": "hl",
+        "name": "Cantidad agua A4"
+      },
+      "DFM4": {
+        "val": "85.0",
+        "unit": "'C",
+        "name": "Temp. agua A4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "77.0",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "5",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Arroz 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 8"
+      },
+      "DFM4": {
+        "val": "85.0",
+        "unit": "'C",
+        "name": "Temp. agua A4"
+      }
+    }
+  },
+  {
+    "teilanl": "Dosificacion 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000100",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM3": {
+        "val": "28.1",
+        "unit": "l",
+        "name": "cantidad acido 4"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000100",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "241",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "61.1",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM7": {
+        "val": "47.3",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "37.8",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 10000010",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "342",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "60.9",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM6": {
+        "val": "457",
+        "unit": "hl/h",
+        "name": "Caudal agua 4"
+      },
+      "DFM7": {
+        "val": "46.6",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "54.6",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000100",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "342",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "61.1",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM7": {
+        "val": "46.0",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "49.0",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 10010000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "42.3",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "48.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "5",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "376",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 10010000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "42.3",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "48.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "5",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "376",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "T. Grits linea 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "342",
+        "unit": "hl",
+        "name": "cantidad agua"
+      },
+      "DFM4": {
+        "val": "279",
+        "unit": "Sacos",
+        "name": "Cantid.  Grits 4"
+      },
+      "DFM5": {
+        "val": "61.1",
+        "unit": "ºC",
+        "name": "Temp. agua 4"
+      },
+      "DFM7": {
+        "val": "46.0",
+        "unit": "ºC",
+        "name": "Temp. TQ 1 (L4)"
+      },
+      "DFM8": {
+        "val": "49.0",
+        "unit": "ºC",
+        "name": "Temp. TQ 2 (L4)"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "42.8",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "5",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "252",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "AM M2B",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "102",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "AM M2B",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "AM M2B",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "CLO",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "769",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      },
+      "DFM4": {
+        "val": "50",
+        "unit": "nr.",
+        "name": "Silo rec/malta 4"
+      },
+      "DFM5": {
+        "val": "769",
+        "unit": "kg",
+        "name": "parcial_cantid.malta4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 11000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "56.0",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "5",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "208",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "61.7",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "5",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "198",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Molienda Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 6"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "62.8",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "3",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "207",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 01000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "71.2",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "3",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "227",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "71.5",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "3",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "233",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "01000000 00100000",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "BASE",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "22017",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      },
+      "DFM4": {
+        "val": "61",
+        "unit": "nr.",
+        "name": "Silo rec/malta 4"
+      },
+      "DFM5": {
+        "val": "21248",
+        "unit": "kg",
+        "name": "parcial_cantid.malta4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "72.1",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "3",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "212",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "BASE",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "22017",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "BASE",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "22019",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "BASE",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "22019",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "79.7",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "3",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "212",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "80.0",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "3",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "211",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM3": {
+        "val": "75.3",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "3",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 7"
+      },
+      "DFM2": {
+        "val": "47",
+        "unit": "hl",
+        "name": "Cantidad agua M4"
+      },
+      "DFM3": {
+        "val": "-1",
+        "unit": "hl/h",
+        "name": "Caudal agua M4"
+      },
+      "DFM4": {
+        "val": "81.3",
+        "unit": "'C",
+        "name": "Temp. agua M4"
+      }
+    }
+  },
+  {
+    "teilanl": "Dosificacion 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM3": {
+        "val": "28.5",
+        "unit": "l",
+        "name": "cantidad acido 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Molienda Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001111",
+        "unit": "nr.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "21498",
+        "unit": "kg",
+        "name": "cant.malta 4"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "Descarga",
+        "name": "Quicktron"
+      }
+    }
+  },
+  {
+    "teilanl": "Reclamo Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 19"
+      },
+      "DFM2": {
+        "val": "BASE",
+        "unit": "nr.",
+        "name": "Clase Malta 4"
+      },
+      "DFM3": {
+        "val": "22020",
+        "unit": "kg",
+        "name": "cantidad malta 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 7"
+      },
+      "DFM2": {
+        "val": "140",
+        "unit": "hl",
+        "name": "Cantidad agua M4"
+      },
+      "DFM3": {
+        "val": "1723",
+        "unit": "hl/h",
+        "name": "Caudal agua M4"
+      },
+      "DFM4": {
+        "val": "44.5",
+        "unit": "'C",
+        "name": "Temp. agua M4"
+      },
+      "DFM5": {
+        "val": "64",
+        "unit": "Hl",
+        "name": "CANT_AGUA_TRUA2_MAC_4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "47.8",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "96",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Dosificacion 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM3": {
+        "val": "28.5",
+        "unit": "l",
+        "name": "cantidad acido 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Dosificacion 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice"
+      },
+      "DFM3": {
+        "val": "28.5",
+        "unit": "l",
+        "name": "cantidad acido 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Molienda Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000111",
+        "unit": "nr.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "21515",
+        "unit": "kg",
+        "name": "cant.malta 4"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "Descarga",
+        "name": "Quicktron"
+      },
+      "DFM5": {
+        "val": "100.0",
+        "unit": "%.",
+        "name": "SP_12/1048M25_L4"
+      }
+    }
+  },
+  {
+    "teilanl": "Molienda Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "21515",
+        "unit": "kg",
+        "name": "cant.malta 4"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "Descarga",
+        "name": "Quicktron"
+      },
+      "DFM5": {
+        "val": "100.0",
+        "unit": "%.",
+        "name": "SP_12/1048M25_L4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "99.7",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM4": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. c"
+      },
+      "DFM5": {
+        "val": "281",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "422",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "100.2",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "266",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "411",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 7"
+      },
+      "DFM2": {
+        "val": "642",
+        "unit": "hl",
+        "name": "Cantidad agua M4"
+      },
+      "DFM3": {
+        "val": "-1",
+        "unit": "hl/h",
+        "name": "Caudal agua M4"
+      },
+      "DFM4": {
+        "val": "68.8",
+        "unit": "'C",
+        "name": "Temp. agua M4"
+      },
+      "DFM5": {
+        "val": "131",
+        "unit": "Hl",
+        "name": "CANT_AGUA_TRUA2_MAC_4"
+      }
+    }
+  },
+  {
+    "teilanl": "Molienda Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "21515",
+        "unit": "kg",
+        "name": "cant.malta 4"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "Descarga",
+        "name": "Quicktron"
+      },
+      "DFM5": {
+        "val": "100.0",
+        "unit": "%.",
+        "name": "SP_12/1048M25_L4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 10000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "50.0",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "646",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000010 00010111",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "50.0",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "646",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Molienda Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "21515",
+        "unit": "kg",
+        "name": "cant.malta 4"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "Descarga",
+        "name": "Quicktron"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "50.4",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "644",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "50.6",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "831",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitador c4"
+      },
+      "DFM3": {
+        "val": "100.0",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "228",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "378",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "50.6",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "654",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001001",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "96.6",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "113",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "68",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM7": {
+        "val": "33.0",
+        "unit": "%",
+        "name": "bomba mezcla"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "96.5",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "108",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "21",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM7": {
+        "val": "33.0",
+        "unit": "%",
+        "name": "bomba mezcla"
+      },
+      "DFM8": {
+        "val": "35",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Arroz 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 8"
+      },
+      "DFM4": {
+        "val": "71.2",
+        "unit": "'C",
+        "name": "Temp. agua A4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Arroz 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 8"
+      },
+      "DFM2": {
+        "val": "45",
+        "unit": "hl",
+        "name": "Cantidad agua A4"
+      },
+      "DFM3": {
+        "val": "698",
+        "unit": "hl/h",
+        "name": "Caudal agua A4"
+      },
+      "DFM4": {
+        "val": "84.8",
+        "unit": "'C",
+        "name": "Temp. agua A4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "79.8",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "7",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM6": {
+        "val": "99",
+        "unit": "hl",
+        "name": "contenido c4"
+      },
+      "DFM8": {
+        "val": "45",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Arroz 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 8"
+      },
+      "DFM2": {
+        "val": "45",
+        "unit": "hl",
+        "name": "Cantidad agua A4"
+      },
+      "DFM4": {
+        "val": "84.8",
+        "unit": "'C",
+        "name": "Temp. agua A4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "78.8",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "7",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM7": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "bomba mezcla"
+      },
+      "DFM8": {
+        "val": "45",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001111",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "68.6",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1202",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Cocedor 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "78.7",
+        "unit": "'C",
+        "name": "temperatura c4"
+      },
+      "DFM5": {
+        "val": "7",
+        "unit": "mbar",
+        "name": "presion c4"
+      },
+      "DFM8": {
+        "val": "45",
+        "unit": "hl",
+        "name": "cantidad agua c4"
+      },
+      "DFM9": {
+        "val": "87",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00001111",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "69.7",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM4": {
+        "val": "55.0",
+        "unit": "%",
+        "name": "zona calefacc. 1"
+      },
+      "DFM5": {
+        "val": "55.0",
+        "unit": "%",
+        "name": "zona calefacc. 2"
+      },
+      "DFM6": {
+        "val": "55.0",
+        "unit": "%",
+        "name": "zona calefacc. 3"
+      },
+      "DFM7": {
+        "val": "1178",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "70.0",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1172",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "35.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "70.2",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1378",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 10000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "70.2",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1164",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00101111",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "78.5",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM4": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. 1"
+      },
+      "DFM5": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. 2"
+      },
+      "DFM6": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "zona calefacc. 3"
+      },
+      "DFM7": {
+        "val": "1157",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "78.8",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1159",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "30.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "78.7",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1375",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM3": {
+        "val": "440",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "1",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "72.6",
+        "unit": "'C",
+        "name": "temp. lavado"
+      }
+    }
+  },
+  {
+    "teilanl": "Cortar 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 3"
+      },
+      "DFM3": {
+        "val": "437",
+        "unit": "mm",
+        "name": "nivel_maquina"
+      },
+      "DFM4": {
+        "val": "-1585",
+        "unit": "mbar",
+        "name": "presion_de_asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "-3",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "1",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1579",
+        "unit": "mbar",
+        "name": "presion de asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "708",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "1",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "56",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "110",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "182",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "156",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "221",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "agitator m4"
+      },
+      "DFM3": {
+        "val": "78.7",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "1343",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "708",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "1",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "59",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "112",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "182",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "157",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "222",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00100000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "-2",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "61",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "838",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM8": {
+        "val": "19",
+        "unit": "hl/h",
+        "name": "622P04"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM3": {
+        "val": "64.8",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "2",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 7"
+      },
+      "DFM2": {
+        "val": "642",
+        "unit": "hl",
+        "name": "Cantidad agua M4"
+      },
+      "DFM3": {
+        "val": "-1",
+        "unit": "hl/h",
+        "name": "Caudal agua M4"
+      },
+      "DFM4": {
+        "val": "31.2",
+        "unit": "'C",
+        "name": "Temp. agua M4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 7"
+      },
+      "DFM2": {
+        "val": "45",
+        "unit": "hl",
+        "name": "Cantidad agua M4"
+      },
+      "DFM3": {
+        "val": "1207",
+        "unit": "hl/h",
+        "name": "Caudal agua M4"
+      },
+      "DFM4": {
+        "val": "81.4",
+        "unit": "'C",
+        "name": "Temp. agua M4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerar Malta 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "Indice cadena 7"
+      },
+      "DFM2": {
+        "val": "47",
+        "unit": "hl",
+        "name": "Cantidad agua M4"
+      },
+      "DFM3": {
+        "val": "591",
+        "unit": "hl/h",
+        "name": "Caudal agua M4"
+      },
+      "DFM4": {
+        "val": "81.5",
+        "unit": "'C",
+        "name": "Temp. agua M4"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM3": {
+        "val": "75.7",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "96",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "45",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00100100",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "740",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "259",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "985",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "125",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "188",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "168",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "220",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM3": {
+        "val": "75.7",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "2",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "45",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000100",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "738",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "256",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "982",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "125",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "189",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "168",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "218",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "738",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "256",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "982",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "125",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "189",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "168",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "218",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "41",
+        "unit": "hl",
+        "name": "contenido buffer"
+      },
+      "DFM4": {
+        "val": "15",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "738",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "254",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "982",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "125",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "188",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "168",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "220",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Cortar 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 3"
+      },
+      "DFM3": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel_maquina"
+      },
+      "DFM4": {
+        "val": "982",
+        "unit": "mbar",
+        "name": "presion_de_asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Macerador 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM3": {
+        "val": "75.6",
+        "unit": "'C",
+        "name": "temperatura m4"
+      },
+      "DFM7": {
+        "val": "2",
+        "unit": "hl",
+        "name": "contenido m4"
+      },
+      "DFM8": {
+        "val": "45",
+        "unit": "hl",
+        "name": "cantid.agua m4"
+      },
+      "DFM9": {
+        "val": "11",
+        "unit": "kg",
+        "name": "Cant. CaSO4"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "60",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "183",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM5": {
+        "val": "50",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "1017",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "106",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM9": {
+        "val": "157",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "130",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Cortar 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000101",
+        "unit": "No.",
+        "name": "indice cadena 3"
+      },
+      "DFM2": {
+        "val": "531",
+        "unit": "hl",
+        "name": "cantidad_mosto"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "mm",
+        "name": "nivel_maquina"
+      },
+      "DFM4": {
+        "val": "680",
+        "unit": "mbar",
+        "name": "presion_de_asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "63.5",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "3",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "entrada"
+      },
+      "DFM3": {
+        "val": "901",
+        "unit": "hl",
+        "name": "contenido buffer"
+      },
+      "DFM4": {
+        "val": "15",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.6",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "58.0",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "58.0",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM8": {
+        "val": "63.6",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "Dim288",
+        "name": "Nivel Lauter 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.6",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "58.0",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "58.0",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM8": {
+        "val": "63.6",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.6",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "58.2",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "58.2",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM8": {
+        "val": "63.7",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM2": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "entrada"
+      },
+      "DFM3": {
+        "val": "899",
+        "unit": "hl",
+        "name": "contenido buffer"
+      },
+      "DFM4": {
+        "val": "15",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "970",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "734",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "18",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "32",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "97",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "125",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "188",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "168",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "218",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "970",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM4": {
+        "val": "1",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "51.0",
+        "unit": "'C",
+        "name": "temp. lavado"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "92.8",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "58.8",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "58.8",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM8": {
+        "val": "64.8",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "18",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Cortar 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000101",
+        "unit": "No.",
+        "name": "indice cadena 3"
+      },
+      "DFM2": {
+        "val": "970",
+        "unit": "hl",
+        "name": "cantidad_mosto"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "mm",
+        "name": "nivel_maquina"
+      },
+      "DFM4": {
+        "val": "472",
+        "unit": "mbar",
+        "name": "presion_de_asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM4": {
+        "val": "15",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "97.1",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "60.0",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "60.0",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM8": {
+        "val": "75.3",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "132",
+        "unit": "hl",
+        "name": "contenido buffer"
+      },
+      "DFM4": {
+        "val": "10",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Cortar 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000101",
+        "unit": "No.",
+        "name": "indice cadena 3"
+      },
+      "DFM2": {
+        "val": "970",
+        "unit": "hl",
+        "name": "cantidad_mosto"
+      },
+      "DFM3": {
+        "val": "1",
+        "unit": "mm",
+        "name": "nivel_maquina"
+      },
+      "DFM4": {
+        "val": "583",
+        "unit": "mbar",
+        "name": "presion_de_asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "970",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "-2",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "1",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "33",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "595",
+        "unit": "mbar",
+        "name": "presion de asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "970",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "-2",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "1",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "33",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "595",
+        "unit": "mbar",
+        "name": "presion de asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "993",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "300",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "1260",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "82.4",
+        "unit": "'C",
+        "name": "temp. lavado"
+      },
+      "DFM6": {
+        "val": "3.00",
+        "unit": "x",
+        "name": "FACTOR_SW"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "993",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "300",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "1260",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "82.4",
+        "unit": "'C",
+        "name": "temp. lavado"
+      },
+      "DFM6": {
+        "val": "3.00",
+        "unit": "x",
+        "name": "FACTOR_SW"
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM4": {
+        "val": "10",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Tanque Buffer 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 5"
+      },
+      "DFM3": {
+        "val": "8",
+        "unit": "hl",
+        "name": "contenido buffer"
+      },
+      "DFM4": {
+        "val": "10",
+        "unit": "hl",
+        "name": "ag.enjuague buf."
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "94.0",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "83.3",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "83.3",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "90.0",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM8": {
+        "val": "75.0",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "57",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00100000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "75.1",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "PELE.CON PRE-ISO",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "1276",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "1143",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "400",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "937",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "83.3",
+        "unit": "'C",
+        "name": "temp. lavado"
+      },
+      "DFM6": {
+        "val": "4.00",
+        "unit": "x",
+        "name": "FACTOR_SW"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000001 01000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "75.2",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "40.0",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM4": {
+        "val": "40.0",
+        "unit": "%",
+        "name": "vapor 2"
+      },
+      "DFM5": {
+        "val": "1.54",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "1316",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "0.01",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000001 01000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "75.2",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM4": {
+        "val": "50.0",
+        "unit": "%",
+        "name": "vapor 2"
+      },
+      "DFM5": {
+        "val": "13.40",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "1363",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "0.35",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "1299",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "500",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "980",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "79.4",
+        "unit": "'C",
+        "name": "temp. lavado"
+      },
+      "DFM6": {
+        "val": "5.00",
+        "unit": "x",
+        "name": "FACTOR_SW"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000001 01000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "77.5",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "60.0",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM4": {
+        "val": "60.0",
+        "unit": "%",
+        "name": "vapor 2"
+      },
+      "DFM5": {
+        "val": "17.09",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "1426",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "1.14",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Dos. Colorante 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "0.3",
+        "unit": "l",
+        "name": "colorante olla 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Dos. Colorante 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "0.3",
+        "unit": "l",
+        "name": "colorante olla 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000011 01000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "81.3",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "65.0",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM4": {
+        "val": "65.0",
+        "unit": "%",
+        "name": "vapor 2"
+      },
+      "DFM5": {
+        "val": "18.09",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "1495",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "2.02",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "1393",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "560",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "1025",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "79.7",
+        "unit": "'C",
+        "name": "temp. lavado"
+      },
+      "DFM6": {
+        "val": "5.60",
+        "unit": "x",
+        "name": "FACTOR_SW"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "1393",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "560",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "1025",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "79.7",
+        "unit": "'C",
+        "name": "temp. lavado"
+      },
+      "DFM6": {
+        "val": "5.60",
+        "unit": "x",
+        "name": "FACTOR_SW"
+      }
+    }
+  },
+  {
+    "teilanl": "Lavado 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "1397",
+        "unit": "hl",
+        "name": "mosto filtrado"
+      },
+      "DFM3": {
+        "val": "560",
+        "unit": "hl",
+        "name": "cantidad lavado"
+      },
+      "DFM4": {
+        "val": "1",
+        "unit": "hl/h",
+        "name": "caudal lavado"
+      },
+      "DFM5": {
+        "val": "79.7",
+        "unit": "'C",
+        "name": "temp. lavado"
+      }
+    }
+  },
+  {
+    "teilanl": "Cortar 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 3"
+      },
+      "DFM2": {
+        "val": "1454",
+        "unit": "hl",
+        "name": "cantidad_mosto"
+      },
+      "DFM3": {
+        "val": "18",
+        "unit": "mm",
+        "name": "nivel_maquina"
+      },
+      "DFM4": {
+        "val": "208",
+        "unit": "mbar",
+        "name": "presion_de_asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1510",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "1558",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "18",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "18",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "164",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "274",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "326",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "305",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "396",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1520",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "1089",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "18",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "18",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "232",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "169",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "326",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "310",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "203",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000100",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.8",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "84.7",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "84.7",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "90.0",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM8": {
+        "val": "89.6",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "61",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 01000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "90.0",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "70.0",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM4": {
+        "val": "70.0",
+        "unit": "%",
+        "name": "vapor 2"
+      },
+      "DFM5": {
+        "val": "19.44",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo_C2"
+      },
+      "DFM8": {
+        "val": "1614",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM9": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM10": {
+        "val": "4.56",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.9",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "83.9",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "83.9",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM8": {
+        "val": "92.0",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "61",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00100001",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1682",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "1547",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "18",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "26",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-17",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "233",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "326",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "319",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "420",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "98.2",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "79.7",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "79.7",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "93.1",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM7": {
+        "val": "4.5",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "92.6",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "61",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "98.2",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "79.7",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "79.7",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "93.1",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM7": {
+        "val": "4.5",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "92.6",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "61",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00011000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "92.6",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "42.1",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM5": {
+        "val": "9.98",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "1522",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "5.71",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "17.98",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "96.8",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "79.3",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "79.3",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "6.6",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.3",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00100001",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1748",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "348",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "18",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "57",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1617",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "42",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "170",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "70",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "62",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1748",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "279",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "7",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "57",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1614",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "58",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "58",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "71",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "60",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Transp Bagazo 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1748",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "276",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "7",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "56",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1602",
+        "unit": "mbar",
+        "name": "presion de asp."
+      },
+      "DFM7": {
+        "val": "14",
+        "unit": "hl/h",
+        "name": "620P03"
+      },
+      "DFM8": {
+        "val": "10",
+        "unit": "hl/h",
+        "name": "622P04"
+      },
+      "DFM9": {
+        "val": "22",
+        "unit": "hl/h",
+        "name": "624P05"
+      },
+      "DFM10": {
+        "val": "8",
+        "unit": "hl/h",
+        "name": "626P06"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1751",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "-2",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "5",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "1",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1579",
+        "unit": "mbar",
+        "name": "presion de asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Transp Bagazo 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.5",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "93.2",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "93.2",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "22.6",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.5",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "93.2",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "93.2",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "22.9",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1751",
+        "unit": "hl",
+        "name": "cantidad mosto"
+      },
+      "DFM3": {
+        "val": "-2",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "484",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "1",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1576",
+        "unit": "mbar",
+        "name": "presion de asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Filtro_Mosto 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "-2",
+        "unit": "hl/h",
+        "name": "caudal mosto"
+      },
+      "DFM4": {
+        "val": "451",
+        "unit": "mm",
+        "name": "nivel maquina"
+      },
+      "DFM5": {
+        "val": "1",
+        "unit": "EBC",
+        "name": "Turbidez"
+      },
+      "DFM6": {
+        "val": "-1582",
+        "unit": "mbar",
+        "name": "presion de asp."
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00011000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "93.5",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "38.6",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM5": {
+        "val": "8.03",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "1492",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "8.36",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "18.20",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.0",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "87.7",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "87.7",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "100.0",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM7": {
+        "val": "24.5",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "86.6",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "88.1",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "88.1",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "24.7",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "2",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.3",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "86.2",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "86.2",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "93.1",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM7": {
+        "val": "28.9",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "2",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "92.8",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "86.2",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "86.2",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "29.0",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "2",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.0",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "84.1",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "84.1",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "32.8",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "3",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "101.3",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "82.0",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "82.0",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "24.2",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM7": {
+        "val": "37.9",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "3",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "101.3",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "82.1",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "82.1",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM5": {
+        "val": "93.1",
+        "unit": "%",
+        "name": "vel_bomba"
+      },
+      "DFM7": {
+        "val": "38.1",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.5",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "3",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "100.8",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "81.8",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "81.8",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "38.9",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.6",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "3",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00011000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "93.6",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "39.9",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM5": {
+        "val": "8.01",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "1474",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "11.89",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "18.55",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "10011000 00000011",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "93.7",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM3": {
+        "val": "1.4",
+        "unit": "%",
+        "name": "vapor 1"
+      },
+      "DFM4": {
+        "val": "1.0",
+        "unit": "%",
+        "name": "vapor 2"
+      },
+      "DFM5": {
+        "val": "0.24",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "1461",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "12.03",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "18.58",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "93.7",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "1461",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "12.03",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "18.55",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.2",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "72.3",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "72.3",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "53.5",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.7",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "3",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Lupulo pre-iso.4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "no.",
+        "name": "indice"
+      },
+      "DFM2": {
+        "val": "102.2",
+        "unit": "°C",
+        "name": "temp_agua"
+      },
+      "DFM3": {
+        "val": "72.3",
+        "unit": "°C",
+        "name": "temp_TQ_min"
+      },
+      "DFM4": {
+        "val": "72.3",
+        "unit": "°C",
+        "name": "temp_TQ_max"
+      },
+      "DFM7": {
+        "val": "53.5",
+        "unit": "min",
+        "name": "tiempo_ebull"
+      },
+      "DFM8": {
+        "val": "93.7",
+        "unit": "´C",
+        "name": "temp_olla"
+      },
+      "DFM9": {
+        "val": "3",
+        "unit": "HL",
+        "name": "LPP4_AGUA"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM5": {
+        "val": "1127",
+        "unit": "HL",
+        "name": "Mosto Frio L-2"
+      },
+      "DFM6": {
+        "val": "1101",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "999",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      },
+      "DFM8": {
+        "val": "116",
+        "unit": "KG",
+        "name": "TOT_CO2_OLLA4"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "93.7",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "1461",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "12.03",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "18.55",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "85.8",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "2",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "12",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "12.03",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "84.5",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "115",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "12.03",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1384",
+        "unit": "hl",
+        "name": "contenido rotap4"
+      },
+      "DFM5": {
+        "val": "1550",
+        "unit": "HL",
+        "name": "Mosto Frio L-2"
+      },
+      "DFM6": {
+        "val": "1371",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1249",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "84.5",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM7": {
+        "val": "2",
+        "unit": "hl",
+        "name": "contenido olla"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "12.03",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "Olla de Coctos 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 6"
+      },
+      "DFM2": {
+        "val": "84.5",
+        "unit": "'C",
+        "name": "temperatura"
+      },
+      "DFM5": {
+        "val": "0.00",
+        "unit": "Ton/h",
+        "name": "caudal vapor"
+      },
+      "DFM6": {
+        "val": "---------------",
+        "unit": "-",
+        "name": "sel_lupulo"
+      },
+      "DFM8": {
+        "val": "20",
+        "unit": "hl",
+        "name": "ag.enjuague olla"
+      },
+      "DFM9": {
+        "val": "0.00",
+        "unit": "Ton.",
+        "name": "Total Vapor Olla"
+      },
+      "DFM10": {
+        "val": "0.00",
+        "unit": "ºP",
+        "name": "Grado Plato"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "2",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "17.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM10": {
+        "val": "33",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "2",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "17.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM10": {
+        "val": "33",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "12.3",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-50",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "17.9",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM10": {
+        "val": "-42",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 5",
+    "dfms": {
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf5:Indice"
+      },
+      "DFM3": {
+        "val": "75.2",
+        "unit": "°C",
+        "name": "Enf5:TempMosto"
+      },
+      "DFM4": {
+        "val": "3",
+        "unit": "-",
+        "name": "Enf5 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 6",
+    "dfms": {
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf6:Indice"
+      },
+      "DFM3": {
+        "val": "74.3",
+        "unit": "°C",
+        "name": "Enf6:TempMosto"
+      },
+      "DFM4": {
+        "val": "7",
+        "unit": "-",
+        "name": "Enf6 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Transp Bagazo 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Transp Bagazo 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 4"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1381",
+        "unit": "hl",
+        "name": "contenido rotap4"
+      },
+      "DFM6": {
+        "val": "1371",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1249",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "1381",
+        "unit": "hl",
+        "name": "contenido rotap4"
+      },
+      "DFM6": {
+        "val": "1371",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1249",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "29.7",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-30",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "20.7",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM10": {
+        "val": "-16",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "6.5",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-33",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "16.9",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "45.3",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "60",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "58",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM2": {
+        "val": "445",
+        "unit": "hl",
+        "name": "contenido rotap4"
+      },
+      "DFM5": {
+        "val": "894",
+        "unit": "HL",
+        "name": "Mosto Frio L-2"
+      },
+      "DFM6": {
+        "val": "852",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "792",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      },
+      "DFM8": {
+        "val": "18.09",
+        "unit": "°P",
+        "name": "PROM °P WH_4"
+      },
+      "DFM9": {
+        "val": "893",
+        "unit": "Hl",
+        "name": "TOT_MOSTO_VHG2_L4"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "47.1",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-42",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM4": {
+        "val": "1587",
+        "unit": "hl/h",
+        "name": "EV:Flujo"
+      },
+      "DFM5": {
+        "val": "15.6",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "31.0",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "500",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "133",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "1.0",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "21",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM4": {
+        "val": "1709",
+        "unit": "hl/h",
+        "name": "EV:Flujo"
+      },
+      "DFM5": {
+        "val": "15.6",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "28.5",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "502",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "12",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000001",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM5": {
+        "val": "1471",
+        "unit": "HL",
+        "name": "Mosto Frio L-2"
+      },
+      "DFM6": {
+        "val": "1413",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1304",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      },
+      "DFM8": {
+        "val": "18.09",
+        "unit": "°P",
+        "name": "PROM °P WH_4"
+      },
+      "DFM9": {
+        "val": "1473",
+        "unit": "Hl",
+        "name": "TOT_MOSTO_VHG2_L4"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 5",
+    "dfms": {
+      "DFM1": {
+        "val": "62.1",
+        "unit": "Min.",
+        "name": "Enf5:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf5:Indice"
+      },
+      "DFM3": {
+        "val": "10.4",
+        "unit": "°C",
+        "name": "Enf5:TempMosto"
+      },
+      "DFM4": {
+        "val": "3",
+        "unit": "-",
+        "name": "Enf5 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 6",
+    "dfms": {
+      "DFM1": {
+        "val": "62.1",
+        "unit": "Min.",
+        "name": "Enf6:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf6:Indice"
+      },
+      "DFM3": {
+        "val": "10.0",
+        "unit": "°C",
+        "name": "Enf6:TempMosto"
+      },
+      "DFM4": {
+        "val": "7",
+        "unit": "-",
+        "name": "Enf6 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM5": {
+        "val": "1473",
+        "unit": "HL",
+        "name": "Mosto Frio L-2"
+      },
+      "DFM6": {
+        "val": "1414",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1305",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "1.0",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-38",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "16.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "502",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "22",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "1.0",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-38",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "16.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "502",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "22",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 5",
+    "dfms": {
+      "DFM1": {
+        "val": "0.8",
+        "unit": "Min.",
+        "name": "Enf5:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf5:Indice"
+      },
+      "DFM3": {
+        "val": "9.0",
+        "unit": "°C",
+        "name": "Enf5:TempMosto"
+      },
+      "DFM4": {
+        "val": "4",
+        "unit": "-",
+        "name": "Enf5 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 6",
+    "dfms": {
+      "DFM1": {
+        "val": "0.8",
+        "unit": "Min.",
+        "name": "Enf6:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf6:Indice"
+      },
+      "DFM3": {
+        "val": "9.0",
+        "unit": "°C",
+        "name": "Enf6:TempMosto"
+      },
+      "DFM4": {
+        "val": "8",
+        "unit": "-",
+        "name": "Enf6 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 5",
+    "dfms": {
+      "DFM1": {
+        "val": "0.3",
+        "unit": "Min.",
+        "name": "Enf5:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf5:Indice"
+      },
+      "DFM3": {
+        "val": "8.9",
+        "unit": "°C",
+        "name": "Enf5:TempMosto"
+      },
+      "DFM4": {
+        "val": "4",
+        "unit": "-",
+        "name": "Enf5 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "Enfriador 6",
+    "dfms": {
+      "DFM1": {
+        "val": "0.3",
+        "unit": "Min.",
+        "name": "Enf6:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "Enf6:Indice"
+      },
+      "DFM3": {
+        "val": "9.0",
+        "unit": "°C",
+        "name": "Enf6:TempMosto"
+      },
+      "DFM4": {
+        "val": "8",
+        "unit": "-",
+        "name": "Enf6 CIP CNT"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM1": {
+        "val": "2.4",
+        "unit": "Min.",
+        "name": "EV:Tiempo"
+      },
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-27",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "16.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "502",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "22",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-27",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "16.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "502",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "22",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "VE 02",
+    "dfms": {
+      "DFM2": {
+        "val": "00000000 00000000",
+        "unit": "-",
+        "name": "EV:Indice"
+      },
+      "DFM3": {
+        "val": "-28",
+        "unit": "mBar",
+        "name": "EV:Vacio"
+      },
+      "DFM5": {
+        "val": "16.4",
+        "unit": "°C",
+        "name": "EV:TempAgua"
+      },
+      "DFM6": {
+        "val": "6.8",
+        "unit": "%",
+        "name": "EV:Nivel"
+      },
+      "DFM7": {
+        "val": "502",
+        "unit": "hl",
+        "name": "EV:Volumen"
+      },
+      "DFM10": {
+        "val": "22",
+        "unit": "mBar",
+        "name": "EV:PresionEntrad"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM5": {
+        "val": "1473",
+        "unit": "HL",
+        "name": "Mosto Frio L-2"
+      },
+      "DFM6": {
+        "val": "1414",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1305",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000010",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM6": {
+        "val": "1414",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1305",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "5",
+        "unit": "hl",
+        "name": "ag.enjuague rota"
+      },
+      "DFM6": {
+        "val": "1414",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1305",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "4",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  },
+  {
+    "teilanl": "Rotapool 4",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "No.",
+        "name": "indice cadena 1"
+      },
+      "DFM3": {
+        "val": "5",
+        "unit": "hl",
+        "name": "ag.enjuague rota"
+      },
+      "DFM6": {
+        "val": "1414",
+        "unit": "HL",
+        "name": "Totalizado Flujo L-2 BF"
+      },
+      "DFM7": {
+        "val": "1305",
+        "unit": "HL",
+        "name": "Totalizado agua caliente L2"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "4",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "4",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "5",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "5",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "5",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  },
+  {
+    "teilanl": "Trub 3",
+    "dfms": {
+      "DFM1": {
+        "val": "00000000 00000000",
+        "unit": "nr.",
+        "name": "indice cadena 2"
+      },
+      "DFM2": {
+        "val": "5",
+        "unit": "hl",
+        "name": "cantidad agua"
+      }
+    }
+  }
+]

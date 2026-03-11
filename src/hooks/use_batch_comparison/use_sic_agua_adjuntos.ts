@@ -27,46 +27,51 @@ export function useSicAguaAdjuntos(
         filteredData = filteredData.filter(d => d.CHARG_NR === series.batch);
       }
 
+      const seriesAccumulator = new Map<string, { agua: number, arroz: number, timestamp: number, date: string }>();
+
       filteredData.forEach((record) => {
         const key = record.CHARG_NR;
         if (!key) return;
 
-        // Buscar cantidades de Agua y Arroz/Adjunto
-        let aguaReal = 0;
-        let arrozReal = 0;
-
-        record.materials.forEach(m => {
-          const nameLower = m.name.toLowerCase();
-          const unitLower = m.unit.toLowerCase();
-          
-          // Agua: sumamos cualquier material líquido (hl o l) que no sea mosto
-          if ((unitLower === "hl" || unitLower === "l") && !nameLower.includes("mosto") && !nameLower.includes("merma")) {
-            aguaReal += m.totalReal;
-          }
-          // Arroz o Adjunto: sumamos cualquier material sólido (kg, g, lbs)
-          if (unitLower === "kg" || unitLower === "lbs" || unitLower === "g") {
-            arrozReal += m.totalReal;
-          }
-        });
-
-        // Solo graficamos si tenemos valores válidos
-        if (aguaReal > 0 && arrozReal > 0) {
-          const ratio = aguaReal / arrozReal;
-
-          if (!dataMap.has(key)) {
-            dataMap.set(key, {
-              batchId: key,
-              date: new Date(record.timestamp).toLocaleString([], { dateStyle: "short", timeStyle: "short" }),
-              timestamp: new Date(record.timestamp).getTime() || 0,
+        if (!seriesAccumulator.has(key)) {
+            seriesAccumulator.set(key, {
+                agua: 0,
+                arroz: 0,
+                timestamp: new Date(record.timestamp).getTime() || 0,
+                date: new Date(record.timestamp).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
             });
-          }
-          
-          const entry = dataMap.get(key)!;
-          // Guardar el valor calculado
-          entry[`value_${series.id}`] = Number(ratio.toFixed(2));
-          // Guardar info extra
-          entry[`agua_${series.id}`] = aguaReal;
-          entry[`arroz_${series.id}`] = arrozReal;
+        }
+        
+        const accum = seriesAccumulator.get(key)!;
+        
+        const isAdjuntoMachine = record.TEILANL_GRUPO.toLowerCase().includes('arroz') || 
+                                 record.TEILANL_GRUPO.toLowerCase().includes('adjunto') ||
+                                 record.TEILANL_GRUPO.toLowerCase().includes('grits');
+                                 
+        if (isAdjuntoMachine) {
+            accum.agua += (record.max_agua_dfm2_hl || 0);
+            accum.arroz += (record.max_adjuntos_dfm2_kg || 0);
+        }
+      });
+
+      // ... (rest code previous to this is fine, let's insert log here)
+      seriesAccumulator.forEach((accum, key) => {
+        console.log(`[AguaAdj] Batch ${key} -> agua: ${accum.agua}, arroz: ${accum.arroz}`);
+        if (accum.agua > 0 && accum.arroz > 0) {
+            const ratio = accum.agua / accum.arroz;
+            
+            if (!dataMap.has(key)) {
+                dataMap.set(key, {
+                    batchId: key,
+                    date: accum.date,
+                    timestamp: accum.timestamp
+                });
+            }
+            
+            const entry = dataMap.get(key)!;
+            entry[`value_${series.id}`] = Number(ratio.toFixed(4));
+            entry[`agua_${series.id}`] = accum.agua;
+            entry[`arroz_${series.id}`] = accum.arroz;
         }
       });
     });

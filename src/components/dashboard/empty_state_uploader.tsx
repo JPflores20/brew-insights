@@ -146,7 +146,7 @@ export function EmptyStateUploader({
                                 className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-primary/5 border border-transparent hover:border-primary/20"
                             >
                                 <Files className="h-4 w-4" />
-                                Cargar Datos Demo (Semanas 7 y 8)
+                                Cargar Datos Demo (Semanas 6, 7, 8, 9)
                             </button>
                         )}
                     </div>

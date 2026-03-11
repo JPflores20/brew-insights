@@ -52,6 +52,8 @@ export const DEMO_DATA: BatchRecord[] = [
     ],
     malta_caramelo_clo: 450,
     descarga_am_m2b: 980,
+    max_agua_dfm2_hl: 480,
+    max_adjuntos_dfm2_kg: 455,
     materials: [
       { name: "Agua", totalReal: 480, totalExpected: 500, unit: "hl" },
       { name: "Arroz", totalReal: 135, totalExpected: 140, unit: "kg" },
@@ -99,6 +101,8 @@ export const DEMO_DATA: BatchRecord[] = [
     ],
     malta_caramelo_clo: 480,
     descarga_am_m2b: 1045,
+    max_agua_dfm2_hl: 520,
+    max_adjuntos_dfm2_kg: 550,
     materials: [
       { name: "Agua Fria", totalReal: 520, totalExpected: 500, unit: "hl" },
       { name: "Arroz Extra", totalReal: 140, totalExpected: 140, unit: "kg" },
@@ -138,6 +142,8 @@ export const DEMO_DATA: BatchRecord[] = [
     ],
     malta_caramelo_clo: 0,
     descarga_am_m2b: 460,
+    max_agua_dfm2_hl: 495,
+    max_adjuntos_dfm2_kg: 138,
     materials: [
       { name: "Agua Tratada", totalReal: 495, totalExpected: 500, unit: "hl" },
       { name: "Adjunto", totalReal: 138, totalExpected: 140, unit: "kg" }
@@ -176,6 +182,8 @@ export const DEMO_DATA: BatchRecord[] = [
     ],
     malta_caramelo_clo: 500,
     descarga_am_m2b: 1100,
+    max_agua_dfm2_hl: 510,
+    max_adjuntos_dfm2_kg: 645,
     materials: [
       { name: "Agua", totalReal: 510, totalExpected: 500, unit: "hl" },
       { name: "Arroz Miga", totalReal: 145, totalExpected: 140, unit: "kg" }

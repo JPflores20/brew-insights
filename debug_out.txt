@@ -1,0 +1,58 @@
+﻿Columns found: {
+  NAME_DFM2: true,
+  IW_DFM2: true,
+  DIM_DFM2: true,
+  GOP_NAME: true,
+  CHARG_NR: true
+}
+[Batch 1354] [Arr.Recl.Arroz 3] DFM2 Name=Clase Arroz 3, Val=ARR GR, Unit=nr.
+[Batch 1354] [Alarma Recl. A 3] DFM2 Name=Clase Arroz 3, Val=ARR GR, Unit=nr.
+[Batch 1354] [Arr.Mol.Arroz 3] DFM2 Name=cant.arroz 3, Val=0, Unit=kg
+[Batch 1352] [Arr.Mol.Malta 4] DFM2 Name=cant.malta 4, Val=0, Unit=kg
+[Batch 1354] [Reclamo Arroz 3] DFM2 Name=Clase Arroz 3, Val=ARR GR, Unit=nr.
+[Batch 1354] [Descarga Arroz 3] DFM2 Name=Clase Arroz 3, Val=ARR GR, Unit=nr.
+[Batch 1354] [Fin Recl.Arroz 3] DFM2 Name=Clase Arroz 3, Val=ARR GR, Unit=nr.
+[Batch 1354] [Molienda Arroz 3] DFM2 Name=cant.arroz 3, Val=13512, Unit=kg
+[Batch 1354] [Arr.Tq. Grits L3] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1354] [Arr.Dosificac. 3] DFM2 Name=cantidad compu 3, Val=0.0, Unit=l
+[Batch 1354] [Arr. Cocedor L3] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1354] [Arr.Premacer.A 3] DFM2 Name=Cantidad agua A3, Val=45, Unit=hl
+[Batch 1354] [Fin Tq. Grits L3] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1354] [Vaciar Equip. A3] DFM2 Name=cant.arroz 3, Val=13542, Unit=kg
+[Batch 1354] [Preparar Acido 3] DFM2 Name=cantidad compu 3, Val=0.0, Unit=l
+[Batch 1354] [Aforo Arroz 3] DFM2 Name=Cantidad agua A3, Val=100, Unit=hl
+[Batch 1354] [Espera Cocedor 3] DFM2 Name=cant.arroz 3, Val=13542, Unit=kg
+[Batch 1353] [Arr.Mol. Malta 2] DFM2 Name=cantidad malta 2, Val=0, Unit=kg
+[Batch 1352] [Arr.Premacer.M4] DFM2 Name=Cantidad agua M4, Val=41, Unit=hl
+[Batch 1352] [Aforo 4] DFM2 Name=Cantidad agua M4, Val=140, Unit=hl
+[Batch 1352] [Molienda Malta 4] DFM2 Name=cant.malta 4, Val=20130, Unit=kg
+[Batch 1354] [Premacer.Arroz 3] DFM2 Name=Cantidad agua A3, Val=350, Unit=hl
+[Batch 1354] [Prem. arroz 3] DFM2 Name=cant.arroz 3, Val=13542, Unit=kg
+[Batch 1354] [Fin Mol.Arroz 3] DFM2 Name=cant.arroz 3, Val=13542, Unit=kg
+[Batch 1356] [Arr.Recl.Arroz 4] DFM2 Name=Clase Arroz 4, Val=ARR GR, Unit=nr.
+[Batch 1356] [Arr.Mol.Arroz 4] DFM2 Name=cant.arroz 4, Val=0, Unit=kg
+[Batch 1356] [Alarma Recl. A 4] DFM2 Name=Clase Arroz 4, Val=ARR GR, Unit=nr.
+[Batch 1352] [Vaciar Equip. M4] DFM2 Name=cant.malta 4, Val=20131, Unit=kg
+[Batch 1352] [Espera Macerad.4] DFM2 Name=cant.malta 4, Val=20131, Unit=kg
+[Batch 1352] [Premacer.Malta 4] DFM2 Name=Cantidad agua M4, Val=712, Unit=hl
+[Batch 1352] [Prem. malta 4] DFM2 Name=cant.malta 4, Val=20131, Unit=kg
+[Batch 1352] [Fin Mol.Malta 4] DFM2 Name=cant.malta 4, Val=20131, Unit=kg
+[Batch 1354] [Arr.Mol.Malta 3] DFM2 Name=cant.malta 3, Val=0, Unit=kg
+[Batch 1355] [Arr.Tq. Grits L1] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1355] [Arr. Cocedor L1] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1355] [Arr. Premacer. A] DFM2 Name=cantidad agua C1, Val=35, Unit=hl
+[Batch 1355] [Fin Tq. Grits L1] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1355] [Arr.Dosificac. 1] DFM2 Name=cantidad compu 1, Val=0.0, Unit=l
+[Batch 1355] [Aforo] DFM2 Name=cantidad agua C1, Val=100, Unit=hl
+[Batch 1355] [Preparar Acido 1] DFM2 Name=cantidad compu 1, Val=0.0, Unit=l
+[Batch 1355] [Premacer.Arroz] DFM2 Name=cantidad agua C1, Val=350, Unit=hl
+[Batch 1356] [Reclamo Arroz 4] DFM2 Name=Clase Arroz 4, Val=ARR GR, Unit=nr.
+[Batch 1357] [Arr.Recl.Arroz 2] DFM2 Name=Clase Arroz 2, Val=ARR GR, Unit=nr.
+[Batch 1357] [Alarma Recl. A 2] DFM2 Name=Clase Arroz 2, Val=ARR GR, Unit=nr.
+[Batch 1357] [Arr.Mol. Arroz 2] DFM2 Name=cantidad arroz 2, Val=0, Unit=kg
+[Batch 1356] [Descarga Arroz 4] DFM2 Name=Clase Arroz 4, Val=ARR GR, Unit=nr.
+[Batch 1356] [Fin Recl.Arroz 4] DFM2 Name=Clase Arroz 4, Val=ARR GR, Unit=nr.
+[Batch 1356] [Molienda Arroz 4] DFM2 Name=cant.arroz 4, Val=13578, Unit=kg
+[Batch 1356] [Arr.Tq. Grits L4] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1356] [Arr. Cocedor L4] DFM2 Name=cantidad agua, Val=0, Unit=hl
+[Batch 1356] [Arr.Dosificac. 4] DFM2 Name=cantidad compu 4, Val=0.0, Unit=l

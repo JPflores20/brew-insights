@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useData } from "@/context/data_context";
 import { AnimatedPage } from "@/components/layout/animated_page";
+import { BetaPageBanner } from "@/components/ui/beta_page_banner";
 import { MetricCard } from "@/components/ui/metric_card";
 import { Activity, Clock, Timer, Info } from "lucide-react";
 import { format, parseISO, differenceInMinutes } from "date-fns";
@@ -88,6 +89,7 @@ export default function Indicadores() {
   return (
     <DashboardLayout>
       <AnimatedPage className="space-y-6 pb-10">
+        <BetaPageBanner />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Indicadores de Desempeño</h1>

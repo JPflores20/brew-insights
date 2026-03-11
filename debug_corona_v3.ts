@@ -48,25 +48,39 @@ async function test() {
     try {
         const buffer = await readFile('public/S2600009.DBF');
         const records = parseRawDBF(buffer.buffer);
-        const b1442 = records.filter(r => String(r.CHARG_NR).includes('1442'));
-        const output = b1442
-            .filter(row => {
-               const val = parseFloat(String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '')) || 0;
-               return val > 0;
-            })
-            .map(row => ({
-                batch: row.CHARG_NR,
-                teilanl: row.TEILANL,
-                gopName: row.GOP_NAME,
-                nameDfm2: row.NAME_DFM2,
-                dimDfm2: row.DIM_DFM2,
-                iwDfm2: row.IW_DFM2
-            }));
         
-        await writeFile('test_1442_arroz.json', JSON.stringify(output, null, 2));
-        console.log("Written to test_1442_arroz.json");
+        // CORONA usually has "CORONA" or "CORO" in REZEPT or PRODUCT
+        const corona = records.filter(r => 
+            String(r.REZEPT).toUpperCase().includes('CORO') || 
+            String(r.PRODUCT).toUpperCase().includes('CORO')
+        );
+        
+        console.log(`Found ${corona.length} records for CORONA`);
+        
+        const groups = Array.from(new Set(corona.map(r => r.TEILANL)));
+        const steps = Array.from(new Set(corona.map(r => r.GOP_BEZ || r.GOP_NAME)));
+        
+        const samples = corona.slice(0, 20).map(r => ({
+            batch: r.CHARG_NR,
+            recipe: r.REZEPT,
+            teilanl: r.TEILANL,
+            gop: r.GOP_BEZ,
+            iw2: r.IW_DFM2,
+            dim2: r.DIM_DFM2,
+            iw3: r.IW_DFM3
+        }));
+        
+        const output = {
+            totalCorona: corona.length,
+            uniqueGroups: groups,
+            uniqueSteps: steps,
+            samples
+        };
+        
+        await writeFile('corona_inspect.json', JSON.stringify(output, null, 2));
+        console.log("Written to corona_inspect.json");
     } catch (e) {
-        console.error("No file found or error", e.message, "\n", e.stack);
+        console.error("Error", e.message, "\n", e.stack);
     }
 }
 test();

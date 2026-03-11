@@ -143,7 +143,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                       />
                       <Tooltip content={<ChartTooltip indicator="line" valueSuffix="min" />} cursor={{ fill: 'hsl(var(--muted)/0.4)' }} />
                       <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                      <Bar dataKey="Tiempo Esperado" fill="hsl(var(--chart-expected))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Setpoint" fill="hsl(var(--chart-expected))" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="Tiempo Real" fill="hsl(var(--chart-real))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -173,7 +173,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                       />
                       <Tooltip content={<ChartTooltip indicator="line" valueSuffix="min" />} />
                       <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                      <Line type="monotone" dataKey="Tiempo Esperado" stroke="hsl(var(--chart-expected))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                      <Line type="monotone" dataKey="Setpoint" stroke="hsl(var(--chart-expected))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                       <Line type="monotone" dataKey="Tiempo Real" stroke="hsl(var(--chart-real))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -185,7 +185,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Equipo</TableHead>
-                                    <TableHead className="text-right">T. Esperado (min)</TableHead>
+                                    <TableHead className="text-right">Setpoint (min)</TableHead>
                                     <TableHead className="text-right">T. Real (min)</TableHead>
                                     <TableHead className="text-right">Desviación</TableHead>
                                     <TableHead className="text-right">T. Muerto</TableHead>
@@ -195,7 +195,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
                                 {filteredData.map((item) => (
                                     <TableRow key={item.machine}>
                                         <TableCell className="font-medium">{item.machine}</TableCell>
-                                        <TableCell className="text-right">{item["Tiempo Esperado"]}</TableCell>
+                                        <TableCell className="text-right">{item["Setpoint"]}</TableCell>
                                         <TableCell className="text-right font-bold">{item["Tiempo Real"]}</TableCell>
                                         <TableCell className={cn("text-right", item["Desviación"] > 10 ? "text-destructive" : "text-green-600")}>
                                             {item["Desviación"] > 0 ? '+' : ''}{item["Desviación"]}

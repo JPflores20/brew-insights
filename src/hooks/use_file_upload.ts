@@ -92,8 +92,10 @@ export function useFileUpload() {
 
     try {
       const demoFiles = [
-        'https://brew-insights.web.app/Semanas/S2600007.DBF',
-        'https://brew-insights.web.app/Semanas/S2600008.DBF'
+        '/salidas/S2600006.DBF',
+        '/salidas/S2600007.DBF',
+        '/salidas/S2600008.DBF',
+        '/salidas/S2600009.DBF'
       ];
       
       let combinedData: BatchRecord[] = [];
@@ -115,8 +117,8 @@ export function useFileUpload() {
       if (combinedData.length > 0) {
         setData(combinedData);
         toast({
-          title: "¡Tanque lleno (Firebase)!",
-          description: `Se han cargado las Semanas 7 y 8 desde la nube (${combinedData.length} registros).`,
+          title: "¡Tanque lleno (Local)!",
+          description: `Se han cargado las Semanas 6, 7, 8 y 9 desde el servidor local (${combinedData.length} registros).`,
           className: "bg-primary text-primary-foreground border-none",
         });
       } else {

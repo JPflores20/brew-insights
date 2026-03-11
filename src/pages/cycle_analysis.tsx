@@ -214,7 +214,7 @@ export default function CycleAnalysis() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Análisis de Tiempos</h1>
-            <p className="text-muted-foreground mt-1">Comparativa: Área Verde (Ideal) vs Área Azul (Real).</p>
+            <p className="text-muted-foreground mt-1">Comparativa: Área Verde (Setpoint) vs Área Azul (Real).</p>
           </div>
           <div className="flex items-center gap-3">
              <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => handlePrint()}>

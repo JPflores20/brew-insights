@@ -18,10 +18,10 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
     return (
         <Card className="col-span-4">
             <CardHeader>
-                <CardTitle>Tendencia de Duración Total vs Ideal</CardTitle>
+                <CardTitle>Tendencia de Duración Total vs Setpoint</CardTitle>
                 <CardDescription>
                     Comparativa visual:
-                    <span className="text-green-600 font-bold"> Verde = Ideal</span> vs
+                    <span className="text-green-600 font-bold"> Verde = Setpoint</span> vs
                     <span className="text-blue-600 font-bold"> Azul = Real</span>.
                 </CardDescription>
             </CardHeader>
@@ -84,7 +84,7 @@ export function TrendAreaChart({ data, theoreticalDuration }: TrendAreaChartProp
                             stroke="#16a34a"
                             fillOpacity={1}
                             fill="url(#colorIdeal)"
-                            name="Duración Ideal"
+                            name="Setpoint"
                         />
                         <Area
                             type="monotone"

@@ -99,7 +99,7 @@ export default function MachineDetail() {
       "Producto": d.productName,
       "Inicio": d.timestamp ? format(new Date(d.timestamp), 'dd/MM/yyyy HH:mm:ss') : '',
       "Duración Real (min)": d.real_total_min,
-      "Duración Esperada (min)": d.esperado_total_min,
+      "Setpoint (min)": d.esperado_total_min,
       "Delta (min)": d.delta_total_min,
       "Alertas": d.alerts.length
     }));

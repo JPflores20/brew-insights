@@ -198,25 +198,10 @@ export default function BatchComparison() {
               series={seriesOptions}
               onAddSeries={addSeries}
             />
-            
-            <SicTemperatureChart
-              data={sicChartData}
-              selectedTempIndices={selectedTempIndices}
-              setSelectedTempIndices={setSelectedTempIndices}
-              series={sicSeriesOptions}
-              onAddSeries={addSicSeries}
-            />
-            
             <SicAguaAdjuntosChart
               data={wChartData}
               series={wSeriesOptions}
               onAddSeries={addWSeries}
-            />
-
-            <SicAguaMaltaChart
-              data={amChartData}
-              series={amSeriesOptions}
-              onAddSeries={addAmSeries}
             />
 
             <SicMaltaCarameloChart
@@ -226,6 +211,21 @@ export default function BatchComparison() {
               updateSeries={updateMSeries}
               removeSeries={removeMSeries}
               uniqueRecipes={uniqueRecipes}
+            />
+
+            {/* Gráficas en Construcción (Deshabilitadas) */}
+            <SicTemperatureChart
+              data={sicChartData}
+              selectedTempIndices={selectedTempIndices}
+              setSelectedTempIndices={setSelectedTempIndices}
+              series={sicSeriesOptions}
+              onAddSeries={addSicSeries}
+            />
+
+            <SicAguaMaltaChart
+              data={amChartData}
+              series={amSeriesOptions}
+              onAddSeries={addAmSeries}
             />
 
 

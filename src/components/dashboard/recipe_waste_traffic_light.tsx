@@ -12,6 +12,7 @@ interface RecipeWasteTrafficLightProps {
   onSelectRecipe: (recipe: string | 'ALL') => void;
   selectedRecipe: string | 'ALL';
 }
+
 interface RecipeWasteStatus {
     name: string;
     totalExpected: number;
@@ -20,26 +21,32 @@ interface RecipeWasteStatus {
     percentDeviation: number;
     status: "good" | "warning" | "danger" | "no-data";
 }
+
 export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }: RecipeWasteTrafficLightProps) {
   const recipeData: RecipeWasteStatus[] = useMemo(() => {
     const rawMap = new Map<string, { exp: number, real: number }>();
+    
     data.forEach(batch => {
         const name = batch.productName || "Desconocido";
         if (!rawMap.has(name)) rawMap.set(name, { exp: 0, real: 0 });
         const current = rawMap.get(name)!;
+        
         batch.materials.forEach(mat => {
             current.exp += mat.totalExpected;
             current.real += mat.totalReal;
         });
     });
+
     const result: RecipeWasteStatus[] = [];
     rawMap.forEach((vals, name) => {
         const delta = vals.real - vals.exp;
         const pct = vals.exp > 0 ? (delta / vals.exp) * 100 : 0;
+        
         let status: RecipeWasteStatus["status"] = "good";
         if (vals.exp === 0) status = "no-data";
         else if (pct > 5) status = "danger";
         else if (pct > 2) status = "warning";
+
         result.push({
             name,
             totalExpected: vals.exp,
@@ -49,8 +56,10 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
             status
         });
     });
+
     return result.sort((a,b) => b.percentDeviation - a.percentDeviation);
   }, [data]);
+
   const getStatusColor = (status: RecipeWasteStatus["status"]) => {
       switch(status) {
           case "danger": return "bg-red-500/10 text-red-600 border-red-500/20";
@@ -59,6 +68,7 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
           default: return "bg-gray-500/10 text-gray-600 border-gray-500/20";
       }
   };
+
   const getStatusIcon = (status: RecipeWasteStatus["status"]) => {
       switch(status) {
           case "danger": return <AlertCircle className="w-5 h-5 text-red-500" />;
@@ -67,6 +77,7 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
           default: return null;
       }
   };
+
   return (
     <Card className="glass shadow-inner overflow-hidden border-t-4 border-t-amber-500/50">
         <CardHeader className="pb-4">
@@ -74,13 +85,12 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
                 Semáforo de Desperdicio
             </CardTitle>
             <CardDescription>
-                Evalúa rápidamente el diferencial de materia prima (Real vs Esperado) para cada receta procesada.
+                Evalúa rápidamente el diferencial de materia prima (Real vs Setpoint) para cada receta procesada.
                 Rojo = +5% desviación, Amarillo = +2% desviación.
             </CardDescription>
         </CardHeader>
         <CardContent>
             <div className="flex flex-wrap gap-4">
-                {}
                 <div 
                     onClick={() => onSelectRecipe(FILTER_ALL)}
                     className={cn(
@@ -89,12 +99,11 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
                     )}
                 >
                     <div className="flex flex-col">
-                        <span className="font-semibold text-foreground truncate">Todas las Recetas</span>
-                        <span className="text-sm text-muted-foreground mt-1">
-                           Vista General
-                        </span>
+                        <span className="font-semibold text-foreground pr-4">Todas las Recetas</span>
+                        <span className="text-xs text-muted-foreground mt-1">Vista General</span>
                     </div>
                 </div>
+
                 {recipeData.map(r => (
                     <Tooltip key={r.name}>
                         <TooltipTrigger asChild>
@@ -107,17 +116,15 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
                                 )}
                             >
                                 <div className="flex flex-col">
-                                    <span className="font-semibold text-current truncate pr-4">{r.name}</span>
+                                    <span className="font-semibold text-current pr-4 truncate max-w-[150px]">{r.name}</span>
                                     <div className="flex items-center gap-2 mt-2">
                                         <Badge variant="outline" className={cn("bg-background", getStatusColor(r.status))}>
                                             {r.delta > 0 ? "+" : ""}{r.percentDeviation.toFixed(2)}%
                                         </Badge>
-                                        <span className="text-xs opacity-80">
-                                            Vs Total Plan
-                                        </span>
+                                        <span className="text-[10px] opacity-70 font-medium">Vs Setpoint</span>
                                     </div>
                                 </div>
-                                <div className="shrink-0 p-2 bg-background/50 rounded-full">
+                                <div className="shrink-0 p-2 bg-background/40 rounded-full">
                                     {getStatusIcon(r.status)}
                                 </div>
                             </div>
@@ -125,12 +132,13 @@ export function RecipeWasteTrafficLight({ data, onSelectRecipe, selectedRecipe }
                         <TooltipContent className="w-64 p-3 bg-popover/95 backdrop-blur-md border border-border shadow-xl">
                             <p className="font-semibold mb-2">{r.name}</p>
                             <div className="grid grid-cols-2 gap-2 text-sm">
-                                <span className="text-muted-foreground">Total Esperado:</span>
+                                <span className="text-muted-foreground">Total Setpoint:</span>
                                 <span className="font-medium text-right">{r.totalExpected.toLocaleString('es-MX', { maximumFractionDigits: 1 })}</span>
                                 <span className="text-muted-foreground">Total Real:</span>
                                 <span className="font-medium text-right">{r.totalReal.toLocaleString('es-MX', { maximumFractionDigits: 1 })}</span>
-                                <span className="text-muted-foreground mt-1">Diferencia:</span>
-                                <span className={cn("font-bold text-right mt-1", r.delta > 0 ? "text-destructive" : "text-green-500")}>
+                                <div className="col-span-2 border-t border-border/50 my-1"></div>
+                                <span className="text-muted-foreground font-semibold">Diferencia:</span>
+                                <span className={cn("font-bold text-right", r.delta > 0 ? "text-destructive" : "text-green-500")}>
                                     {r.delta > 0 ? "+" : ""}{r.delta.toLocaleString('es-MX', { maximumFractionDigits: 1 })}
                                 </span>
                             </div>

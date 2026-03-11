@@ -124,7 +124,6 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
 }
 
 export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord[]> {
-  alert('PROCESANDO VERSIÓN 6.0 - SINCRONIZACIÓN DE CRITERIOS');
   console.log('[DBF_PROCESSOR] VERSION 6.0 - SYNC CRITERIA');
   const view = new DataView(buffer);
   let encoding = 'windows-1252';
@@ -155,6 +154,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     // IW_DFM2 identifies the material/movement type ('CLO' for caramel malt, 'AM M2B' for discharge)
     // IW_DFM3 is the numeric value (kilograms)
     const raw_dfm2_class = String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '').trim().toUpperCase();
+    const raw_dfm2_num = parseFloat(String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '')) || 0;
+    const raw_dim_dfm2 = String(row['DIM_DFM2'] ?? '').trim().toLowerCase();
     const raw_dfm3_val = parseFloat(String(row['IW_DFM3'] ?? row['IWDFM3'] ?? '')) || 0;
     const gopNameUpper = gopName.toUpperCase();
 
@@ -200,7 +201,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
         }
       }
     }
-    return { CHARG_NR: chargNr, TEILANL_GRUPO: teilGroup(teilanl), GOP_NAME: gopName, GOP_NR: gopNr, productName, start, end, startHour, swMin, iwMin, row_clo_val, row_am_m2b_val, row_premacerar_hl, row_descarga_kg, materials: rowMaterials, parameters: rowParams };
+    return { CHARG_NR: chargNr, TEILANL_GRUPO: teilGroup(teilanl), GOP_NAME: gopName, GOP_NR: gopNr, productName, start, end, startHour, swMin, iwMin, row_clo_val, row_am_m2b_val, row_premacerar_hl, row_descarga_kg, row_dfm2_hl: raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0, row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0, materials: rowMaterials, parameters: rowParams };
   }).filter((e) => e.CHARG_NR && e.TEILANL_GRUPO !== 'SIN_TEILANL');
 
   const groupedEvents = new Map<string, typeof events>();
@@ -224,8 +225,13 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     let foundNumerator = false;
     let lastPremacerarHl = 0;
     const aguaMaltaPoints: BatchRecord['agua_malta_points'] = [];
+    let max_agua_dfm2_hl = 0;
+    let max_adjuntos_dfm2_kg = 0;
 
     group.forEach((evt, index) => {
+      if (evt.row_dfm2_hl > max_agua_dfm2_hl) max_agua_dfm2_hl = evt.row_dfm2_hl;
+      if (evt.row_dfm2_kg > max_adjuntos_dfm2_kg) max_adjuntos_dfm2_kg = evt.row_dfm2_kg;
+
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
       if (index > 0 && evt.start) {
@@ -284,6 +290,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       malta_caramelo_clo,
       descarga_am_m2b,
       agua_malta_points: aguaMaltaPoints,
+      max_agua_dfm2_hl,
+      max_adjuntos_dfm2_kg,
       steps,
       materials: Array.from(materialsMap.values()),
       parameters: parametersList,

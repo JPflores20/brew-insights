@@ -27,7 +27,7 @@ export async function analyzeProcessGaps(
       if (item.type === 'gap') {
         promptText += ` Duración: ${item.duration} min. Ocurrió esperando entre "${item.prevStep}" y "${item.nextStep}".`;
       } else {
-        promptText += ` Duración Real: ${item.duration} min (Esperado: ${item.expected} min). Desviación: +${item.delta} min.`;
+        promptText += ` Duración Real: ${item.duration} min (Setpoint: ${item.expected} min). Desviación: +${item.delta} min.`;
       }
     });
   } else {
