@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BatchRecord } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,24 @@ interface RecipeDeviationChartProps {
   setSelectedMaterialNames: (names: string[]) => void;
 }
 
+const getBatchLine = (batch: BatchRecord): string => {
+  const validLines = ["1", "2", "3", "4"];
+
+  if (batch.TEILANL_GRUPO) {
+      const match = batch.TEILANL_GRUPO.match(/(\d+)\s*$/);
+      if (match && validLines.includes(match[1])) return match[1];
+  }
+  
+  if (batch.steps && batch.steps.length > 0) {
+      for (const step of batch.steps) {
+          const match = step.stepName.match(/(\d+)\s*$/);
+          if (match && validLines.includes(match[1])) return match[1];
+      }
+  }
+  
+  return "1";
+};
+
 export function RecipeDeviationChart({ 
   data, 
   recipeNames, 
@@ -34,21 +52,103 @@ export function RecipeDeviationChart({
   selectedMaterialNames, 
   setSelectedMaterialNames 
 }: RecipeDeviationChartProps) {
-  const [selectedMaterialUnit, setSelectedMaterialUnit] = useState<string>(FILTER_ALL);
+  // Inicializamos todos los estados locales en blanco ("") para que los selectores muestren su placeholder
+  const [selectedMaterialUnit, setSelectedMaterialUnit] = useState<string>("");
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
+  const [selectedLine, setSelectedLine] = useState<string>("");
+
+  // Forzamos a que la receta general (que viene del padre) también arranque en blanco al cargar la página
+  useEffect(() => {
+    if (selectedRecipe === FILTER_ALL) {
+      setSelectedRecipe("");
+    }
+  }, []);
+
+  // Reiniciar filtros en cascada si cambia la receta seleccionada
+  useEffect(() => {
+    setSelectedLine("");
+    setSelectedBatch("");
+  }, [selectedRecipe]);
+
+  const availableLines = useMemo(() => {
+    if (!selectedRecipe || selectedRecipe === "") return [];
+
+    let baseData = data;
+    if (selectedRecipe !== FILTER_ALL) {
+      baseData = data.filter(d => d.productName === selectedRecipe);
+    }
+    const lines = new Set<string>();
+    baseData.forEach(d => {
+      lines.add(getBatchLine(d));
+    });
+    return Array.from(lines).sort((a, b) => parseInt(a) - parseInt(b));
+  }, [data, selectedRecipe]);
+
+  const availableBatches = useMemo(() => {
+    if (!selectedRecipe || selectedRecipe === "") return [];
+    if (!selectedLine || selectedLine === "") return [];
+
+    let baseData = data;
+    if (selectedRecipe !== FILTER_ALL) {
+      baseData = baseData.filter(d => d.productName === selectedRecipe);
+    }
+    if (selectedLine !== FILTER_ALL) {
+      baseData = baseData.filter(d => getBatchLine(d) === selectedLine);
+    }
+    
+    const batchMap = new Map<string, string>();
+    baseData.forEach(d => {
+      if (d.CHARG_NR && !batchMap.has(d.CHARG_NR)) {
+        batchMap.set(d.CHARG_NR, d.productName || "Desconocido");
+      }
+    });
+    
+    return Array.from(batchMap.entries())
+      .map(([batch, productName]) => ({ batch, productName }))
+      .sort((a, b) => a.batch.localeCompare(b.batch));
+  }, [data, selectedRecipe, selectedLine]);
+
+  // Modificamos el filtro maestro para devolver un arreglo vacío si faltan selecciones obligatorias
+  const baseFilteredData = useMemo(() => {
+    if (!selectedRecipe || selectedRecipe === "") return [];
+    if (!selectedLine || selectedLine === "") return [];
+    if (!selectedBatch || selectedBatch === "") return [];
+
+    let filtered = data;
+    if (selectedRecipe !== FILTER_ALL) {
+        filtered = filtered.filter(d => d.productName === selectedRecipe);
+    }
+    if (selectedLine !== FILTER_ALL) {
+        filtered = filtered.filter(d => getBatchLine(d) === selectedLine);
+    }
+    if (selectedBatch !== FILTER_ALL) {
+        filtered = filtered.filter(d => d.CHARG_NR === selectedBatch);
+    }
+    return filtered;
+  }, [data, selectedRecipe, selectedLine, selectedBatch]);
+
+  const uniqueNames = useMemo(() => {
+    const names = new Set<string>();
+    baseFilteredData.forEach(batch => batch.materials.forEach(mat => names.add(mat.name)));
+    return Array.from(names).sort();
+  }, [baseFilteredData]);
+
+  const uniqueUnits = useMemo(() => {
+      const units = new Set<string>();
+      baseFilteredData.forEach(batch => batch.materials.forEach(mat => units.add(mat.unit)));
+      return Array.from(units).sort();
+  }, [baseFilteredData]);
 
   const chartData = useMemo(() => {
-    let filteredData = data;
-    if (selectedRecipe !== FILTER_ALL) {
-        filteredData = data.filter(d => d.productName === selectedRecipe);
-    }
+    if (baseFilteredData.length === 0) return [];
 
     const materialMap = new Map<string, { exp: number, real: number, unit: string, name: string }>();
     
-    filteredData.forEach(batch => {
+    baseFilteredData.forEach(batch => {
         batch.materials.forEach(mat => {
             const matKey = `${mat.name} (${mat.unit})`;
             
-            if (selectedMaterialUnit !== FILTER_ALL && mat.unit !== selectedMaterialUnit) return;
+            if (selectedMaterialUnit !== FILTER_ALL && selectedMaterialUnit !== "" && mat.unit !== selectedMaterialUnit) return;
             if (selectedMaterialNames.length > 0 && !selectedMaterialNames.includes(mat.name)) return;
             
             if (!materialMap.has(matKey)) {
@@ -69,24 +169,28 @@ export function RecipeDeviationChart({
     }));
 
     return result.sort((a,b) => b["Total Real"] - a["Total Real"]);
-  }, [data, selectedRecipe, selectedMaterialUnit, selectedMaterialNames]);
+  }, [baseFilteredData, selectedMaterialUnit, selectedMaterialNames]);
 
-  const uniqueUnits = useMemo(() => {
-      const units = new Set<string>();
-      data.forEach(batch => batch.materials.forEach(mat => units.add(mat.unit)));
-      return Array.from(units).sort();
-  }, [data]);
+  const handleLineChange = (val: string) => {
+    setSelectedLine(val);
+    setSelectedBatch(""); 
+    setSelectedMaterialNames([]);
+    setSelectedMaterialUnit("");
+  };
 
-  const uniqueNames = useMemo(() => {
-    const names = new Set<string>();
-    data.forEach(batch => batch.materials.forEach(mat => names.add(mat.name)));
-    return Array.from(names).sort();
-  }, [data]);
+  const handleBatchChange = (val: string) => {
+      setSelectedBatch(val);
+      setSelectedMaterialNames([]);
+      setSelectedMaterialUnit("");
+  };
+
+  // Condición para saber si mostramos el mensaje de inicio
+  const isSelectionIncomplete = !selectedRecipe || selectedRecipe === "" || !selectedLine || selectedLine === "" || !selectedBatch || selectedBatch === "";
 
   return (
     <Card className="bg-card shadow-sm border-border flex flex-col overflow-hidden">
-      <CardHeader className="flex flex-col md:flex-row items-start justify-between pb-4 gap-4">
-        <div className="space-y-1 md:max-w-[40%]">
+      <CardHeader className="flex flex-col xl:flex-row items-start justify-between pb-4 gap-4">
+        <div className="space-y-1 xl:max-w-[20%]">
             <CardTitle className="text-xl font-semibold text-foreground">
               Desviación por Material
             </CardTitle>
@@ -94,15 +198,47 @@ export function RecipeDeviationChart({
                 Compara las cantidades objetivo del diseño de receta (SW) vs el consumo real en operación (IW).
             </CardDescription>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        
+        <div className="flex flex-wrap items-center gap-3 xl:max-w-[80%] justify-end">
+            
             <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
-                <SelectTrigger className="w-[180px] h-9">
-                    <SelectValue placeholder="Todas las Recetas" />
+                <SelectTrigger className="w-[160px] h-9">
+                    <SelectValue placeholder="Seleccionar Receta" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value={FILTER_ALL}>Todas las Recetas</SelectItem>
                     {recipeNames.map(r => (
                         <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+
+            {/* Selector de Línea (bloqueado si no hay receta) */}
+            <Select value={selectedLine} onValueChange={handleLineChange} disabled={!selectedRecipe || selectedRecipe === ""}>
+                <SelectTrigger className="w-[150px] h-9">
+                    <SelectValue placeholder="Seleccionar Casa" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value={FILTER_ALL}>Todas (Casas)</SelectItem>
+                    {availableLines.map(line => (
+                        <SelectItem key={line} value={line}>
+                            Casa {line}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+
+            {/* Selector de Lote (bloqueado si no hay Casa) */}
+            <Select value={selectedBatch} onValueChange={handleBatchChange} disabled={!selectedLine || selectedLine === ""}>
+                <SelectTrigger className="w-[180px] h-9">
+                    <SelectValue placeholder="Seleccionar Lote" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value={FILTER_ALL}>Todos los Lotes</SelectItem>
+                    {availableBatches.map(({ batch, productName }) => (
+                        <SelectItem key={batch} value={batch}>
+                            {batch} {productName}
+                        </SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -112,11 +248,12 @@ export function RecipeDeviationChart({
                 selected={selectedMaterialNames}
                 onChange={setSelectedMaterialNames}
                 placeholder="Todos los Materiales"
-                className="w-[220px]"
+                className="w-[200px]"
             />
 
-            <Select value={selectedMaterialUnit} onValueChange={setSelectedMaterialUnit}>
-                <SelectTrigger className="w-[140px] h-9">
+            {/* Selector de Unidad (bloqueado si no hay lote) */}
+            <Select value={selectedMaterialUnit} onValueChange={setSelectedMaterialUnit} disabled={!selectedBatch || selectedBatch === ""}>
+                <SelectTrigger className="w-[130px] h-9">
                     <SelectValue placeholder="Tipo Unidad" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,8 +265,13 @@ export function RecipeDeviationChart({
             </Select>
         </div>
       </CardHeader>
+      
       <CardContent className="p-6 pt-0">
-         {chartData.length > 0 ? (
+         {isSelectionIncomplete ? (
+            <div className="flex items-center justify-center h-[400px] w-full text-muted-foreground text-center px-4 border-2 border-dashed rounded-lg">
+                Selecciona una Receta, una Casa y un Lote en los filtros superiores para comenzar a visualizar el consumo de materiales.
+            </div>
+         ) : chartData.length > 0 ? (
             <div className="w-full h-[400px] mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
