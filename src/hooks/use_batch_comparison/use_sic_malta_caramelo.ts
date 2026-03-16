@@ -11,11 +11,11 @@ export function useSicMaltaCaramelo(
 
     seriesList.forEach((series) => {
       // Filtrar por receta y asegurar que el registro tenga valor de descarga
-      const recipes = Array.from(new Set(data.map(r => r.productName)));
+      if (series.recipe === "") return;
       
       const filtered = data.filter(record => {
         // Filtrar por receta (case-insensitive)
-        if (series.recipe && series.recipe !== FILTER_ALL) {
+        if (series.recipe !== FILTER_ALL) {
           if (record.productName.toUpperCase() !== series.recipe.toUpperCase()) return false;
         }
         return true; 

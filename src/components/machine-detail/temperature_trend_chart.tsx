@@ -254,7 +254,13 @@ export function TemperatureTrendChart({
                 </div>
             </CardHeader>
             <div className="h-[340px] w-full">
-                {data.length === 0 ? (
+                {isMultiSeries && (!series || series.length === 0) ? (
+                    <div className="flex h-full w-full items-center justify-center flex-col gap-2 text-muted-foreground p-8 border-2 border-dashed border-muted rounded-lg">
+                        <Plus className="h-8 w-8 opacity-50" />
+                        <p className="text-lg font-medium">No hay series configuradas</p>
+                        <p className="text-sm">Haz clic en "Añadir Serie" para comparar tendencias de temperatura.</p>
+                    </div>
+                ) : data.length === 0 ? (
                     <div className="flex h-full w-full items-center justify-center flex-col gap-2 text-muted-foreground p-8 border-2 border-dashed border-muted rounded-lg">
                         <Thermometer className="h-8 w-8 opacity-50" />
                         <p>No hay datos de temperatura disponibles con los filtros actuales.</p>

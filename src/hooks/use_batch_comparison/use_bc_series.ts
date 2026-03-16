@@ -3,18 +3,22 @@ import { SeriesItem, BatchRecord } from "@/types";
 import { COLORS, computeOptions } from "./bc_utils";
 import { FILTER_ALL } from "@/lib/constants";
 
-export function useBcSeries(data: BatchRecord[]) {
-  const [seriesList, setSeriesList] = useState<SeriesItem[]>([
-    { 
-      id: "1", 
-      recipe: FILTER_ALL, 
-      machine: FILTER_ALL, 
-      batch: FILTER_ALL,
-      step: FILTER_ALL,
-      parameter: FILTER_ALL,
-      color: COLORS[0] 
-    },
-  ]);
+export function useBcSeries(data: BatchRecord[], initialCount: number = 0) {
+  const [seriesList, setSeriesList] = useState<SeriesItem[]>(() => {
+    const initial: SeriesItem[] = [];
+    for (let i = 0; i < initialCount; i++) {
+        initial.push({
+            id: (i + 1).toString(),
+            recipe: "",
+            machine: "",
+            batch: FILTER_ALL,
+            step: FILTER_ALL,
+            parameter: FILTER_ALL,
+            color: COLORS[i % COLORS.length]
+        });
+    }
+    return initial;
+  });
   const addSeries = () => {
     const nextId = Math.max(0, ...seriesList.map((s) => parseInt(s.id))) + 1;
     const lastSeries = seriesList[seriesList.length - 1];

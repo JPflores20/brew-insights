@@ -8,58 +8,71 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight } from "lucide-react";
+import { MultiSelect } from "@/components/ui/multi_select";
+
 interface BatchSelectorCardProps {
   batchIds: string[];
-  batchA: string;
-  batchB: string;
+  selectedBatches: string[];
   batchProductMap: Map<string, string>;
-  onChangeBatchA: (val: string) => void;
-  onChangeBatchB: (val: string) => void;
+  onChangeBatches: (val: string[]) => void;
+  machines: string[];
+  selectedMachines: string[];
+  onChangeMachines: (val: string[]) => void;
 }
 export function BatchSelectorCard({
   batchIds,
-  batchA,
-  batchB,
+  selectedBatches,
   batchProductMap,
-  onChangeBatchA,
-  onChangeBatchB,
+  onChangeBatches,
+  machines,
+  selectedMachines,
+  onChangeMachines,
 }: BatchSelectorCardProps) {
+  const batchOptions = batchIds.map(id => `${id} - ${batchProductMap.get(id) || "Sin producto"}`);
+  
+  const handleOnBatchChange = (selectedOptions: string[]) => {
+    const ids = selectedOptions.map(opt => opt.split(' - ')[0]);
+    onChangeBatches(ids);
+  };
+
+  const selectedBatchOptions = selectedBatches.map(id => 
+    `${id} - ${batchProductMap.get(id) || "Sin producto"}`
+  );
+
   return (
     <Card className="bg-card border-border print:hidden">
       <CardHeader>
-        <CardTitle>Seleccionar Lotes</CardTitle>
+        <CardTitle>Comparativo de ciclos por equipo</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex-1 w-full">
-            <Select value={batchA} onValueChange={onChangeBatchA}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar Lote A" />
-              </SelectTrigger>
-              <SelectContent>
-                {batchIds.map((id) => (
-                  <SelectItem key={id} value={id}>
-                    {id} - {batchProductMap.get(id) || "Sin producto"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <ArrowRight className="h-6 w-6 text-muted-foreground hidden sm:block" />
-          <div className="flex-1 w-full">
-            <Select value={batchB} onValueChange={onChangeBatchB}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar Lote B" />
-              </SelectTrigger>
-              <SelectContent>
-                {batchIds.map((id) => (
-                  <SelectItem key={id} value={id}>
-                    {id} - {batchProductMap.get(id) || "Sin producto"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">Seleccionar Lotes</label>
+          <MultiSelect
+            options={batchOptions}
+            selected={selectedBatchOptions}
+            onChange={handleOnBatchChange}
+            placeholder="Seleccionar Lotes para comparación..."
+          />
+          {selectedBatches.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Comparando {selectedBatches.length} {selectedBatches.length === 1 ? 'lote' : 'lotes'}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">Filtrar por Equipos</label>
+          <MultiSelect
+            options={machines}
+            selected={selectedMachines}
+            onChange={onChangeMachines}
+            placeholder="Seleccionar Equipos..."
+          />
+          {selectedMachines.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Mostrando {selectedMachines.length} {selectedMachines.length === 1 ? 'equipo' : 'equipos'}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

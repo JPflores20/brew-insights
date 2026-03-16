@@ -86,7 +86,13 @@ export function SicTemperatureChart({
                 <SeriesConfigPanel seriesList={series} onAddSeries={onAddSeries} />
             }
         >
-            {!hasData ? (
+            {series.length === 0 ? (
+                <ChartPlaceholder 
+                    icon={<TrendingUp className="h-full w-full" />}
+                    title="No hay series configuradas"
+                    description="Haz clic en 'Añadir Serie' en el panel superior para comparar la evolución de temperatura."
+                />
+            ) : !hasData ? (
                 <ChartPlaceholder 
                     icon={<TrendingUp className="h-full w-full" />}
                     title="No hay datos disponibles para la configuración seleccionada."

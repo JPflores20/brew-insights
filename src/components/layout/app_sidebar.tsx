@@ -39,7 +39,7 @@ const navItems = [
         isActive: true,
     },
     {
-        title: "Comparación",
+        title: "Comparativo",
         url: "/cocimientos/comparacion",
         icon: GitCompare,
     },

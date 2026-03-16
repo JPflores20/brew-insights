@@ -38,8 +38,9 @@ export default function BatchComparison() {
     data,
     batchIds,
     batchProductMap,
-    batchA, setBatchA,
-    batchB, setBatchB,
+    selectedBatches, setSelectedBatches,
+    selectedMachines, setSelectedMachines,
+    allAvailableMachines,
     chartType, setChartType,
     availableTempParams,
     selectedTempParam, setSelectedTempParam,
@@ -54,7 +55,7 @@ export default function BatchComparison() {
     seriesList: sicSeriesList, 
     addSeries: addSicSeries, 
     seriesOptions: sicSeriesOptions 
-  } = useBcSeries(data);
+  } = useBcSeries(data, 1);
   const { chartData: sicChartData } = useSicChart(data, sicSeriesList);
 
   // Series management and data for Water/Adjuncts SIC Chart
@@ -62,7 +63,7 @@ export default function BatchComparison() {
     seriesList: wSeriesList,
     addSeries: addWSeries,
     seriesOptions: wSeriesOptions
-  } = useBcSeries(data);
+  } = useBcSeries(data, 1);
   const { chartData: wChartData } = useSicAguaAdjuntos(data, wSeriesList);
 
   // Series management and data for Water/Malt SIC Chart
@@ -70,7 +71,7 @@ export default function BatchComparison() {
       seriesList: amSeriesList,
       addSeries: addAmSeries,
       seriesOptions: amSeriesOptions
-  } = useBcSeries(data);
+  } = useBcSeries(data, 1);
   const { chartData: amChartData } = useSicAguaMalta(data, amSeriesList);
 
   // Series management and data for Malta Caramelo SIC Chart
@@ -79,27 +80,28 @@ export default function BatchComparison() {
     addSeries: addMSeries,
     updateSeries: updateMSeries,
     removeSeries: removeMSeries,
-  } = useBcSeries(data);
+  } = useBcSeries(data, 1);
 
   // Extract unique recipes for the Malt Chart filter
   const uniqueRecipes = Array.from(new Set(data.map(d => d.productName).filter(Boolean))).sort();
 
 
 
-  const batchAData = getBatchById(data, batchA);
-  const batchBData = getBatchById(data, batchB);
-  const machinesA = batchAData.map((d) => d.TEILANL_GRUPO);
-  const machinesB = batchBData.map((d) => d.TEILANL_GRUPO);
-  const relevantMachines = Array.from(new Set([...machinesA, ...machinesB])).sort();
-  const comparisonData = relevantMachines.map((machineName) => {
-    const recordA = batchAData.find((d) => d.TEILANL_GRUPO === machineName);
-    const recordB = batchBData.find((d) => d.TEILANL_GRUPO === machineName);
-    return {
-      machine: machineName,
-      [batchA || "Lote A"]: recordA?.real_total_min || 0,
-      [batchB || "Lote B"]: recordB?.real_total_min || 0,
-    };
+  const selectedBatchesData = selectedBatches.map(id => getBatchById(data, id));
+  
+  const relevantMachines = Array.from(
+    new Set(selectedBatchesData.flatMap(batch => batch.map(d => d.TEILANL_GRUPO)))
+  ).sort();
+
+  const comparisonData = selectedMachines.map((machineName) => {
+    const row: Record<string, unknown> = { machine: machineName };
+    selectedBatches.forEach(id => {
+      const record = getBatchById(data, id).find(d => d.TEILANL_GRUPO === machineName);
+      row[id] = record?.real_total_min || 0;
+    });
+    return row;
   });
+
   const componentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
@@ -121,8 +123,8 @@ export default function BatchComparison() {
         {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Comparación de Lotes</h1>
-            <p className="text-muted-foreground">Analiza diferencias de tiempo entre dos cocimientos</p>
+            <h1 className="text-2xl font-bold text-foreground">Comparativo</h1>
+            <p className="text-muted-foreground">Analiza diferencias de tiempo y temperaturas entre múltiples cocimientos</p>
           </div>
           <div className="flex items-center gap-2">
             <Tabs value={chartType} onValueChange={setChartType} className="w-full md:w-auto">
@@ -144,7 +146,8 @@ export default function BatchComparison() {
                   toast({ title: "Sin datos", description: "No hay comparación activa.", variant: "destructive" });
                   return;
                 }
-                exportToCSV(comparisonData, `Comparativa_${batchA}_vs_${batchB}_${format(new Date(), "yyyyMMdd")}`);
+                const batchStr = selectedBatches.join("_");
+                exportToCSV(comparisonData, `Comparativa_${batchStr}_${format(new Date(), "yyyyMMdd")}`);
                 toast({ title: "Exportación exitosa", description: "Tabla comparativa descargada." });
               }}
             >
@@ -158,27 +161,27 @@ export default function BatchComparison() {
           <div className="hidden print:block mb-6">
             <h1 className="text-3xl font-bold text-black mb-2">Reporte de Comparación de Lotes</h1>
             <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
-            {batchA && batchB && (
+            {selectedBatches.length > 0 && (
               <p className="text-lg mt-2 text-black">
-                Comparando: <strong>{batchA}</strong> vs <strong>{batchB}</strong>
+                Comparando: <strong>{selectedBatches.join(", ")}</strong>
               </p>
             )}
           </div>
           {}
           <BatchSelectorCard
             batchIds={batchIds}
-            batchA={batchA}
-            batchB={batchB}
+            selectedBatches={selectedBatches}
             batchProductMap={batchProductMap}
-            onChangeBatchA={setBatchA}
-            onChangeBatchB={setBatchB}
+            onChangeBatches={setSelectedBatches}
+            machines={allAvailableMachines}
+            selectedMachines={selectedMachines}
+            onChangeMachines={setSelectedMachines}
           />
           {}
-          {batchA && batchB && (
+          {selectedBatches.length > 0 && (
             <BatchComparisonChart
               data={comparisonData as Record<string, unknown>[]}
-              batchA={batchA}
-              batchB={batchB}
+              selectedBatches={selectedBatches}
               chartType={chartType as ChartType}
               batchProductMap={batchProductMap}
             />

@@ -21,11 +21,15 @@ export function isTemperatureParam(name: string, unit: string): boolean {
   const n = name.toLowerCase();
   return u.includes("°c") || u.includes("temp") || n.includes("temp");
 }
-const isValidSelection = (val: string): boolean => Boolean(val && val !== FILTER_ALL);
-const filterByMachine = (data: BatchRecord[], machine: string) => 
-  isValidSelection(machine) ? data.filter((d) => d.TEILANL_GRUPO === machine) : data;
-const filterByRecipe = (data: BatchRecord[], recipe: string) => 
-  isValidSelection(recipe) ? data.filter((d) => d.productName === recipe) : data;
+const isValidSelection = (val: string): boolean => Boolean(val && val !== FILTER_ALL && val !== "");
+const filterByMachine = (data: BatchRecord[], machine: string, emptyReturnsAll: boolean = true) => {
+  if (machine === "") return emptyReturnsAll ? data : [];
+  return isValidSelection(machine) ? data.filter((d) => d.TEILANL_GRUPO === machine) : data;
+};
+const filterByRecipe = (data: BatchRecord[], recipe: string, emptyReturnsAll: boolean = true) => {
+  if (recipe === "") return emptyReturnsAll ? data : [];
+  return isValidSelection(recipe) ? data.filter((d) => d.productName === recipe) : data;
+};
 const getUniqueValues = (data: string[]) => Array.from(new Set(data.filter(Boolean))).sort();
 const hasTemperatureParam = (record: BatchRecord) => 
   record.parameters?.some((p) => isTemperatureParam(p.name, p.unit || ""));
@@ -116,7 +120,7 @@ const formatShortDate = (timestamp: string) => {
   });
 };
 const extractBatchTrendData = (data: BatchRecord[], machine: string, batchId: string, param: string) => {
-  const record = filterByMachine(data, machine).find((d) => d.CHARG_NR === batchId);
+  const record = filterByMachine(data, machine, false).find((d) => d.CHARG_NR === batchId);
   if (!record?.parameters) return [];
   const exactMatches = record.parameters.filter((p) => p.name === param);
   const sourceParams = exactMatches.length > 0 
@@ -130,7 +134,7 @@ const extractBatchTrendData = (data: BatchRecord[], machine: string, batchId: st
   }));
 };
 const extractHistoricalTrendData = (data: BatchRecord[], machine: string, recipe: string, param: string, stepName?: string) => {
-  const records = filterByRecipe(filterByMachine(data, machine), recipe);
+  const records = filterByRecipe(filterByMachine(data, machine, false), recipe, false);
   return records
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map((record) => {

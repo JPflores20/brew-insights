@@ -7,8 +7,9 @@ export function useBatchComparison() {
   const { data } = useData();
   const batchIds = getUniqueBatchIds(data);
   const {
-    batchA, setBatchA,
-    batchB, setBatchB,
+    selectedBatches, setSelectedBatches,
+    selectedMachines, setSelectedMachines,
+    allAvailableMachines,
     chartType, setChartType,
     selectedTempParam, setSelectedTempParam,
     selectedTempIndices, setSelectedTempIndices,
@@ -16,7 +17,7 @@ export function useBatchComparison() {
     batchProductMap,
     availableTempParams
   } = useBcState(data, batchIds);
-  const { seriesList, addSeries, seriesOptions } = useBcSeries(data);
+  const { seriesList, addSeries, seriesOptions } = useBcSeries(data, 1);
   const { chartData } = useBcChart(data, seriesList, selectedTempParam);
   return {
     data,
@@ -27,8 +28,9 @@ export function useBatchComparison() {
     chartData,
     seriesOptions,
     addSeries,
-    batchA, setBatchA,
-    batchB, setBatchB,
+    selectedBatches, setSelectedBatches,
+    selectedMachines, setSelectedMachines,
+    allAvailableMachines,
     chartType, setChartType,
     selectedTempParam, setSelectedTempParam,
     selectedTempIndices, setSelectedTempIndices,

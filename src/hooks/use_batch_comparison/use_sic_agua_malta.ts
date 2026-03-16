@@ -11,12 +11,14 @@ export function useSicAguaMalta(
 
     seriesList.forEach((series) => {
       // Filtrar data por máquina y receta
+      // Filtrar data por receta
+      if (series.recipe === "") return;
+      
       let filteredData = data;
-      if (series.machine && series.machine !== FILTER_ALL) {
-        filteredData = filteredData.filter((d) => d.TEILANL_GRUPO === series.machine);
-      }
-      if (series.recipe && series.recipe !== FILTER_ALL) {
-        filteredData = filteredData.filter((d) => d.productName === series.recipe);
+      if (series.recipe !== FILTER_ALL) {
+        filteredData = filteredData.filter((d) => 
+            d.productName?.toUpperCase() === series.recipe.toUpperCase()
+        );
       }
 
       filteredData.forEach((record) => {

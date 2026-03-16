@@ -37,6 +37,7 @@ export function useSicChart(
       }
 
       // Calculate trend data ALWAYS getting the historical points (using FILTER_ALL for batch)
+      // Pass emptyReturnsAll: false to ensure chart stays empty if no machine/recipe selected
       const historicalPoints = calculateTrendData(
         data,
         series.machine,

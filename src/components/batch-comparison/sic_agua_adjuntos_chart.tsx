@@ -68,11 +68,17 @@ export function SicAguaAdjuntosChart({
                 />
             }
         >
-            {!hasData ? (
+            {series.length === 0 ? (
+                <ChartPlaceholder 
+                    icon={<Droplet className="h-full w-full" />}
+                    title="No hay series configuradas"
+                    description="Haz clic en 'Añadir Serie' en la parte superior para seleccionar una receta y visualizar el ratio Agua/Adjuntos."
+                />
+            ) : !hasData ? (
                 <ChartPlaceholder 
                     icon={<Droplet className="h-full w-full" />}
                     title="No hay datos de Agua/Adjuntos para la configuración seleccionada."
-                    description=""
+                    description="Es posible que los lotes de la receta seleccionada no tengan registros de agua o adjuntos."
                 />
             ) : (
                 <ResponsiveContainer width="100%" height="100%">

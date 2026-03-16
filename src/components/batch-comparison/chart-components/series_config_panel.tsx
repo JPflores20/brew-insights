@@ -24,11 +24,11 @@ export function SeriesConfigPanel({
     hideStepParameterFilters = false,
     onlyShowRecipe = false
 }: SeriesConfigPanelProps) {
-    if (!seriesList || seriesList.length === 0) return null;
+    const isEmpty = !seriesList || seriesList.length === 0;
 
     return (
         <div className="flex flex-col gap-3 w-full print:hidden">
-            {seriesList.map((seriesItem) => (
+            {!isEmpty && seriesList.map((seriesItem) => (
                 <div key={seriesItem.id} className="flex flex-col sm:flex-row gap-2 w-full items-center p-2 rounded-md bg-muted/30 border border-border/50">
                     <div 
                         className="w-4 h-4 rounded-full shrink-0 border border-border" 

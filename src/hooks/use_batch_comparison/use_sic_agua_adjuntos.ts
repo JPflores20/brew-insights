@@ -11,15 +11,18 @@ export function useSicAguaAdjuntos(
 
     seriesList.forEach((series) => {
       // Filtrar data por máquina y receta
-      let filteredData = data;
-      if (series.machine && series.machine !== FILTER_ALL) {
-        filteredData = filteredData.filter((d) => d.TEILANL_GRUPO === series.machine);
-      }
-      if (series.recipe && series.recipe !== FILTER_ALL) {
-        filteredData = filteredData.filter((d) => d.productName === series.recipe);
+      // Filtrar data por receta (la máquina es opcional o se deduce de los registros)
+      if (series.recipe === "") return;
+      
+      // Hacer una copia y filtrar por receta (case-insensitive)
+      let filteredData = [...data];
+      if (series.recipe !== FILTER_ALL) {
+        filteredData = filteredData.filter((d) => 
+            d.productName?.toUpperCase() === series.recipe.toUpperCase()
+        );
       }
 
-      // Ordenar cronológicamente
+      // Ordenar cronológicamente (usando la copia)
       filteredData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
       // Solo quedarnos con el batch activo si se especificó uno
@@ -44,11 +47,10 @@ export function useSicAguaAdjuntos(
         
         const accum = seriesAccumulator.get(key)!;
         
-        const isAdjuntoMachine = record.TEILANL_GRUPO.toLowerCase().includes('arroz') || 
-                                 record.TEILANL_GRUPO.toLowerCase().includes('adjunto') ||
-                                 record.TEILANL_GRUPO.toLowerCase().includes('grits');
-                                 
-        if (isAdjuntoMachine) {
+        // Agregamos valores si están presentes. 
+        // Usamos Math.max si sospechamos que son totales de lote repetidos, 
+        // pero por ahora mantenemos la suma por si son múltiples cocedores de adjuntos.
+        if (record.max_agua_dfm2_hl > 0 || record.max_adjuntos_dfm2_kg > 0) {
             accum.agua += (record.max_agua_dfm2_hl || 0);
             accum.arroz += (record.max_adjuntos_dfm2_kg || 0);
         }

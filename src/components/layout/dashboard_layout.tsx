@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
 }
 const routeNames: Record<string, string> = {
   "cocimientos": "Resumen",
-  "comparacion": "Comparación",
+  "comparacion": "Comparativo",
   "maquinaria": "Maquinaria",
   "ciclos": "Ciclos & Gantt"
 };

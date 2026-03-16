@@ -87,11 +87,17 @@ export function SicAguaMaltaChart({
                 />
             }
         >
-            {!hasData ? (
+            {series.length === 0 ? (
+                <ChartPlaceholder 
+                    icon={<Waves className="h-full w-full" />}
+                    title="No hay series configuradas"
+                    description="Haz clic en 'Añadir Serie' en el panel superior para comparar la relación Agua/Malta."
+                />
+            ) : !hasData ? (
                 <ChartPlaceholder 
                     icon={<Waves className="h-full w-full" />}
                     title="No hay datos de Agua/Malta para la configuración seleccionada."
-                    description=""
+                    description="Es posible que los lotes de la receta seleccionada no tengan registros de agua o malta."
                 />
             ) : (
                 <ResponsiveContainer width="100%" height="100%">
