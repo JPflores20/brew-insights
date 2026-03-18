@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard_layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,11 +8,18 @@ import { Button } from "@/components/ui/button";
 import { useData } from "@/context/data_context";
 import { useLocalStorage } from "@/hooks/use_local_storage";
 import { format, parseISO } from "date-fns";
-import { AlertCircle, Clock, TrendingUp, Activity, CheckCircle, Printer } from "lucide-react";
+import { AlertCircle, Clock, TrendingUp, Activity, CheckCircle, Printer, CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { calculateMergedDuration } from "@/utils/time_utils";
 import { TrendAreaChart } from "@/components/analysis/trend_area_chart";
+import { EquipmentGanttChart } from "@/components/analysis/equipment_gantt_chart";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AnimatedPage } from "@/components/layout/animated_page";
+import { startOfDay, endOfDay } from "date-fns";
+import { MultiSelect } from "@/components/ui/multi_select";
 import { MetricCard } from "@/components/ui/metric_card";
 import { LoadingState } from "@/components/ui/loading_state";
 import { motion } from "framer-motion";
@@ -22,7 +29,38 @@ export default function CycleAnalysis() {
   const [selectedProduct, setSelectedProduct] = useLocalStorage<string>("cycle-product", "");
   const [theoreticalDuration, setTheoreticalDuration] = useLocalStorage<number>("cycle-theoretical", 120);
   const [selectedStep, setSelectedStep] = useState<string>("FULL_CYCLE");
+  const [activeTab, setActiveTab] = useState<string>("area");
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+  const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
   const componentRef = useRef<HTMLDivElement>(null);
+
+  const availableDates = useMemo(() => {
+    if (!data) return [];
+    const dateSet = new Set<string>();
+    
+    data.forEach(batch => {
+        if (!batch.timestamp) return;
+        if (selectedProduct && selectedProduct !== "ALL" && batch.productName !== selectedProduct) return;
+        
+        let batchStart = new Date(batch.timestamp).getTime();
+        if (batch.steps && batch.steps.length > 0) {
+            const firstStep = batch.steps.find(s => s.startTime);
+            if (firstStep?.startTime) batchStart = parseISO(firstStep.startTime).getTime();
+        }
+        
+        const dateStr = format(new Date(batchStart), "yyyy-MM-dd");
+        dateSet.add(dateStr);
+    });
+    
+    return Array.from(dateSet).sort().reverse(); 
+  }, [data, selectedProduct]);
+
+  useEffect(() => {
+      if (availableDates.length > 0 && (!selectedDate || !availableDates.includes(selectedDate))) {
+          setSelectedDate(availableDates[0]);
+      }
+  }, [availableDates, selectedDate]);
   const handlePrint = useReactToPrint({
       contentRef: componentRef,
       documentTitle: `Analisis_Ciclos_${selectedProduct || 'Global'}_${format(new Date(), 'yyyy-MM-dd_HHmm')}`,
@@ -178,6 +216,142 @@ export default function CycleAnalysis() {
       min: Math.min(...durations)
     };
   }, [chartData]);
+  
+  const availableBatches = useMemo(() => {
+    if (!data) return [];
+    const targetDate = selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date();
+    const dayStart = startOfDay(targetDate).getTime();
+    const dayEnd = endOfDay(targetDate).getTime();
+    
+    const batches = new Set<string>();
+    
+    data.forEach(batch => {
+        if (!batch.timestamp) return;
+        if (selectedProduct && batch.productName !== selectedProduct) return;
+        
+        let batchStart = new Date(batch.timestamp).getTime();
+        let batchEnd = batchStart + ((batch.real_total_min || 0) * 60000);
+        
+        if (batch.steps && batch.steps.length > 0) {
+            const firstStep = batch.steps.find(s => s.startTime);
+            const lastStep = batch.steps[batch.steps.length - 1];
+            if (firstStep?.startTime) batchStart = parseISO(firstStep.startTime).getTime();
+            if (lastStep?.endTime) batchEnd = parseISO(lastStep.endTime).getTime();
+        }
+        
+        if (batchEnd < dayStart || batchStart > dayEnd) return; 
+        
+        if (batch.CHARG_NR) {
+            batches.add(batch.CHARG_NR);
+        }
+    });
+    
+    return Array.from(batches).sort();
+  }, [data, selectedDate, selectedProduct]);
+
+  const availableEquipments = useMemo(() => {
+    if (!data) return [];
+    
+    const equipSet = new Set<string>();
+    data.forEach(batch => {
+        if (batch.TEILANL_GRUPO) {
+            equipSet.add(batch.TEILANL_GRUPO);
+        }
+    });
+    
+    return Array.from(equipSet).sort();
+  }, [data]);
+
+  const ganttData = useMemo(() => {
+      if (!data) return [];
+      const targetDate = selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date();
+      const dayStart = startOfDay(targetDate).getTime();
+      const dayEnd = endOfDay(targetDate).getTime();
+      
+      const batchesByMachine = new Map<string, any[]>();
+      
+      data.forEach(batch => {
+          if (!batch.timestamp) return;
+          let batchStart = new Date(batch.timestamp).getTime();
+          let batchEnd = batchStart + ((batch.real_total_min || 0) * 60000);
+          
+          if (batch.steps && batch.steps.length > 0) {
+              const firstStep = batch.steps.find(s => s.startTime);
+              const lastStep = batch.steps[batch.steps.length - 1];
+              if (firstStep?.startTime) batchStart = parseISO(firstStep.startTime).getTime();
+              if (lastStep?.endTime) batchEnd = parseISO(lastStep.endTime).getTime();
+          }
+          
+          if (batchEnd < dayStart || batchStart > dayEnd) return;
+          
+          if (selectedBatches.length > 0 && !selectedBatches.includes(batch.CHARG_NR)) return;
+          
+          const machine = batch.TEILANL_GRUPO;
+          if (!machine) return;
+          
+          if (selectedEquipments.length > 0 && !selectedEquipments.includes(machine)) return;
+          
+          if (!batchesByMachine.has(machine)) {
+              batchesByMachine.set(machine, []);
+          }
+          
+          batchesByMachine.get(machine)!.push({
+              batchId: batch.CHARG_NR,
+              productName: batch.productName,
+              startTime: new Date(batchStart),
+              endTime: new Date(batchEnd),
+              durationMin: Math.round((batchEnd - batchStart) / 60000)
+          });
+      });
+      const parseMachineKey = (machineName: string) => {
+          const PROCESS_ORDER: Record<string, number> = {
+              "Cortar": 1,
+              "Malta": 2,
+              "Adjuntos": 3,
+              "Cocedor": 4,
+              "Macerador": 5,
+              "Filtro": 6,
+              "Lavado": 7,
+              "Olla": 8,
+              "Lupulo": 9,
+              "Dos": 10,
+              "Whirlpool": 11,
+              "Enfriador": 12,
+          };
+      
+          const matchMatch = machineName.match(/^(.*?)(\d+)$/);
+          let num = 0;
+          let base = machineName.trim();
+      
+          if (matchMatch) {
+             num = parseInt(matchMatch[2], 10);
+             base = matchMatch[1].trim();
+             if (base.endsWith('.')) base = base.slice(0, -1).trim();
+          }
+          
+          let order = 99;
+          for (const key of Object.keys(PROCESS_ORDER)) {
+              if (base.includes(key)) {
+                  order = PROCESS_ORDER[key];
+                  break;
+              }
+          }
+          
+          return { num, order, base };
+      };
+
+      return Array.from(batchesByMachine.entries()).map(([machineName, events]) => ({
+          machineName,
+          events
+      })).sort((a, b) => {
+          const keyA = parseMachineKey(a.machineName);
+          const keyB = parseMachineKey(b.machineName);
+          if (keyA.num !== keyB.num) return keyA.num - keyB.num;
+          if (keyA.order !== keyB.order) return keyA.order - keyB.order;
+          return keyA.base.localeCompare(keyB.base);
+      });
+  }, [data, selectedDate, selectedBatches, selectedEquipments]);
+
   if (!data) {
     return (
       <DashboardLayout>
@@ -222,35 +396,90 @@ export default function CycleAnalysis() {
               </Button>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 bg-card/50 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm print:hidden">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 bg-card/50 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm print:hidden">
             <div className="w-full sm:w-[200px]">
               <Label className="text-xs text-muted-foreground mb-1 block">Producto</Label>
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+              <Select value={selectedProduct || "ALL"} onValueChange={(val) => setSelectedProduct(val === "ALL" ? "" : val)}>
                 <SelectTrigger className="h-8 bg-background/50"><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="ALL">Todos los productos</SelectItem>
                   {uniqueProducts.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full sm:w-[200px]">
-              <Label className="text-xs text-muted-foreground mb-1 block">Fase / Paso</Label>
-              <Select value={selectedStep} onValueChange={setSelectedStep}>
-                <SelectTrigger className="h-8 bg-background/50"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FULL_CYCLE">Ciclo Completo (Total)</SelectItem>
-                  {uniqueSteps.map(step => <SelectItem key={step} value={step}>{step}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-full sm:w-[120px]">
-              <Label className="text-xs text-muted-foreground mb-1 block">Meta Global (min)</Label>
-              <Input
-                type="number"
-                className="h-8 bg-background/50"
-                value={theoreticalDuration}
-                onChange={(e) => setTheoreticalDuration(Number(e.target.value))}
-              />
-            </div>
+            {activeTab === "area" && (
+                <div className="w-full sm:w-[200px]">
+                  <Label className="text-xs text-muted-foreground mb-1 block">Fase / Paso (Área)</Label>
+                  <Select value={selectedStep} onValueChange={setSelectedStep}>
+                    <SelectTrigger className="h-8 bg-background/50"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FULL_CYCLE">Ciclo Completo (Total)</SelectItem>
+                      {uniqueSteps.map(step => <SelectItem key={step} value={step}>{step}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+            )}
+            {activeTab === "gantt" && (
+                <>
+                    <div className="w-full sm:w-[160px]">
+                      <Label className="text-xs text-muted-foreground mb-1 block">Día Gantt</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full h-8 justify-start text-left font-normal bg-background/50",
+                              !selectedDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(parseISO(selectedDate), "dd/MM/yyyy") : <span>Elige fecha</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate ? parseISO(selectedDate) : undefined}
+                            onSelect={(date) => date && setSelectedDate(format(date, "yyyy-MM-dd"))}
+                            disabled={(date) => !availableDates.includes(format(date, "yyyy-MM-dd"))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="w-full sm:w-[250px]">
+                      <Label className="text-xs text-muted-foreground mb-1 block">Filtro Lotes</Label>
+                      <MultiSelect
+                        options={availableBatches}
+                        selected={selectedBatches}
+                        onChange={setSelectedBatches}
+                        placeholder={availableBatches.length > 0 ? "Todos los del día..." : "Sin lotes en el día"}
+                        className="bg-background/50 max-h-8 overflow-y-auto"
+                      />
+                    </div>
+                    <div className="w-full sm:w-[250px]">
+                      <Label className="text-xs text-muted-foreground mb-1 block">Filtro Equipos</Label>
+                      <MultiSelect
+                        options={availableEquipments}
+                        selected={selectedEquipments}
+                        onChange={setSelectedEquipments}
+                        placeholder="Todos los equipos..."
+                        className="bg-background/50 max-h-8 overflow-y-auto"
+                      />
+                    </div>
+                </>
+            )}
+            {activeTab === "area" && (
+                <div className="w-full sm:w-[120px]">
+                  <Label className="text-xs text-muted-foreground mb-1 block">Meta Global (min)</Label>
+                  <Input
+                    type="number"
+                    className="h-8 bg-background/50"
+                    value={theoreticalDuration}
+                    onChange={(e) => setTheoreticalDuration(Number(e.target.value))}
+                  />
+                </div>
+            )}
         </div>
         {}
         <div ref={componentRef}>
@@ -302,14 +531,24 @@ export default function CycleAnalysis() {
             />
             </div>
             {}
-            <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-6"
-            >
-            <TrendAreaChart data={chartData} theoreticalDuration={theoreticalDuration} />
-            </motion.div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+                <TabsList className="mb-4">
+                    <TabsTrigger value="area">Análisis de Áreas</TabsTrigger>
+                    <TabsTrigger value="gantt">Gantt por Equipos</TabsTrigger>
+                </TabsList>
+                <TabsContent value="area" className="outline-none">
+                    <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    >
+                        <TrendAreaChart data={chartData} theoreticalDuration={theoreticalDuration} />
+                    </motion.div>
+                </TabsContent>
+                <TabsContent value="gantt" className="outline-none h-[640px]">
+                    <EquipmentGanttChart data={ganttData} selectedDate={selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date()} />
+                </TabsContent>
+            </Tabs>
         </div>
       </AnimatedPage>
     </DashboardLayout>
