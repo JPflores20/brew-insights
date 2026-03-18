@@ -27,6 +27,8 @@ import {
     ListFilter,
 } from "lucide-react";
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
+import { GanttStepChart } from "./gantt_step_chart";
+
 const COLOR_PRIMARY = "hsl(var(--primary))";
 const COLOR_SECONDARY = "#3b82f6";
 const COLOR_ERROR = "#ef4444";
@@ -85,6 +87,7 @@ export const SequenceChart = memo(function SequenceChart({
                         <TabsTrigger value="bar">Barras</TabsTrigger>
                         <TabsTrigger value="line">Línea</TabsTrigger>
                         <TabsTrigger value="radar">Radar</TabsTrigger>
+                        <TabsTrigger value="gantt">Gantt</TabsTrigger>
                     </TabsList>
                 </div>
                 <div className="flex-1 w-full min-h-0">
@@ -148,6 +151,9 @@ export const SequenceChart = memo(function SequenceChart({
                                 <Legend {...LEGEND_PROPS} />
                             </RadarChart>
                         </ResponsiveContainer>
+                    </TabsContent>
+                    <TabsContent value="gantt" className="h-full mt-0">
+                        <GanttStepChart stepsData={stepsData as any} />
                     </TabsContent>
                 </div>
             </Tabs>
