@@ -216,7 +216,7 @@ export default function Overview() {
             <DialogHeader>
               <DialogTitle className="text-2xl flex items-center justify-between gap-2 pr-8">
                 <div className="flex items-center gap-2">
-                  {expandedChart === "efficiency" && <><TrendingUp className="h-6 w-6 text-primary" /> Eficiencia Detallada por Grupo</>}
+                  {expandedChart === "efficiency" && <><TrendingUp className="h-6 w-6 text-primary" /> Tiempo total de ciclo</>}
                   {expandedChart === "distribution" && <><PieChartIcon className="h-6 w-6 text-accent" /> Distribución Completa de Productos</>}
                 </div>
                 {expandedChart === "distribution" && (

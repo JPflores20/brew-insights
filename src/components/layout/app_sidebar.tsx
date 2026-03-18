@@ -44,7 +44,7 @@ const navItems = [
         icon: GitCompare,
     },
     {
-        title: "Maquinaria",
+        title: "Equipos",
         url: "/cocimientos/maquinaria",
         icon: Cog,
     },

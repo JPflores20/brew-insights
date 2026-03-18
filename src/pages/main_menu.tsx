@@ -37,7 +37,7 @@ export default function MainMenu() {
               <CardDescription className="text-slate-400">Hot Block</CardDescription>
             </CardHeader>
             <CardContent className="text-center text-slate-500 text-sm">
-              Monitoreo de cocción, comparación de lotes y análisis de maquinaria.
+              Monitoreo de cocción, comparación de lotes y análisis de equipos.
             </CardContent>
           </Card>
           {}

@@ -313,7 +313,7 @@ export function MachineryTab({
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/20 rounded-lg border border-dashed">
         <p className="text-muted-foreground">
-          Selecciona un lote para ver la información de maquinaria.
+          Selecciona un lote para ver la información del equipo.
         </p>
       </div>
     );
@@ -442,7 +442,7 @@ export function MachineryTab({
         <CardHeader className="bg-muted/50 pb-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <CardTitle className="text-lg">Resumen General de Maquinaria</CardTitle>
+              <CardTitle className="text-lg">Resumen General de Equipos</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">Comparativa de métricas entre lotes seleccionados</p>
             </div>
             <Popover>

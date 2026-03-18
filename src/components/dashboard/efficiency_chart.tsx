@@ -63,7 +63,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
     <Card className="bg-card border-border h-full flex flex-col overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className={cn("text-lg font-semibold text-foreground", titleClassName)}>
-          Eficiencia Promedio por Grupo
+          Tiempo total de ciclo
         </CardTitle>
         <div className="flex items-center gap-2">
             {}

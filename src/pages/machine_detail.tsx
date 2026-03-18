@@ -191,7 +191,7 @@ export default function MachineDetail() {
                     value="machinery"
                     className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                     >
-                    <Cog className="h-4 w-4" /> Maquinaria
+                    <Cog className="h-4 w-4" /> Equipos
                     </TabsTrigger>
                 </TabsList>
                 </div>
