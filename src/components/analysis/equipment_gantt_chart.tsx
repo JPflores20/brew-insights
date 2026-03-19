@@ -96,7 +96,7 @@ export const EquipmentGanttChart = memo(function EquipmentGanttChart({ data, sel
                     <div className="w-52 flex-shrink-0 flex flex-col border-r sticky left-0 z-40 bg-card/95 backdrop-blur-sm">
                         <div className="h-[33px] border-b shrink-0" /> {/* Header spacer */}
                         {rows.map((row, idx) => (
-                            <div key={`label-${idx}`} className="h-28 shrink-0 flex items-center px-4 font-semibold text-sm text-foreground border-b border-border/50">
+                            <div key={`label-${idx}`} className="h-48 shrink-0 flex items-center px-4 font-semibold text-sm text-foreground border-b border-border/50">
                                 {row.machineName}
                             </div>
                         ))}
@@ -123,7 +123,7 @@ export const EquipmentGanttChart = memo(function EquipmentGanttChart({ data, sel
                         <div className="relative z-10 pt-[33px]">
                             <TooltipProvider>
                                 {rows.map((row, rowIdx) => (
-                                    <div key={`row-${rowIdx}`} className="h-28 shrink-0 relative border-b border-border/50 group hover:bg-muted/10 transition-colors">
+                                    <div key={`row-${rowIdx}`} className="h-48 shrink-0 relative border-b border-border/50 group hover:bg-muted/10 transition-colors">
                                         {row.events.map((evt, evtIdx) => {
                                             const leftPercent = (evt.startOffsetMin / totalMinutes) * 100;
                                             const widthPercent = Math.max((evt.durationVisible / totalMinutes) * 100, 0.2); // minimum viable width
@@ -176,13 +176,19 @@ export const EquipmentGanttChart = memo(function EquipmentGanttChart({ data, sel
                                                                     </TooltipContent>
                                                                 </Tooltip>
                                                                 
-                                                                {/* Label above */}
-                                                                <div className="absolute -top-5 w-full text-center text-[10px] font-semibold text-blue-700 truncate px-0.5">
-                                                                    Lote {evt.batchId} 
-                                                                </div>
-                                                                {/* Time below */}
-                                                                <div className="absolute -bottom-5 w-full text-center text-[10px] text-muted-foreground font-mono truncate px-0.5">
-                                                                    {format(evt.visibleStartTime, "HH:mm")} - {format(evt.visibleEndTime, "HH:mm")}
+                                                                {/* Label con inclinación y stagger */}
+                                                                <div 
+                                                                    className="absolute left-1 origin-bottom-left -rotate-45 text-[10px] whitespace-nowrap z-40 pointer-events-none drop-shadow-sm"
+                                                                    style={{ 
+                                                                        bottom: `calc(100% + ${4 + (evtIdx % 3) * 16}px)`
+                                                                    }}
+                                                                >
+                                                                    <span className="font-semibold text-blue-700 bg-background/80 px-1 rounded backdrop-blur-sm">
+                                                                        Lote {evt.batchId}
+                                                                    </span>
+                                                                    <span className="text-muted-foreground font-mono ml-1.5 bg-background/80 px-1 rounded backdrop-blur-sm">
+                                                                        {format(evt.visibleStartTime, "HH:mm")} - {format(evt.visibleEndTime, "HH:mm")}
+                                                                    </span>
                                                                 </div>
                                                             </>
                                                         )}
