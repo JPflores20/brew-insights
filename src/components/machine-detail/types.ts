@@ -21,4 +21,5 @@ export interface CapabilityStats {
     cp: number;
     cpk: number;
     valuesCount: number;
+    unit?: string;
 }

@@ -190,6 +190,7 @@ export default function BatchComparison() {
           <div className="space-y-6 mt-6">
             <TemperatureTrendChart
               data={chartData}
+              fullData={data}
               selectedTempParam={selectedTempParam}
               availableTempParams={availableTempParams}
               setSelectedTempParam={setSelectedTempParam}

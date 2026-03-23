@@ -56,9 +56,9 @@ export function CapabilityPanel({
                         <span className="text-sm font-medium truncate">Paso: {stats.name} ({stats.valuesCount} datos)</span>
                     </div>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-x-4 gap-y-2 text-sm leading-tight items-center">
-                        <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase tracking-wider">Objetivo</span><span className="font-semibold">{stats.avgTarget.toFixed(2)}</span></div>
-                        <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase tracking-wider">Media (μ)</span><span className="font-semibold">{stats.mean.toFixed(2)}</span></div>
-                        <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase tracking-wider">Desv. Est. (σ)</span><span className="font-semibold">{stats.stdDev.toFixed(2)}</span></div>
+                        <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase tracking-wider">Objetivo</span><span className="font-semibold">{stats.avgTarget.toFixed(2)}{stats.unit || "°C"}</span></div>
+                        <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase tracking-wider">Media (μ)</span><span className="font-semibold">{stats.mean.toFixed(2)}{stats.unit || "°C"}</span></div>
+                        <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase tracking-wider">Desv. Est. (σ)</span><span className="font-semibold">{stats.stdDev.toFixed(2)}{stats.unit || "°C"}</span></div>
                         
                         <div className="hidden sm:block col-span-1 border-l h-full mx-auto border-border/30"></div>
                         

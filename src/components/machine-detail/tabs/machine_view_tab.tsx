@@ -76,6 +76,7 @@ export function MachineViewTab(props: MachineViewTabProps) {
                 />
                 <TemperatureTrendChart
                     data={props.tempTrendData}
+                    fullData={props.fullData}
                     trendBatch={props.trendBatch}
                     trendRecipe={props.trendRecipe}
                     trendMachine={props.trendMachine}

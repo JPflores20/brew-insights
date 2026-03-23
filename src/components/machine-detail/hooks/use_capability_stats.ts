@@ -1,15 +1,39 @@
 import { useState, useMemo, useEffect } from "react";
 import { SeriesConfig, CapabilityStats } from "../types";
+import { FILTER_ALL } from "@/lib/constants";
 
-export function useCapabilityStats(data: any[], isMultiSeries: boolean, series?: SeriesConfig[]) {
-    const [tolerance, setTolerance] = useState<number>(1.0);
+export function useCapabilityStats(
+    fullData: any[], 
+    isMultiSeries: boolean, 
+    series?: SeriesConfig[], 
+    selectedMachine?: string, 
+    trendBatch?: string
+) {
+    const [tolerance, setTolerance] = useState<number>(5.0); // 5 min tolerance default for time
     const [selectedStepForCp, setSelectedStepForCp] = useState<string>("");
 
     const availableStepsForCp = useMemo(() => {
-        if (!data || data.length === 0) return [];
-        const steps = data.map(d => d.stepName || d.date).filter(Boolean);
-        return Array.from(new Set(steps));
-    }, [data]);
+        if (!fullData || fullData.length === 0) return [];
+        const steps = new Set<string>();
+        let relevantRecords = fullData;
+
+        if (!isMultiSeries && selectedMachine && selectedMachine !== FILTER_ALL) {
+            relevantRecords = fullData.filter(d => d.TEILANL_GRUPO === selectedMachine);
+        } else if (isMultiSeries && series && series.length > 0) {
+            // Aggregate all steps across all selected machines in series
+            relevantRecords = fullData.filter(d => series.some(s => s.machine === FILTER_ALL || d.TEILANL_GRUPO === s.machine));
+        }
+
+        relevantRecords.forEach(r => {
+            if (Array.isArray(r.steps)) {
+                r.steps.forEach((s: any) => {
+                    if (s.stepName) steps.add(s.stepName);
+                });
+            }
+        });
+
+        return Array.from(steps).sort();
+    }, [fullData, isMultiSeries, series, selectedMachine]);
 
     useEffect(() => {
         if (availableStepsForCp.length > 0 && (!selectedStepForCp || !availableStepsForCp.includes(selectedStepForCp))) {
@@ -18,36 +42,44 @@ export function useCapabilityStats(data: any[], isMultiSeries: boolean, series?:
     }, [availableStepsForCp, selectedStepForCp]);
 
     const stats = useMemo<CapabilityStats | null>(() => {
-        if (!data || data.length === 0 || !selectedStepForCp) return null;
-        
-        let valueKeys = isMultiSeries && series ? series.map(s => `value_${s.id}`) : ["value"];
-        let targetKeys = isMultiSeries && series ? series.map(s => `target_${s.id}`) : ["target"];
-        
-        const stepDataEntries = data.filter(d => (d.stepName || d.date) === selectedStepForCp);
-        if (stepDataEntries.length === 0) return null;
+        if (!fullData || fullData.length === 0) return null;
 
         let allValues: number[] = [];
-        let allTargets: number[] = [];
+        let allExpected: number[] = [];
+        let records = fullData;
 
-        stepDataEntries.forEach(row => {
-            valueKeys.forEach(vKey => {
-                if (row[vKey] !== undefined && row[vKey] !== null && !isNaN(row[vKey] as any)) {
-                    allValues.push(Number(row[vKey]));
+        if (isMultiSeries && series && series.length > 0) {
+            records = fullData.filter(d => 
+                series.some(s => 
+                    (s.machine === FILTER_ALL || d.TEILANL_GRUPO === s.machine) &&
+                    (s.recipe === FILTER_ALL || d.productName === s.recipe)
+                )
+            );
+        } else if (selectedMachine && selectedMachine !== FILTER_ALL) {
+            records = fullData.filter(d => d.TEILANL_GRUPO === selectedMachine);
+        }
+
+        records.forEach(r => {
+            if (Array.isArray(r.steps)) {
+                const step = r.steps.find((s: any) => s.stepName === selectedStepForCp);
+                if (step && typeof step.durationMin === 'number') {
+                    allValues.push(step.durationMin);
+                    if (typeof step.expectedDurationMin === 'number') {
+                        allExpected.push(step.expectedDurationMin);
+                    }
                 }
-            });
-            targetKeys.forEach(tKey => {
-                if (row[tKey] !== undefined && row[tKey] !== null && !isNaN(row[tKey] as any)) {
-                    allTargets.push(Number(row[tKey]));
-                }
-            });
+            }
         });
 
-        if (allValues.length < 2) return null;
+        if (allValues.length === 0) {
+             return { name: selectedStepForCp || "Ninguno", mean: 0, stdDev: 0, avgTarget: 0, cp: 0, cpk: 0, valuesCount: 0, unit: " min" };
+        }
 
         const mean = allValues.reduce((a, b) => a + b, 0) / allValues.length;
-        const variance = allValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (allValues.length - 1);
+        const variance = allValues.length > 1 ? allValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (allValues.length - 1) : 0;
         const stdDev = Math.sqrt(variance);
-        const avgTarget = allTargets.length > 0 ? allTargets.reduce((a, b) => a + b, 0) / allTargets.length : mean;
+        
+        const avgTarget = allExpected.length > 0 ? (allExpected.reduce((a, b) => a + b, 0) / allExpected.length) : mean;
 
         const usl = avgTarget + tolerance;
         const lsl = avgTarget - tolerance;
@@ -56,8 +88,10 @@ export function useCapabilityStats(data: any[], isMultiSeries: boolean, series?:
         const cpl = stdDev > 0 ? (mean - lsl) / (3 * stdDev) : 0;
         const cpk = stdDev > 0 ? Math.min(cpu, cpl) : 0;
 
-        return { name: selectedStepForCp, mean, stdDev, avgTarget, cp, cpk, valuesCount: allValues.length };
-    }, [data, isMultiSeries, series, tolerance, selectedStepForCp]);
+        const unit = " min";
+
+        return { name: selectedStepForCp, mean, stdDev, avgTarget, cp, cpk, valuesCount: allValues.length, unit };
+    }, [fullData, isMultiSeries, series, selectedMachine, tolerance, selectedStepForCp]);
 
     return { 
         tolerance, 

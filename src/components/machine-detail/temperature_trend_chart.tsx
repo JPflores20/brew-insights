@@ -4,8 +4,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Thermometer, Plus } from "lucide-react";
 import { FILTER_ALL } from "@/lib/constants";
 import { SeriesConfig } from "./types";
-import { useCapabilityStats } from "./hooks/use_capability_stats";
 import { CapabilityPanel } from "./components/capability_panel";
+import { useCapabilityStats } from "./hooks/use_capability_stats";
 import { MultiSeriesFilters } from "./components/multi_series_filters";
 import { SingleSeriesFilters } from "./components/single_series_filters";
 import { MultiSeriesChart } from "./components/multi_series_chart";
@@ -13,6 +13,7 @@ import { SingleSeriesChart } from "./components/single_series_chart";
 
 interface TemperatureTrendChartProps {
     data: any[];
+    fullData: any[];
     trendBatch?: string;
     trendRecipe?: string;
     trendMachine?: string;
@@ -36,7 +37,7 @@ interface TemperatureTrendChartProps {
 
 export function TemperatureTrendChart(props: TemperatureTrendChartProps) {
     const {
-        data, trendBatch, trendRecipe, trendMachine, selectedTempParam,
+        data, fullData, trendBatch, trendRecipe, trendMachine, selectedTempParam,
         uniqueRecipes = [], machinesWithTemps = [], availableTrendBatches = [],
         availableTempParams, setTrendRecipe, setTrendMachine, setTrendBatch,
         setSelectedTempParam, selectedTempIndices, setSelectedTempIndices,
@@ -44,7 +45,7 @@ export function TemperatureTrendChart(props: TemperatureTrendChartProps) {
     } = props;
 
     const isMultiSeries = Boolean(series && series.length > 0);
-    const { tolerance, setTolerance, selectedStepForCp, setSelectedStepForCp, availableStepsForCp, stats } = useCapabilityStats(data, isMultiSeries, series);
+    const { tolerance, setTolerance, selectedStepForCp, setSelectedStepForCp, availableStepsForCp, stats } = useCapabilityStats(fullData, isMultiSeries, series, trendMachine, trendBatch);
 
     return (
         <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
