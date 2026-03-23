@@ -31,6 +31,10 @@ export function useBcChart(
         }
         const entry = dataMap.get(key)!;
         entry[`value_${series.id}`] = p.value;
+        if ('target' in p && p.target !== undefined && p.target !== null) {
+          entry[`target_${series.id}`] = (p as any).target;
+          entry.target = (p as any).target; // fallback for single series consumers
+        }
         if ((p as { unit?: string }).unit) {
           entry.unit = (p as { unit?: string }).unit;
         }

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/context/data_context";
 import { useLocalStorage } from "@/hooks/use_local_storage";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { AlertCircle, Clock, TrendingUp, Activity, CheckCircle, Printer, CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { calculateMergedDuration } from "@/utils/time_utils";
 import { TrendAreaChart } from "@/components/analysis/trend_area_chart";
 import { EquipmentGanttChart } from "@/components/analysis/equipment_gantt_chart";
+import { BrewGanttChart } from "@/components/analysis/brew_gantt_chart";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AnimatedPage } from "@/components/layout/animated_page";
 import { startOfDay, endOfDay } from "date-fns";
@@ -24,6 +25,62 @@ import { MetricCard } from "@/components/ui/metric_card";
 import { LoadingState } from "@/components/ui/loading_state";
 import { motion } from "framer-motion";
 import { useReactToPrint } from "react-to-print";
+const EXCLUDED_EQUIPMENTS = [
+  "Cortar",
+  "Dos. Colorante",
+  "Dosif Enzima",
+  "Rec. Nivel",
+  "Tolvas Bagazo",
+  "Lupulo Pre Iso.1",
+  "VE1",
+  "VE2",
+  "Dosificacion",
+  "Macerar Arroz",
+  "Select Lines",
+  "Transp Bagazo",
+  "Molienda Arroz",
+  "Trub 3"
+];
+
+const normalizeEquip = (name: string) => name.replace(/\s+/g, '').toLowerCase();
+const EXCLUDED_NORM = EXCLUDED_EQUIPMENTS.map(normalizeEquip);
+
+const parseMachineKey = (machineName: string) => {
+    const PROCESS_ORDER: Record<string, number> = {
+        "Grits": 1,
+        "Cocedor": 2,
+        "Malta": 3,
+        "Macerador": 4,
+        "F1": 5,
+        "Lavado": 6,
+        "Buffer": 7,
+        "Olla": 8,
+        "Evapor": 9,
+        "Trub": 10,
+        "Enfriador": 11,
+    };
+
+    const matchMatch = machineName.match(/^(.*?)(\d+)$/);
+    let num = 0;
+    let base = machineName.trim();
+
+    if (matchMatch) {
+        num = parseInt(matchMatch[2], 10);
+        base = matchMatch[1].trim();
+        if (base.endsWith('.')) base = base.slice(0, -1).trim();
+    }
+    
+    let order = 99;
+    for (const key of Object.keys(PROCESS_ORDER)) {
+        if (machineName.includes(key)) {
+            order = PROCESS_ORDER[key];
+            break;
+        }
+    }
+    
+    return { num, order, base };
+};
+
 export default function CycleAnalysis() {
   const { data } = useData();
   const [selectedProduct, setSelectedProduct] = useLocalStorage<string>("cycle-product", "");
@@ -33,6 +90,7 @@ export default function CycleAnalysis() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
   const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
+  const [selectedBrew, setSelectedBrew] = useState<string>("");
   const componentRef = useRef<HTMLDivElement>(null);
 
   const availableDates = useMemo(() => {
@@ -259,7 +317,9 @@ export default function CycleAnalysis() {
         }
     });
     
-    return Array.from(equipSet).sort();
+    return Array.from(equipSet)
+        .filter(e => !EXCLUDED_NORM.some(excluded => normalizeEquip(e).startsWith(excluded)))
+        .sort();
   }, [data]);
 
   const ganttData = useMemo(() => {
@@ -287,7 +347,7 @@ export default function CycleAnalysis() {
           if (selectedBatches.length > 0 && !selectedBatches.includes(batch.CHARG_NR)) return;
           
           const machine = batch.TEILANL_GRUPO;
-          if (!machine) return;
+          if (!machine || EXCLUDED_NORM.some(excluded => normalizeEquip(machine).startsWith(excluded))) return;
           
           if (selectedEquipments.length > 0 && !selectedEquipments.includes(machine)) return;
           
@@ -303,42 +363,6 @@ export default function CycleAnalysis() {
               durationMin: Math.round((batchEnd - batchStart) / 60000)
           });
       });
-      const parseMachineKey = (machineName: string) => {
-          const PROCESS_ORDER: Record<string, number> = {
-              "Cortar": 1,
-              "Malta": 2,
-              "Adjuntos": 3,
-              "Cocedor": 4,
-              "Macerador": 5,
-              "Filtro": 6,
-              "Lavado": 7,
-              "Olla": 8,
-              "Lupulo": 9,
-              "Dos": 10,
-              "Whirlpool": 11,
-              "Enfriador": 12,
-          };
-      
-          const matchMatch = machineName.match(/^(.*?)(\d+)$/);
-          let num = 0;
-          let base = machineName.trim();
-      
-          if (matchMatch) {
-             num = parseInt(matchMatch[2], 10);
-             base = matchMatch[1].trim();
-             if (base.endsWith('.')) base = base.slice(0, -1).trim();
-          }
-          
-          let order = 99;
-          for (const key of Object.keys(PROCESS_ORDER)) {
-              if (base.includes(key)) {
-                  order = PROCESS_ORDER[key];
-                  break;
-              }
-          }
-          
-          return { num, order, base };
-      };
 
       return Array.from(batchesByMachine.entries()).map(([machineName, events]) => ({
           machineName,
@@ -351,6 +375,35 @@ export default function CycleAnalysis() {
           return keyA.base.localeCompare(keyB.base);
       });
   }, [data, selectedDate, selectedBatches, selectedEquipments]);
+
+  const brewGanttData = useMemo(() => {
+    if (!data || !selectedBrew) return [];
+    
+    const brewRecords = data.filter(d => d.CHARG_NR === selectedBrew);
+    
+    return brewRecords
+      .filter(record => !EXCLUDED_NORM.some(excluded => normalizeEquip(record.TEILANL_GRUPO).startsWith(excluded)))
+      .map(record => ({
+        machineName: record.TEILANL_GRUPO,
+      steps: record.steps
+        .filter(s => !s.stepName.includes("⏳ Espera"))
+        .map(s => ({
+          stepName: s.stepName,
+          startTime: parseISO(s.startTime),
+          endTime: parseISO(s.endTime),
+          durationMin: s.durationMin,
+          expectedDurationMin: s.expectedDurationMin
+        }))
+        .filter(s => isValid(s.startTime) && isValid(s.endTime))
+    })).filter(r => r.steps.length > 0)
+    .sort((a, b) => {
+        const keyA = parseMachineKey(a.machineName);
+        const keyB = parseMachineKey(b.machineName);
+        if (keyA.num !== keyB.num) return keyA.num - keyB.num;
+        if (keyA.order !== keyB.order) return keyA.order - keyB.order;
+        return keyA.base.localeCompare(keyB.base);
+    });
+  }, [data, selectedBrew]);
 
   if (!data) {
     return (
@@ -407,18 +460,32 @@ export default function CycleAnalysis() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Filtros para Análisis de Áreas */}
             {activeTab === "area" && (
-                <div className="w-full sm:w-[200px]">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Fase / Paso (Área)</Label>
-                  <Select value={selectedStep} onValueChange={setSelectedStep}>
-                    <SelectTrigger className="h-8 bg-background/50"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FULL_CYCLE">Ciclo Completo (Total)</SelectItem>
-                      {uniqueSteps.map(step => <SelectItem key={step} value={step}>{step}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                    <div className="w-full sm:w-[200px]">
+                      <Label className="text-xs text-muted-foreground mb-1 block">Fase / Paso (Área)</Label>
+                      <Select value={selectedStep} onValueChange={setSelectedStep}>
+                        <SelectTrigger className="h-8 bg-background/50"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FULL_CYCLE">Ciclo Completo (Total)</SelectItem>
+                          {uniqueSteps.map(step => <SelectItem key={step} value={step}>{step}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-full sm:w-[120px]">
+                      <Label className="text-xs text-muted-foreground mb-1 block">Meta Global (min)</Label>
+                      <Input
+                        type="number"
+                        className="h-8 bg-background/50"
+                        value={theoreticalDuration}
+                        onChange={(e) => setTheoreticalDuration(Number(e.target.value))}
+                      />
+                    </div>
+                </>
             )}
+
+            {/* Filtros para Gantt por Equipos */}
             {activeTab === "gantt" && (
                 <>
                     <div className="w-full sm:w-[160px]">
@@ -469,16 +536,50 @@ export default function CycleAnalysis() {
                     </div>
                 </>
             )}
-            {activeTab === "area" && (
-                <div className="w-full sm:w-[120px]">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Meta Global (min)</Label>
-                  <Input
-                    type="number"
-                    className="h-8 bg-background/50"
-                    value={theoreticalDuration}
-                    onChange={(e) => setTheoreticalDuration(Number(e.target.value))}
-                  />
-                </div>
+
+            {/* Filtros para Gantt por Cocimientos */}
+            {activeTab === "brew_gantt" && (
+                <>
+                    <div className="w-full sm:w-[160px]">
+                      <Label className="text-xs text-muted-foreground mb-1 block">Día Gantt</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full h-8 justify-start text-left font-normal bg-background/50",
+                              !selectedDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(parseISO(selectedDate), "dd/MM/yyyy") : <span>Elige fecha</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate ? parseISO(selectedDate) : undefined}
+                            onSelect={(date) => date && setSelectedDate(format(date, "yyyy-MM-dd"))}
+                            disabled={(date) => !availableDates.includes(format(date, "yyyy-MM-dd"))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="w-full sm:w-[250px]">
+                        <Label className="text-xs text-muted-foreground mb-1 block">Lote (Cocimiento)</Label>
+                        <Select value={selectedBrew} onValueChange={setSelectedBrew}>
+                          <SelectTrigger className="h-8 bg-background/50">
+                            <SelectValue placeholder="Elige lote..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableBatches.map(b => (
+                              <SelectItem key={b} value={b}>{b}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                    </div>
+                </>
             )}
         </div>
         {}
@@ -535,6 +636,7 @@ export default function CycleAnalysis() {
                 <TabsList className="mb-4">
                     <TabsTrigger value="area">Análisis de Áreas</TabsTrigger>
                     <TabsTrigger value="gantt">Gantt por Equipos</TabsTrigger>
+                    <TabsTrigger value="brew_gantt">Gantt por Cocimientos</TabsTrigger>
                 </TabsList>
                 <TabsContent value="area" className="outline-none">
                     <motion.div
@@ -547,6 +649,9 @@ export default function CycleAnalysis() {
                 </TabsContent>
                 <TabsContent value="gantt" className="outline-none h-[640px]">
                     <EquipmentGanttChart data={ganttData} selectedDate={selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date()} />
+                </TabsContent>
+                <TabsContent value="brew_gantt" className="outline-none h-[640px]">
+                    <BrewGanttChart data={brewGanttData} selectedBrewId={selectedBrew} />
                 </TabsContent>
             </Tabs>
         </div>

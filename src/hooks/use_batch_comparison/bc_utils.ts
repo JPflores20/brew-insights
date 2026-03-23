@@ -91,12 +91,12 @@ const getParamValue = (record: BatchRecord | undefined, paramName: string, stepN
     if (stepName && stepName !== FILTER_ALL && record.steps) {
       const stepMatch = record.steps.find((s) => s.stepName === stepName);
       if (stepMatch) {
-        return { name: PARAM_TIME, value: stepMatch.durationMin, unit: "min" };
+        return { name: PARAM_TIME, value: stepMatch.durationMin, target: stepMatch.expectedDurationMin, unit: "min" };
       }
     } else {
       // If "Todos los pasos" is selected, return the total batch expected duration or sum of real durations
       const totalMins = record.real_total_min || (record.steps ? record.steps.reduce((sum, s) => sum + (s.durationMin || 0), 0) : 0);
-      return { name: PARAM_TIME, value: totalMins, unit: "min" };
+      return { name: PARAM_TIME, value: totalMins, target: record.esperado_total_min, unit: "min" };
     }
     return null;
   }
@@ -129,6 +129,7 @@ const extractBatchTrendData = (data: BatchRecord[], machine: string, batchId: st
   return sourceParams.map((p, index) => ({
     stepName: p.stepName || `Paso ${index + 1}`,
     value: Number(p.value),
+    target: p.target !== undefined ? Number(p.target) : null,
     unit: p.unit,
     date: record.timestamp,
   }));
@@ -152,6 +153,7 @@ const extractHistoricalTrendData = (data: BatchRecord[], machine: string, recipe
       return {
         batchId: record.CHARG_NR,
         value: pVal ? Number(pVal.value) : null,
+        target: pVal && 'target' in pVal && pVal.target !== undefined ? Number(pVal.target) : null,
         duration: duration,
         date: dateLabel,
         machine: record.TEILANL_GRUPO,

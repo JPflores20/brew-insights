@@ -6,13 +6,11 @@ interface EmptyStateUploaderProps {
     loading: boolean;
     uploadProgress: number;
     onFilesSelected: (files: File[]) => void;
-    onLoadDemo?: () => void;
 }
 export function EmptyStateUploader({
     loading,
     uploadProgress,
     onFilesSelected,
-    onLoadDemo,
 }: EmptyStateUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -138,16 +136,6 @@ export function EmptyStateUploader({
                             <p className="text-xs text-muted-foreground">
                                 Soporta unicamente archivos .dbf
                             </p>
-                        )}
-                        {onLoadDemo && (
-                            <button
-                                type="button"
-                                onClick={onLoadDemo}
-                                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-primary/5 border border-transparent hover:border-primary/20"
-                            >
-                                <Files className="h-4 w-4" />
-                                Cargar Datos Demo (Semanas 6, 7, 8, 9)
-                            </button>
                         )}
                     </div>
                 </>

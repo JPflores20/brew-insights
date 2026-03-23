@@ -66,7 +66,7 @@ const navItems = [
         badge: "Beta"
     },
     {
-        title: "Calidad del Producto",
+        title: "Calidad",
         url: "/cocimientos/calidad",
         icon: Activity,
         badge: "Beta"

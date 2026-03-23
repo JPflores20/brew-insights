@@ -28,7 +28,7 @@ import { useFileUpload } from "@/hooks/use_file_upload";
 export default function Overview() {
   const { data, setData, isLoaded } = useData();
   const { toast } = useToast();
-  const { loading, uploadProgress, processFiles, loadDemoData } = useFileUpload();
+  const { loading, uploadProgress, processFiles } = useFileUpload();
   const [expandedChart, setExpandedChart] = useState<"efficiency" | "distribution" | null>(null);
   const [distributionDateRange, setDistributionDateRange] = useState<DateRange | undefined>();
   const handleExport = () => {
@@ -108,7 +108,6 @@ export default function Overview() {
           loading={loading} 
           uploadProgress={uploadProgress} 
           onFilesSelected={processFiles} 
-          onLoadDemo={loadDemoData}
         />
       </DashboardLayout>
     );

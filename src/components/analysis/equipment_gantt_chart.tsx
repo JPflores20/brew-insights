@@ -176,7 +176,6 @@ export const EquipmentGanttChart = memo(function EquipmentGanttChart({ data, sel
                                                                     </TooltipContent>
                                                                 </Tooltip>
                                                                 
-                                                                {/* Label con inclinación y stagger */}
                                                                 <div 
                                                                     className="absolute left-1 origin-bottom-left -rotate-45 text-[10px] whitespace-nowrap z-40 pointer-events-none drop-shadow-sm"
                                                                     style={{ 
@@ -185,9 +184,6 @@ export const EquipmentGanttChart = memo(function EquipmentGanttChart({ data, sel
                                                                 >
                                                                     <span className="font-semibold text-blue-700 bg-background/80 px-1 rounded backdrop-blur-sm">
                                                                         Lote {evt.batchId}
-                                                                    </span>
-                                                                    <span className="text-muted-foreground font-mono ml-1.5 bg-background/80 px-1 rounded backdrop-blur-sm">
-                                                                        {format(evt.visibleStartTime, "HH:mm")} - {format(evt.visibleEndTime, "HH:mm")}
                                                                     </span>
                                                                 </div>
                                                             </>
