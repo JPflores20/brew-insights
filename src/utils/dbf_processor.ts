@@ -227,6 +227,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     const aguaMaltaPoints: BatchRecord['agua_malta_points'] = [];
     let max_agua_dfm2_hl = 0;
     let max_adjuntos_dfm2_kg = 0;
+    let emo_iw_dfm8: number | undefined;
 
     group.forEach((evt, index) => {
       if (evt.row_dfm2_hl > max_agua_dfm2_hl) max_agua_dfm2_hl = evt.row_dfm2_hl;
@@ -275,6 +276,17 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       if (evt.row_descarga_kg > 0 && lastPremacerarHl > 0) {
         aguaMaltaPoints.push({ aguaHl: lastPremacerarHl, maltaKg: evt.row_descarga_kg, stepName: evt.GOP_NAME });
       }
+
+      // Extract emo_iw_dfm8 (usually from Bombear Mosto or similar)
+      const emoParam = evt.parameters.find(p => 
+        p.dfmCode === 'DFM8' || 
+        p.dfmCode === 'DFM08' || 
+        p.name?.toUpperCase().includes('PROMEDIO_EMO') ||
+        p.name?.toUpperCase().includes('PROMEDIO EMO')
+      );
+      if (emoParam && emo_iw_dfm8 === undefined) {
+        emo_iw_dfm8 = emoParam.val;
+      }
     });
     return {
       CHARG_NR: group[0].CHARG_NR,
@@ -287,6 +299,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       max_gap_min: +(max_gap.toFixed(2)),
       timestamp: group[0].start?.toISOString() ?? new Date().toISOString(),
       startHour: group[0].startHour,
+      emo_iw_dfm8,
       malta_caramelo_clo,
       descarga_am_m2b,
       agua_malta_points: aguaMaltaPoints,

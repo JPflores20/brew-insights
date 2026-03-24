@@ -4,10 +4,9 @@ export type {
   BatchMaterial,
   BatchParameter,
   BatchRecord,
-  ProcessCapabilityResult,
   TemperaturePoint,
 } from "@/types";
-import type { BatchRecord, BatchParameter, ProcessCapabilityResult } from "@/types";
+import type { BatchRecord, BatchParameter } from "@/types";
 export function getUniqueBatchIds(data: BatchRecord[]): string[] {
   return Array.from(new Set(data.map(d => d.CHARG_NR))).sort();
 }
@@ -121,117 +120,7 @@ export function getShiftStats(data: BatchRecord[]) {
     avgIdle: stats.count > 0 ? Math.round(stats.totalIdle / stats.count) : 0,
   }));
 }
-function calculateProcessMean(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sumOfValues = values.reduce((total, current) => total + current, 0);
-  return sumOfValues / values.length;
-}
-function calculateStandardDeviationSample(values: number[]): number {
-  const sampleSize = values.length;
-  if (sampleSize < 2) return 0;
-  const processMean = calculateProcessMean(values);
-  const sumOfSquaredDifferences = values.reduce(
-    (accumulator, currentValue) => accumulator + Math.pow(currentValue - processMean, 2), 
-    0
-  );
-  return Math.sqrt(sumOfSquaredDifferences / (sampleSize - 1));
-}
-export function calculateCpCpk(
-  values: number[],
-  lowerSpecificationLimit: number,
-  upperSpecificationLimit: number
-): ProcessCapabilityResult {
-  const sampleSize = values.length;
-  const processMean = calculateProcessMean(values);
-  const standardDeviation = calculateStandardDeviationSample(values);
-  const hasInvalidInputs = (
-    sampleSize < 2 || 
-    standardDeviation <= 0 || 
-    !isFinite(standardDeviation) || 
-    !isFinite(lowerSpecificationLimit) || 
-    !isFinite(upperSpecificationLimit) || 
-    upperSpecificationLimit <= lowerSpecificationLimit
-  );
-  if (hasInvalidInputs) {
-    return { 
-      sampleSize: sampleSize, 
-      processMean: processMean, 
-      standardDeviation: standardDeviation, 
-      lowerSpecificationLimit: lowerSpecificationLimit, 
-      upperSpecificationLimit: upperSpecificationLimit, 
-      processCapabilityRatio: null, 
-      processCapabilityIndex: null 
-    };
-  }
-  const processCapabilityRatio = (upperSpecificationLimit - lowerSpecificationLimit) / (6 * standardDeviation);
-  const capabilityUpper = (upperSpecificationLimit - processMean) / (3 * standardDeviation);
-  const capabilityLower = (processMean - lowerSpecificationLimit) / (3 * standardDeviation);
-  const processCapabilityIndex = Math.min(capabilityUpper, capabilityLower);
-  return { 
-    sampleSize: sampleSize, 
-    processMean: processMean, 
-    standardDeviation: standardDeviation, 
-    lowerSpecificationLimit: lowerSpecificationLimit, 
-    upperSpecificationLimit: upperSpecificationLimit, 
-    processCapabilityRatio: processCapabilityRatio, 
-    processCapabilityIndex: processCapabilityIndex 
-  };
-}
-export function getCpCpkForTemperatureDeltaByParameter(
-  data: BatchRecord[],
-  specMap: Record<string, { lsl: number; usl: number }>,
-  options?: {
-    machine?: string;
-    stepName?: string;
-    parameterName?: string;
-  }
-) {
-  const { machine, stepName, parameterName } = options || {};
-  const allParams: BatchParameter[] = data
-    .filter((r) => (machine ? r.TEILANL_GRUPO === machine : true))
-    .flatMap((r) => r.parameters || [])
-    .filter((p) => (stepName ? p.stepName === stepName : true))
-    .filter((p) => (parameterName ? p.name === parameterName : true));
-  const groups = new Map<string, BatchParameter[]>();
-  allParams.forEach((p) => {
-    if (!groups.has(p.name)) groups.set(p.name, []);
-    groups.get(p.name)!.push(p);
-  });
-  const results = Array.from(groups.entries()).map(([pname, items]) => {
-    const spec = specMap[pname];
-    const deltas = items
-      .map((p) => Number(p.value) - Number(p.target))
-      .filter((v) => Number.isFinite(v));
-    if (!spec) {
-      return {
-        parameter: pname,
-        unit: items[0]?.unit || "",
-        sampleSize: deltas.length,
-        processMean: calculateProcessMean(deltas),
-        standardDeviation: calculateStandardDeviationSample(deltas),
-        lowerSpecificationLimit: null as number | null,
-        upperSpecificationLimit: null as number | null,
-        processCapabilityRatio: null as number | null,
-        processCapabilityIndex: null as number | null,
-        missingSpec: true,
-      };
-    }
-    const cap = calculateCpCpk(deltas, spec.lsl, spec.usl);
-    return {
-      parameter: pname,
-      unit: items[0]?.unit || "",
-      ...cap,
-      missingSpec: false,
-    };
-  });
-  return results.sort((a: any, b: any) => {
-    if (a.missingSpec && !b.missingSpec) return 1;
-    if (!a.missingSpec && b.missingSpec) return -1;
-    const ac = a.processCapabilityIndex ?? -999;
-    const bc = b.processCapabilityIndex ?? -999;
-    return ac - bc;
-  });
-}
+
 import type { TemperaturePoint } from "@/types";
 export function generateTemperatureComparisonData(
   batchIds: string[],

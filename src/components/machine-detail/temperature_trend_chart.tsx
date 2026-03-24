@@ -4,8 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Thermometer, Plus } from "lucide-react";
 import { FILTER_ALL } from "@/lib/constants";
 import { SeriesConfig } from "./types";
-import { CapabilityPanel } from "./components/capability_panel";
-import { useCapabilityStats } from "./hooks/use_capability_stats";
+
 import { MultiSeriesFilters } from "./components/multi_series_filters";
 import { SingleSeriesFilters } from "./components/single_series_filters";
 import { MultiSeriesChart } from "./components/multi_series_chart";
@@ -45,7 +44,6 @@ export function TemperatureTrendChart(props: TemperatureTrendChartProps) {
     } = props;
 
     const isMultiSeries = Boolean(series && series.length > 0);
-    const { tolerance, setTolerance, selectedStepForCp, setSelectedStepForCp, availableStepsForCp, stats } = useCapabilityStats(fullData, isMultiSeries, series, trendMachine, trendBatch);
 
     return (
         <Card className="bg-card border-border w-full p-6 opacity-90 hover:opacity-100 transition-opacity">
@@ -60,10 +58,6 @@ export function TemperatureTrendChart(props: TemperatureTrendChartProps) {
                             {isMultiSeries ? "Comparación de múltiples series de temperatura" : (trendBatch && trendBatch !== FILTER_ALL ? `Visualizando evolución paso a paso del lote ${trendBatch}` : "Análisis histórico por equipo y receta")}
                         </CardDescription>
                     </div>
-
-                    {stats && (trendBatch === FILTER_ALL || isMultiSeries) && (
-                        <CapabilityPanel stats={stats} availableStepsForCp={availableStepsForCp} selectedStepForCp={selectedStepForCp} setSelectedStepForCp={setSelectedStepForCp} tolerance={tolerance} setTolerance={setTolerance} />
-                    )}
 
                     {isMultiSeries && series ? (
                         <MultiSeriesFilters series={series} onAddSeries={onAddSeries} hideParamSelector={hideParamSelector} selectedTempParam={selectedTempParam} setSelectedTempParam={setSelectedTempParam} availableTempParams={availableTempParams} />

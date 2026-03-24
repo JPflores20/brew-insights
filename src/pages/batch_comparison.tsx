@@ -8,7 +8,6 @@ import {
   AreaChart as AreaChartIcon,
   Printer,
   ArrowRight,
-  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,13 +23,14 @@ import { SicTemperatureChart } from "@/components/batch-comparison/sic_temperatu
 import { SicAguaAdjuntosChart } from "@/components/batch-comparison/sic_agua_adjuntos_chart";
 import { SicAguaMaltaChart } from "@/components/batch-comparison/sic_agua_malta_chart";
 import { SicMaltaCarameloChart } from "@/components/batch-comparison/sic_malta_caramelo_chart";
+import { EmoCapabilityChart } from "@/components/batch-comparison/emo_capability_chart";
+import { StepCapabilityChart } from "@/components/batch-comparison/step_capability_chart";
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
 import { useBcSeries } from "@/hooks/use_batch_comparison/use_bc_series";
 import { useSicChart } from "@/hooks/use_batch_comparison/use_sic_chart";
 import { useSicAguaAdjuntos } from "@/hooks/use_batch_comparison/use_sic_agua_adjuntos";
 import { useSicAguaMalta } from "@/hooks/use_batch_comparison/use_sic_agua_malta";
-import { useSicMaltaCaramelo } from "@/hooks/use_batch_comparison/use_sic_malta_caramelo";
 
 export default function BatchComparison() {
   const { toast } = useToast();
@@ -85,8 +85,6 @@ export default function BatchComparison() {
   // Extract unique recipes for the Malt Chart filter
   const uniqueRecipes = Array.from(new Set(data.map(d => d.productName).filter(Boolean))).sort();
 
-
-
   const selectedBatchesData = selectedBatches.map(id => getBatchById(data, id));
   
   const relevantMachines = Array.from(
@@ -108,6 +106,7 @@ export default function BatchComparison() {
     documentTitle: `Reporte_Comparacion_${format(new Date(), "yyyy-MM-dd_HHmm")}`,
     pageStyle: `@page{size:auto;margin:15mm;}@media print{body{-webkit-print-color-adjust:exact;}}`,
   });
+
   if (data.length === 0) {
     return (
       <DashboardLayout>
@@ -117,10 +116,10 @@ export default function BatchComparison() {
       </DashboardLayout>
     );
   }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Comparativo</h1>
@@ -155,9 +154,8 @@ export default function BatchComparison() {
             </Button>
           </div>
         </div>
-        {}
+
         <div ref={componentRef} className="space-y-6">
-          {}
           <div className="hidden print:block mb-6">
             <h1 className="text-3xl font-bold text-black mb-2">Reporte de Comparación de Lotes</h1>
             <p className="text-gray-600">Generado el {format(new Date(), "PPP p")}</p>
@@ -167,7 +165,7 @@ export default function BatchComparison() {
               </p>
             )}
           </div>
-          {}
+
           <BatchSelectorCard
             batchIds={batchIds}
             selectedBatches={selectedBatches}
@@ -177,7 +175,7 @@ export default function BatchComparison() {
             selectedMachines={selectedMachines}
             onChangeMachines={setSelectedMachines}
           />
-          {}
+
           {selectedBatches.length > 0 && (
             <BatchComparisonChart
               data={comparisonData as Record<string, unknown>[]}
@@ -186,7 +184,7 @@ export default function BatchComparison() {
               batchProductMap={batchProductMap}
             />
           )}
-          {}
+
           <div className="space-y-6 mt-6">
             <TemperatureTrendChart
               data={chartData}
@@ -202,6 +200,11 @@ export default function BatchComparison() {
               series={seriesOptions}
               onAddSeries={addSeries}
             />
+
+            <EmoCapabilityChart data={data} />
+            
+            <StepCapabilityChart data={data} />
+
             <SicAguaAdjuntosChart
               data={wChartData}
               series={wSeriesOptions}
@@ -217,7 +220,6 @@ export default function BatchComparison() {
               uniqueRecipes={uniqueRecipes}
             />
 
-            {/* Gráficas en Construcción (Deshabilitadas) */}
             <SicTemperatureChart
               data={sicChartData}
               selectedTempIndices={selectedTempIndices}
@@ -231,8 +233,6 @@ export default function BatchComparison() {
               series={amSeriesOptions}
               onAddSeries={addAmSeries}
             />
-
-
           </div>
         </div>
       </div>

@@ -13,13 +13,4 @@ export interface SeriesConfig {
     onRemove?: () => void;
 }
 
-export interface CapabilityStats {
-    name: string;
-    mean: number;
-    stdDev: number;
-    avgTarget: number;
-    cp: number;
-    cpk: number;
-    valuesCount: number;
-    unit?: string;
-}
+
