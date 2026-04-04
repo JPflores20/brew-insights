@@ -6,43 +6,64 @@ interface EmptyStateUploaderProps {
     loading: boolean;
     uploadProgress: number;
     onFilesSelected: (files: File[]) => void;
+    maxFiles?: number;
 }
 export function EmptyStateUploader({
     loading,
     uploadProgress,
     onFilesSelected,
+    maxFiles = 4,
 }: EmptyStateUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (!loading) setIsDragging(true);
     };
+
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
     };
+
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
         if (loading) return;
-        const droppedFiles = Array.from(e.dataTransfer.files);
-        onFilesSelected(droppedFiles);
+        const droppedFiles = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.dbf'));
+        setPendingFiles(prev => [...prev, ...droppedFiles]);
     };
+
     const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-            onFilesSelected(Array.from(files));
+            const newFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.dbf'));
+            setPendingFiles(prev => [...prev, ...newFiles]);
         }
         e.target.value = "";
     };
+
+    const handleProcess = () => {
+        if (pendingFiles.length > 0) {
+            onFilesSelected(pendingFiles);
+            setPendingFiles([]);
+        }
+    };
+
+    const removeFile = (index: number) => {
+        setPendingFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
     return (
         <div
             className={cn(
-                "relative flex h-[70vh] flex-col items-center justify-center space-y-6 text-center rounded-xl transition-all overflow-hidden",
+                "relative flex min-h-[70vh] flex-col items-center justify-center space-y-6 text-center rounded-xl transition-all overflow-hidden p-8",
                 loading ? "" : "border-2 border-dashed",
                 !loading && isDragging
-                    ? "border-amber-500 bg-amber-500/5 scale-[1.02]"
-                    : "border-border"
+                    ? "border-amber-500 bg-amber-500/5 scale-[1.01]"
+                    : "border-border",
+                pendingFiles.length > 0 && !loading ? "border-solid border-amber-500/50 bg-amber-500/5" : ""
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -90,6 +111,70 @@ export function EmptyStateUploader({
                         </div>
                     </div>
                 </div>
+            ) : pendingFiles.length > 0 ? (
+                <div className="w-full max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="bg-primary/10 rounded-full p-4 w-fit mx-auto">
+                        <Files className="h-10 w-10 text-primary" />
+                    </div>
+                    
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight mb-2">
+                            Archivos Seleccionados ({pendingFiles.length})
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Puedes añadir más archivos de otras carpetas o iniciar la carga ahora.
+                        </p>
+                    </div>
+
+                    <div className="bg-slate-900/50 border border-slate-800 rounded-xl max-h-[30vh] overflow-y-auto p-4 custom-scrollbar">
+                        <div className="grid grid-cols-2 gap-2 text-left">
+                            {pendingFiles.map((file, idx) => (
+                                <div key={`${file.name}-${idx}`} className="flex items-center justify-between bg-slate-800/50 p-2 rounded border border-slate-700 text-xs">
+                                    <span className="truncate max-w-[150px]">{file.name}</span>
+                                    <button 
+                                        onClick={() => removeFile(idx)}
+                                        className="text-red-400 hover:text-red-300 ml-2"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-4">
+                        <div className="relative">
+                            <Button variant="outline" size="lg" className="border-amber-500/50 hover:bg-amber-500/10 gap-2">
+                                <Upload className="h-4 w-4" />
+                                Añadir Más
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept=".dbf"
+                                    className="absolute inset-0 cursor-pointer opacity-0"
+                                    onChange={handleFileInput}
+                                />
+                            </Button>
+                        </div>
+                        
+                        <Button 
+                            size="lg" 
+                            className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg gap-2 px-8"
+                            onClick={handleProcess}
+                        >
+                            <Beer className="h-4 w-4" />
+                            Procesar {pendingFiles.length} Archivos
+                        </Button>
+                        
+                        <Button 
+                            variant="ghost" 
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => setPendingFiles([])}
+                        >
+                            Cancelar
+                        </Button>
+                    </div>
+                </div>
             ) : (
                 <>
                     <div
@@ -111,27 +196,29 @@ export function EmptyStateUploader({
                         <p className="text-muted-foreground max-w-lg mx-auto">
                             {isDragging
                                 ? "¡Suelta los archivos!"
-                                : "Arrastra hasta 4 archivos DBF aquí, o selecciona para empezar."}
+                                : `Arrastra hasta ${maxFiles} archivos DBF aquí, o selecciona para empezar.`}
                         </p>
                     </div>
                     <div className="flex flex-col items-center gap-4">
-                        <Button
-                            size="lg"
-                            className={cn(
-                                "relative cursor-pointer hover:scale-105 transition-transform shadow-lg",
-                                isDragging ? "bg-amber-500 hover:bg-amber-600" : ""
-                            )}
-                        >
-                            <Upload className="mr-2 h-5 w-5" />
-                            Seleccionar Archivos (Max 4)
-                            <input
-                                type="file"
-                                multiple
-                                accept=".dbf"
-                                className="absolute inset-0 cursor-pointer opacity-0"
-                                onChange={handleFileInput}
-                            />
-                        </Button>
+                        <div className="relative">
+                            <Button
+                                size="lg"
+                                className={cn(
+                                    "relative cursor-pointer hover:scale-105 transition-transform shadow-lg",
+                                    isDragging ? "bg-amber-500 hover:bg-amber-600" : ""
+                                )}
+                            >
+                                <Upload className="mr-2 h-5 w-5" />
+                                Seleccionar Archivos (Max {maxFiles})
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept=".dbf"
+                                    className="absolute inset-0 cursor-pointer opacity-0"
+                                    onChange={handleFileInput}
+                                />
+                            </Button>
+                        </div>
                         {!isDragging && (
                             <p className="text-xs text-muted-foreground">
                                 Soporta unicamente archivos .dbf

@@ -46,12 +46,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
   // Manual specification limits (LEI = LSL, LES = USL)
-  const [lei, setLei] = useLocalStorage<number>("emo-lei", 18);
-  const [les, setLes] = useLocalStorage<number>("emo-les", 22);
+  const [lei, setLei] = useLocalStorage<number | "">("emo-lei", 18);
+  const [les, setLes] = useLocalStorage<number | "">("emo-les", 22);
 
   // Filters
-  const [selectedRecipe, setSelectedRecipe] = useState<string>(FILTER_ALL);
-  const [selectedMachine, setSelectedMachine] = useState<string>(FILTER_ALL);
+  const [selectedRecipe, setSelectedRecipe] = useState<string>("");
+  const [selectedMachine, setSelectedMachine] = useState<string>("");
 
   // Derived options for filters
   const uniqueRecipes = useMemo(() => {
@@ -67,6 +67,8 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
 
   // Extract EMO values (IW_DFM8) with filtering
   const emoValues = useMemo(() => {
+    if (!selectedMachine) return [];
+
     const filtered = data
       .filter((d) => {
         const recipeMatch = selectedRecipe === FILTER_ALL || d.productName === selectedRecipe;
@@ -105,20 +107,25 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
     const stdDev = Math.sqrt(variance);
 
     // Cp = (LES - LEI) / (6 * deviation)
-    const cp = (les - lei) / (6 * stdDev);
+    const nLei = Number(lei);
+    const nLes = Number(les);
+    const cp = (nLes - nLei) / (6 * stdDev);
 
     // Cpk = MIN((LES - media) / (3 * deviation), (media - LEI) / (3 * deviation))
-    const cpkUpper = (les - mean) / (3 * stdDev);
-    const cpkLower = (mean - lei) / (3 * stdDev);
+    const cpkUpper = (nLes - mean) / (3 * stdDev);
+    const cpkLower = (mean - nLei) / (3 * stdDev);
     const cpk = Math.min(cpkUpper, cpkLower);
+    
+    // Target is exactly in the middle of LEI and LES
+    const target = (nLei + nLes) / 2;
 
-    return { n, mean, min, max, stdDev, cp, cpk, lei, les };
+    return { n, mean, min, max, stdDev, cp, cpk, lei: nLei, les: nLes, target };
   }, [emoValues, lei, les]);
 
   // Gaussian Curve Data Generation
   const chartData = useMemo(() => {
     if (!stats) return [];
-    const { mean, stdDev, lei, les } = stats;
+    const { mean, stdDev, lei: sLei, les: sLes } = stats;
     if (stdDev === 0) return [];
     
     const points = [];
@@ -128,8 +135,8 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
     const dataStart = mean - sigmaCount * stdDev;
     const dataEnd = mean + sigmaCount * stdDev;
     
-    const start = Math.min(dataStart, lei - stdDev);
-    const end = Math.max(dataEnd, les + stdDev);
+    const start = Math.min(dataStart, sLei - stdDev);
+    const end = Math.max(dataEnd, sLes + stdDev);
     
     const step = (end - start) / 100;
 
@@ -161,7 +168,8 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
                     id="lei"
                     type="number"
                     value={lei}
-                    onChange={(e) => setLei(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setLei(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    onFocus={(e) => e.target.select()}
                     className="h-8 w-20 text-xs font-mono"
                   />
                 </div>
@@ -171,7 +179,8 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
                     id="les"
                     type="number"
                     value={les}
-                    onChange={(e) => setLes(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setLes(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    onFocus={(e) => e.target.select()}
                     className="h-8 w-20 text-xs font-mono"
                   />
                 </div>
@@ -199,7 +208,7 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
 
                 <Select value={selectedMachine} onValueChange={setSelectedMachine}>
                   <SelectTrigger className="w-full sm:w-[200px] h-9 bg-background">
-                    <SelectValue placeholder="Rotapool" />
+                    <SelectValue placeholder="Seleccionar Rotapool" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={FILTER_ALL}>Todos los Rotapool</SelectItem>
@@ -224,6 +233,11 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
                  <Beaker className="h-12 w-12 text-primary/20 mb-2" />
                  <p className="font-bold">No se detectaron datos de EMO en el dataset actual.</p>
                  <p className="text-sm max-w-md">Es posible que necesites recargar la página o volver a procesar los archivos DBF para capturar la columna <code className="bg-muted px-1 rounded">IW_DFM8</code>.</p>
+               </div>
+            ) : !selectedMachine ? (
+               <div className="flex h-full items-center justify-center flex-col gap-2 text-muted-foreground p-8 text-center">
+                 <Activity className="h-10 w-10 opacity-20" />
+                 <p>Selecciona un Rotapool para comenzar el análisis.</p>
                </div>
             ) : emoValues.length === 0 ? (
                <div className="flex h-full items-center justify-center flex-col gap-2 text-muted-foreground">
@@ -272,6 +286,13 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
                   <ReferenceLine x={stats.lei} stroke="#ef4444" strokeWidth={2}>
                     <Label value={`LEI: ${stats.lei}`} position="insideTopLeft" fill="#ef4444" fontSize={10} fontWeight="bold" />
                   </ReferenceLine>
+
+                  {/* Target Line */}
+                  {(stats.lei !== 0 || stats.les !== 0) && (
+                    <ReferenceLine x={stats.target} stroke="#10b981" strokeWidth={2} strokeDasharray="5 5">
+                      <Label value={`Target: ${stats.target.toFixed(2)}`} position="top" fill="#10b981" fontSize={10} fontWeight="bold" />
+                    </ReferenceLine>
+                  )}
 
                   {/* LES Line */}
                   <ReferenceLine x={stats.les} stroke="#ef4444" strokeWidth={2}>
@@ -326,6 +347,10 @@ export function EmoCapabilityChart({ data }: EmoCapabilityChartProps) {
                 <TableCell className="text-right font-mono font-bold text-primary">
                     {stats?.cpk !== undefined && isFinite(stats.cpk) ? stats.cpk.toFixed(3) : "---"}
                 </TableCell>
+              </TableRow>
+              <TableRow className="bg-green-500/5">
+                <TableCell className="font-semibold text-green-600 uppercase text-[10px]">Target</TableCell>
+                <TableCell className="text-right font-mono font-bold text-green-600">{stats?.target.toFixed(3) || "---"}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">LES</TableCell>

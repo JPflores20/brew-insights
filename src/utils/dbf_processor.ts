@@ -84,28 +84,27 @@ function normalizeText(s: unknown): string {
 }
 function titleKeepAcronyms(base: string): string {
   if (!base) return 'SIN_TEILANL';
-  return base.split(' ').map((w) => (w === 've' ? 'VE' : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+  return base
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => (w === 've' ? 'VE' : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
 }
-function teilGroup(teil: string): string {
-  const s = normalizeText(teil);
+function teilGroup(teil: string, dfm3?: string, rezeptNr?: string): string {
+  if (!teil) return 'SIN_TEILANL';
+  const rawTeil = String(teil).trim();
+  const s = normalizeText(rawTeil);
   if (!s) return 'SIN_TEILANL';
-  const match = s.match(/^(.*?)(?:\s+0*(\d+))?$/);
-  let base = match ? match[1].trim() : s;
-  const num = match ? match[2] : null;
-  base = base.replace(/\s+/g, ' ').trim();
-  
-  // Unify any Reclamo, Descarga or Malta related records into a single "Malta [Index]" group
-  const lowBase = base.toLowerCase();
-  if (lowBase.includes('malta') || lowBase.includes('reclamo') || lowBase.includes('descarga')) {
-    const suffix = num ? ` ${num}` : '';
-    return `Malta${suffix}`;
+
+  // Collapse dots and spaces into single spaces for consistency
+  const cleaned = s.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Specific check for Kraeusen tanks to keep them looking like the DBF but readable
+  if (cleaned.includes('kraeus')) {
+    return titleKeepAcronyms(cleaned);
   }
 
-  const keepNumPrefixes = ['cocedor', 'macerador', 'enfriador', 'rotapool', 'olla', 'tanque', 'tq', 'filtro', 'lavado', 'trub', 've', 'molienda', 'grits', 'linea'];
-  if (num && keepNumPrefixes.some((p) => base.startsWith(p))) {
-    return `${titleKeepAcronyms(base)} ${parseInt(num)}`;
-  }
-  return titleKeepAcronyms(base);
+  return titleKeepAcronyms(cleaned);
 }
 function buildDateFromFields(row: Record<string, unknown>, prefix: string): Date | null {
   const y = row[`${prefix}_JAHR`];
@@ -124,7 +123,7 @@ export async function processDbfFile(file: File): Promise<BatchRecord[]> {
 }
 
 export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord[]> {
-  console.log('[DBF_PROCESSOR] VERSION 6.0 - SYNC CRITERIA');
+  console.log('[DBF_PROCESSOR] VERSION 6.1 - TANK NR FROM DFM3');
   const view = new DataView(buffer);
   let encoding = 'windows-1252';
   try {
@@ -151,12 +150,15 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     const gopNr = String(row['GOP_NR'] ?? '').trim();
     const productName = String(row['REZEPT'] ?? row['PRODUCT'] ?? '').trim();
     
+    // IW_DFM3 usually contains the Tank Number in Cold Block
+    const raw_dfm3_val_str = String(row['IW_DFM3'] ?? row['IWDFM3'] ?? '').trim();
+    
     // IW_DFM2 identifies the material/movement type ('CLO' for caramel malt, 'AM M2B' for discharge)
-    // IW_DFM3 is the numeric value (kilograms)
+    // IW_DFM3 is the numeric value (kilograms) in Hot Block, but Tank Nr in some Cold Block records
     const raw_dfm2_class = String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '').trim().toUpperCase();
     const raw_dfm2_num = parseFloat(String(row['IW_DFM2'] ?? row['IWDFM2'] ?? '')) || 0;
     const raw_dim_dfm2 = String(row['DIM_DFM2'] ?? '').trim().toLowerCase();
-    const raw_dfm3_val = parseFloat(String(row['IW_DFM3'] ?? row['IWDFM3'] ?? '')) || 0;
+    const raw_dfm3_val = parseFloat(raw_dfm3_val_str) || 0;
     const gopNameUpper = gopName.toUpperCase();
 
     let row_clo_val = 0;
@@ -164,8 +166,6 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     let row_premacerar_hl = 0;
     let row_descarga_kg = 0;
 
-    // Numerator/Denominator: Caramel Malta Differentiation (Version 5.8)
-    // Both CLO, CPLS and AM M2B are valid for numerator if under RECLAMO step
     const codesMalta = ['CLO', 'AM M28', 'CPLS', 'AM M2B'];
     
     if (codesMalta.includes(raw_dfm2_class) && gopNameUpper.includes('RECLAMO')) {
@@ -175,11 +175,9 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       row_am_m2b_val = raw_dfm3_val;
     }
 
-    // New: Water/Malt Ratio specific extraction
     if (gopNameUpper === 'PREMACERAR MALTA') {
       row_premacerar_hl = raw_dfm3_val;
     }
-    // Sincronización: Usar los mismos criterios de Malta Caramelo para los Kg
     if (codesMalta.includes(raw_dfm2_class) && gopNameUpper.includes('DESCARGA')) {
       row_descarga_kg = raw_dfm3_val;
     }
@@ -187,21 +185,57 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     const rowMaterials: { name: string; val: number; exp: number; unit: string }[] = [];
     const rowParams: { name: string; val: number; target: number; unit: string; dfmCode: string }[] = [];
     for (let i = 1; i <= 24; i++) {
-      const name = row[`NAME_DFM${i}`];
+      let name = String(row[`NAME_DFM${i}`] ?? '').trim();
       const val = parseFloat(String(row[`IW_DFM${i}`] ?? ''));
       const exp = parseFloat(String(row[`SW_DFM${i}`] ?? ''));
-      const unit = String(row[`DIM_DFM${i}`] ?? '').trim().toLowerCase();
+      let unit = String(row[`DIM_DFM${i}`] ?? '').trim().toLowerCase();
+
       if (name && !isNaN(val)) {
+        const nameUpper = name.toUpperCase();
+        // Normalize Cold Block parameters
+        if (unit === 'gg-%' || nameUpper.includes('EXTRACT')) {
+          name = 'Extracto (Plato)';
+          unit = '°P';
+        } else if (unit.includes('c') || nameUpper.includes('TEM.')) {
+          if (nameUpper.includes('REG.')) name = 'Temp. Consigna';
+          else name = 'Temp. Tanque';
+          unit = '°C';
+        } else if (nameUpper.includes('PH')) {
+          name = 'pH';
+          unit = 'pH';
+        }
+
         const isMaterial = ['kg', 'hl', 'l', 'g', 'lbs'].includes(unit);
-        const isParam = ['c', '°c', 'bar', 'mbar', 'm3/h', '%', 'rpm', 'hz', 'a'].includes(unit);
+        const isParam = ['c', '°c', '°p', 'ph', 'bar', 'mbar', 'm3/h', '%', 'rpm', 'hz', 'a'].includes(unit);
         if (isMaterial) {
-          rowMaterials.push({ name: String(name).trim(), val: val || 0, exp: exp || 0, unit });
+          rowMaterials.push({ name: name.trim(), val: val || 0, exp: exp || 0, unit });
         } else if (isParam || (!isMaterial && val > 0)) {
-          rowParams.push({ name: String(name).trim(), val: val || 0, target: exp || 0, unit, dfmCode: `DFM${i}` });
+          rowParams.push({ name: name.trim(), val: val || 0, target: exp || 0, unit, dfmCode: `DFM${i}` });
         }
       }
     }
-    return { CHARG_NR: chargNr, TEILANL_GRUPO: teilGroup(teilanl), GOP_NAME: gopName, GOP_NR: gopNr, productName, start, end, startHour, swMin, iwMin, row_clo_val, row_am_m2b_val, row_premacerar_hl, row_descarga_kg, row_dfm2_hl: raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0, row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0, materials: rowMaterials, parameters: rowParams };
+    const rezeptNr = String(row['REZEPT_NR'] ?? '').trim();
+
+    return { 
+      CHARG_NR: chargNr, 
+      TEILANL_GRUPO: teilGroup(teilanl, raw_dfm3_val_str, rezeptNr), 
+      GOP_NAME: gopName, 
+      GOP_NR: gopNr, 
+      productName, 
+      start, 
+      end, 
+      startHour, 
+      swMin, 
+      iwMin, 
+      row_clo_val, 
+      row_am_m2b_val, 
+      row_premacerar_hl, 
+      row_descarga_kg, 
+      row_dfm2_hl: raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0, 
+      row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0, 
+      materials: rowMaterials, 
+      parameters: rowParams 
+    };
   }).filter((e) => e.CHARG_NR && e.TEILANL_GRUPO !== 'SIN_TEILANL');
 
   const groupedEvents = new Map<string, typeof events>();
@@ -261,7 +295,6 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       steps.push({ stepName: evt.GOP_NAME || `Paso ${index + 1}`, stepNr: evt.GOP_NR, durationMin: +evt.iwMin.toFixed(2), expectedDurationMin: +evt.swMin.toFixed(2), startTime: evt.start?.toISOString() ?? '', endTime: evt.end?.toISOString() ?? '' });
       if (evt.end && evt.end.getTime() > lastEnd) lastEnd = evt.end.getTime();
       
-      // RULE: Only take the FIRST non-zero occurrence for Reclamo Malta per group
       if (!foundNumerator && (evt.row_clo_val || 0) > 0) {
         malta_caramelo_clo = evt.row_clo_val;
         foundNumerator = true;
@@ -269,7 +302,6 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       
       descarga_am_m2b += (evt.row_am_m2b_val || 0);
 
-      // New: Collect Water/Malt Ratio points
       if (evt.row_premacerar_hl > 0) {
         lastPremacerarHl = evt.row_premacerar_hl;
       }
@@ -277,7 +309,6 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
         aguaMaltaPoints.push({ aguaHl: lastPremacerarHl, maltaKg: evt.row_descarga_kg, stepName: evt.GOP_NAME });
       }
 
-      // Extract emo_iw_dfm8 (usually from Bombear Mosto or similar)
       const emoParam = evt.parameters.find(p => 
         p.dfmCode === 'DFM8' || 
         p.dfmCode === 'DFM08' || 
@@ -291,7 +322,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     return {
       CHARG_NR: group[0].CHARG_NR,
       TEILANL_GRUPO: group[0].TEILANL_GRUPO,
-      productName: group[0].productName || 'Desconocido',
+      productName: [...group].reverse().find(e => e.productName && !['Desconocido', 'SIN_PRODUCTO', 'ALL', 'PRODUCTO'].includes(e.productName))?.productName || group[0].productName || 'Desconocido',
       real_total_min: +(real_total.toFixed(2)),
       esperado_total_min: +(esperado_total.toFixed(2)),
       delta_total_min: +((real_total - esperado_total).toFixed(2)),
@@ -314,9 +345,49 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
 
   const validCount = results.filter(r => (r.malta_caramelo_clo || 0) > 0 && (r.descarga_am_m2b || 0) > 0).length;
   console.log(`[DBF_FINAL] processed=${results.length} withMaltaData=${validCount}`);
-  if (validCount > 0) {
-    const sample = results.find(r => (r.malta_caramelo_clo || 0) > 0 && (r.descarga_am_m2b || 0) > 0);
-    console.log(`[DBF_SAMPLE] Batch=${sample?.CHARG_NR} Recipe=${sample?.productName} CLO=${sample?.malta_caramelo_clo} M2B=${sample?.descarga_am_m2b}`);
-  }
   return results;
+}
+export function mergeBatchRecords(records: BatchRecord[]): BatchRecord[] {
+  const grouped = new Map<string, BatchRecord[]>();
+  
+  records.forEach(r => {
+    const key = `${r.CHARG_NR.trim()}|${r.TEILANL_GRUPO.trim()}`;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(r);
+  });
+
+  return Array.from(grouped.values()).map(group => {
+    if (group.length === 1) return group[0];
+
+    // Merge group
+    const first = group[0];
+    const allSteps = group.flatMap(g => g.steps);
+    const allParams = group.flatMap(g => g.parameters);
+    const allMaterials = group.flatMap(g => g.materials);
+    const allAlerts = group.flatMap(g => g.alerts || []);
+    const allAguaMalta = group.flatMap(g => g.agua_malta_points || []);
+
+    // Unique steps by name and startTime to avoid exact duplicates
+    const uniqueStepsMap = new Map<string, BatchRecord['steps'][0]>();
+    allSteps.forEach(s => {
+      const sKey = `${s.stepName}|${s.startTime}`;
+      if (!uniqueStepsMap.has(sKey)) uniqueStepsMap.set(sKey, s);
+    });
+
+    // Pick best product name (one that isn't 'Desconocido')
+    const bestProduct = group.map(g => g.productName).find(p => p && !['Desconocido', 'SIN_PRODUCTO', 'ALL', 'PRODUCTO'].includes(p)) || first.productName;
+
+    return {
+      ...first,
+      productName: bestProduct,
+      steps: Array.from(uniqueStepsMap.values()).sort((a, b) => a.startTime.localeCompare(b.startTime)),
+      parameters: allParams.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || '')),
+      materials: allMaterials, // Could be grouped too but usually fine
+      alerts: Array.from(new Set(allAlerts)),
+      agua_malta_points: allAguaMalta,
+      real_total_min: group.reduce((sum, g) => sum + (g.real_total_min || 0), 0),
+      esperado_total_min: group.reduce((sum, g) => sum + (g.esperado_total_min || 0), 0),
+      // Recalculate other totals if needed
+    };
+  });
 }

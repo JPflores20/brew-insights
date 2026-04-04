@@ -19,13 +19,13 @@ import {
 } from "recharts";
 import { Input } from "@/components/ui/input";
 import { Label as UILabel } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BatchRecord } from "@/types";
-import { Activity, Beaker, FileSpreadsheet, Filter, Thermometer } from "lucide-react";
+import { Activity, Beaker, FileSpreadsheet, Filter, Clock } from "lucide-react";
 import { FILTER_ALL } from "@/lib/constants";
 
-interface StepCapabilityChartProps {
+interface StepDurationCapabilityChartProps {
   data: BatchRecord[];
 }
 
@@ -33,8 +33,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background/90 backdrop-blur-md border border-border p-3 rounded-lg shadow-xl">
-        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Valor: {label}</p>
-        <p className="text-sm font-bold text-[#8b5cf6]">
+        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Duración: {label} min</p>
+        <p className="text-sm font-bold text-blue-500">
           Densidad: <span className="font-mono">{parseFloat(payload[0].value).toFixed(4)}</span>
         </p>
       </div>
@@ -43,19 +43,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
+export function StepDurationCapabilityChart({ data }: StepDurationCapabilityChartProps) {
   // Filters
   const [selectedRecipe, setSelectedRecipe] = useState<string>("");
   const [selectedMachine, setSelectedMachine] = useState<string>("");
   const [selectedStep, setSelectedStep] = useState<string>("");
-  const [selectedParam, setSelectedParam] = useState<string>("");
 
   // Specification Limits (LEI/LES) - Persisted per unique analysis key
-  const analysisKey = `step-cap-${selectedMachine}-${selectedStep}-${selectedParam}`;
+  const analysisKey = `step-duration-cap-${selectedMachine}-${selectedStep}`;
   const [lei, setLei] = useState<number | "">(0);
   const [les, setLes] = useState<number | "">(0);
 
-  // Load/Save LEI/LES from localStorage manually because the key is highly dynamic
+  // Load/Save LEI/LES from localStorage manually
   useEffect(() => {
     const savedLei = localStorage.getItem(`${analysisKey}-lei`);
     const savedLes = localStorage.getItem(`${analysisKey}-les`);
@@ -84,7 +83,7 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
     return Array.from(new Set(data.map((d) => d.productName).filter(Boolean))).sort();
   }, [data]);
 
-  // 2. Unique Machines (All machines)
+  // 2. Unique Machines
   const uniqueMachines = useMemo(() => {
     return Array.from(new Set(data.map((d) => d.TEILANL_GRUPO).filter(Boolean))).sort();
   }, [data]);
@@ -110,35 +109,9 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
     }
   }, [selectedMachine, uniqueSteps, selectedStep]);
 
-  // 4. Unique Parameters for the selected Step/Machine
-  const uniqueParams = useMemo(() => {
-    if (selectedMachine === FILTER_ALL || selectedStep === FILTER_ALL) return [];
-    const params = new Set<string>();
-    data.forEach(d => {
-      if (d.TEILANL_GRUPO === selectedMachine) {
-        d.parameters.forEach(p => {
-          if (p.stepName === selectedStep) {
-            params.add(p.name);
-          }
-        });
-      }
-    });
-    return Array.from(params).sort();
-  }, [data, selectedMachine, selectedStep]);
-
-  // Auto-select first temperature parameter if available
-  useEffect(() => {
-    if (uniqueParams.length > 0) {
-      if (selectedParam === FILTER_ALL || !uniqueParams.includes(selectedParam)) {
-        const tempParam = uniqueParams.find(p => p.toUpperCase().includes('TEMP') || p.toUpperCase().includes('TEMP.'));
-        setSelectedParam(tempParam || uniqueParams[0]);
-      }
-    }
-  }, [uniqueParams, selectedParam]);
-
-  // Extract Values for Analysis
+  // Extract Durations for Analysis
   const analysisValues = useMemo(() => {
-    if (selectedMachine === FILTER_ALL || selectedStep === FILTER_ALL || selectedParam === FILTER_ALL) return [];
+    if (selectedMachine === FILTER_ALL || selectedStep === FILTER_ALL) return [];
     
     return data
       .filter((d) => {
@@ -147,12 +120,12 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
         return recipeMatch && machineMatch;
       })
       .flatMap((d) => 
-        d.parameters
-          .filter(p => p.stepName === selectedStep && p.name === selectedParam)
-          .map(p => p.value)
+        d.steps
+          .filter(s => s.stepName === selectedStep)
+          .map(s => s.durationMin)
       )
       .filter((v): v is number => typeof v === "number" && !isNaN(v));
-  }, [data, selectedRecipe, selectedMachine, selectedStep, selectedParam]);
+  }, [data, selectedRecipe, selectedMachine, selectedStep]);
 
   // Statistical calculations
   const stats = useMemo(() => {
@@ -167,10 +140,10 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
     const variance = sumSqDiff / (n - 1);
     const stdDev = Math.sqrt(variance);
 
-    // Only calculate Cp/Cpk if limits are defined (not both zero)
     const nLei = Number(lei);
     const nLes = Number(les);
-    const hasLimits = nLei !== 0 || nLes !== 0;
+    const hasLimits = (nLei !== 0 || nLes !== 0) && nLes > nLei;
+    
     const cp = hasLimits ? (nLes - nLei) / (6 * stdDev) : 0;
     const cpkUpper = hasLimits ? (nLes - mean) / (3 * stdDev) : 0;
     const cpkLower = hasLimits ? (mean - nLei) / (3 * stdDev) : 0;
@@ -178,13 +151,13 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
 
     const target = hasLimits ? (nLei + nLes) / 2 : 0;
 
-    return { n, mean, min, max, stdDev, cp, cpk, lei: nLei, les: nLes, target };
+    return { n, mean, min, max, stdDev, cp, cpk, lei: nLei, les: nLes, target, hasLimits };
   }, [analysisValues, lei, les]);
 
   // Gaussian Curve Data Generation
   const chartData = useMemo(() => {
     if (!stats) return [];
-    const { mean, stdDev, lei, les } = stats;
+    const { mean, stdDev, lei, les, hasLimits } = stats;
     if (stdDev === 0) return [];
     
     const points = [];
@@ -193,8 +166,6 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
     const dataStart = mean - sigmaCount * stdDev;
     const dataEnd = mean + sigmaCount * stdDev;
     
-    // Limits lines visibility
-    const hasLimits = lei !== 0 || les !== 0;
     const start = hasLimits ? Math.min(dataStart, lei - stdDev) : dataStart;
     const end = hasLimits ? Math.max(dataEnd, les + stdDev) : dataEnd;
     
@@ -202,7 +173,7 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
 
     for (let x = start; x <= end; x += step) {
       const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
-      points.push({ x: parseFloat(x.toFixed(3)), y: parseFloat(y.toFixed(5)) });
+      points.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(5)) });
     }
     return points;
   }, [stats]);
@@ -215,19 +186,19 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
-                  <Thermometer className="h-5 w-5 text-purple-500" />
-                  Capacidad del Proceso - Temperatura por Paso
+                  <Clock className="h-5 w-5 text-blue-500" />
+                  Capacidad del Proceso - Duración de Pasos
                 </CardTitle>
                 <CardDescription>
-                  Análisis de {selectedParam === FILTER_ALL ? 'variable' : selectedParam} en el paso {selectedStep === FILTER_ALL ? '...' : selectedStep}
+                  Análisis de tiempos en el paso {selectedStep === FILTER_ALL ? '...' : selectedStep}
                 </CardDescription>
               </div>
               
               <div className="flex items-center gap-3 bg-secondary/40 p-2 rounded-lg border border-border">
                 <div className="flex flex-col">
-                  <UILabel htmlFor="step-lei" className="text-[10px] uppercase font-bold text-muted-foreground mb-1">LEI</UILabel>
+                  <UILabel htmlFor="dur-lei" className="text-[10px] uppercase font-bold text-muted-foreground mb-1">LEI (min)</UILabel>
                   <Input
-                    id="step-lei"
+                    id="dur-lei"
                     type="number"
                     value={lei}
                     onChange={(e) => handleLeiChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
@@ -236,9 +207,9 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <UILabel htmlFor="step-les" className="text-[10px] uppercase font-bold text-muted-foreground mb-1">LES</UILabel>
+                  <UILabel htmlFor="dur-les" className="text-[10px] uppercase font-bold text-muted-foreground mb-1">LES (min)</UILabel>
                   <Input
-                    id="step-les"
+                    id="dur-les"
                     type="number"
                     value={les}
                     onChange={(e) => handleLesChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
@@ -249,53 +220,52 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
               </div>
             </div>
 
-            {/* Filters Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-muted/20 rounded-lg border border-border/50">
-              <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
-                <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="Receta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={FILTER_ALL}>Todas las recetas</SelectItem>
-                  {uniqueRecipes.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/20 rounded-lg border border-border/50">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium mr-2">
+                <Filter className="h-4 w-4" /> Filtros:
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-9 bg-background">
+                    <SelectValue placeholder="Receta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={FILTER_ALL}>Todas las recetas</SelectItem>
+                    {uniqueRecipes.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedMachine} onValueChange={setSelectedMachine}>
-                <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="Equipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={FILTER_ALL}>Seleccionar equipo</SelectItem>
-                  {uniqueMachines.map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedMachine} onValueChange={setSelectedMachine}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-9 bg-background">
+                    <SelectValue placeholder="Equipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={FILTER_ALL}>Seleccionar equipo</SelectItem>
+                    {uniqueMachines.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedStep} onValueChange={setSelectedStep} disabled={selectedMachine === FILTER_ALL}>
-                <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="Paso" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueSteps.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedStep} onValueChange={setSelectedStep} disabled={selectedMachine === FILTER_ALL}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-9 bg-background">
+                    <SelectValue placeholder="Paso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {uniqueSteps.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={selectedParam} onValueChange={setSelectedParam} disabled={selectedStep === FILTER_ALL}>
-                <SelectTrigger className="h-9 bg-background font-medium">
-                  <SelectValue placeholder="Variable" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueParams.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="text-xs text-muted-foreground ml-auto bg-background px-2 py-1 rounded border border-border/50">
+                Muestra: <span className="font-bold text-foreground">{analysisValues.length}</span> registros
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -305,7 +275,7 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
             {selectedMachine === FILTER_ALL ? (
               <div className="flex h-full items-center justify-center flex-col gap-2 text-muted-foreground p-8 text-center">
                 <Activity className="h-10 w-10 opacity-20" />
-                <p>Selecciona un equipo y paso para comenzar el análisis.</p>
+                <p>Selecciona un equipo y paso para comenzar el análisis de tiempos.</p>
               </div>
             ) : analysisValues.length === 0 ? (
                <div className="flex h-full items-center justify-center flex-col gap-2 text-muted-foreground">
@@ -321,9 +291,9 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <defs>
-                    <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    <linearGradient id="colorDur" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
@@ -332,41 +302,37 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
                     type="number" 
                     domain={['dataMin', 'dataMax']} 
                     tick={{ fontSize: 10 }}
-                    tickFormatter={(val) => val.toFixed(1)}
+                    tickFormatter={(val) => `${val}m`}
                   />
                   <YAxis hide />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="y"
-                    stroke="#8b5cf6"
-                    fill="url(#colorTemp)"
+                    stroke="#3b82f6"
+                    fill="url(#colorDur)"
                     strokeWidth={2}
                     animationDuration={1000}
                   />
                   
                   {/* Media Line */}
-                  <ReferenceLine x={stats.mean} stroke="#8b5cf6" strokeDasharray="3 3">
-                    <Label value="Media" position="top" fill="#8b5cf6" fontSize={10} />
+                  <ReferenceLine x={stats.mean} stroke="#3b82f6" strokeDasharray="3 3">
+                    <Label value="Media" position="top" fill="#3b82f6" fontSize={10} />
                   </ReferenceLine>
 
-                  {/* Target Line */}
-                  {(lei !== 0 || les !== 0) && (
-                    <ReferenceLine x={stats.target} stroke="#10b981" strokeWidth={2} strokeDasharray="5 5">
-                      <Label value={`Target: ${stats.target.toFixed(2)}`} position="top" fill="#10b981" fontSize={10} fontWeight="bold" />
-                    </ReferenceLine>
-                  )}
-
                   {/* Limits Lines */}
-                  {lei !== 0 && (
-                    <ReferenceLine x={lei} stroke="#ef4444" strokeWidth={2}>
-                      <Label value={`LEI: ${lei}`} position="insideTopLeft" fill="#ef4444" fontSize={10} fontWeight="bold" />
-                    </ReferenceLine>
-                  )}
-                  {les !== 0 && (
-                    <ReferenceLine x={les} stroke="#ef4444" strokeWidth={2}>
-                      <Label value={`LES: ${les}`} position="insideTopRight" fill="#ef4444" fontSize={10} fontWeight="bold" />
-                    </ReferenceLine>
+                  {stats.hasLimits && (
+                    <>
+                      <ReferenceLine x={stats.target} stroke="#10b981" strokeWidth={2} strokeDasharray="5 5">
+                        <Label value={`Target: ${stats.target.toFixed(1)}`} position="top" fill="#10b981" fontSize={10} fontWeight="bold" />
+                      </ReferenceLine>
+                      <ReferenceLine x={stats.lei} stroke="#ef4444" strokeWidth={2}>
+                        <Label value={`LEI: ${stats.lei}`} position="insideTopLeft" fill="#ef4444" fontSize={10} fontWeight="bold" />
+                      </ReferenceLine>
+                      <ReferenceLine x={stats.les} stroke="#ef4444" strokeWidth={2}>
+                        <Label value={`LES: ${stats.les}`} position="insideTopRight" fill="#ef4444" fontSize={10} fontWeight="bold" />
+                      </ReferenceLine>
+                    </>
                   )}
                 </AreaChart>
               </ResponsiveContainer>
@@ -379,7 +345,7 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
         <CardHeader>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-accent" />
-            Performance {selectedParam === FILTER_ALL ? '' : selectedParam}
+            Performance Duración
           </CardTitle>
           <CardDescription>Métricas de capacidad del paso</CardDescription>
         </CardHeader>
@@ -392,63 +358,55 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Media</TableCell>
-                <TableCell className="text-right font-mono font-bold text-purple-600">{stats?.mean.toFixed(2) || "---"}</TableCell>
+                <TableCell className="text-right font-mono font-bold text-blue-600">{stats?.mean.toFixed(2) || "---"} min</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Min</TableCell>
-                <TableCell className="text-right font-mono">{stats?.min.toFixed(2) || "---"}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Máx.</TableCell>
-                <TableCell className="text-right font-mono">{stats?.max.toFixed(2) || "---"}</TableCell>
+                <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Min / Máx</TableCell>
+                <TableCell className="text-right font-mono text-xs">{stats?.min.toFixed(1) || "---"} - {stats?.max.toFixed(1) || "---"} min</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Desv. Est. σ</TableCell>
                 <TableCell className="text-right font-mono">{stats?.stdDev.toFixed(3) || "---"}</TableCell>
               </TableRow>
-              <TableRow className="bg-purple-500/5">
-                <TableCell className="font-bold text-purple-600 uppercase text-[10px]">Cp</TableCell>
-                <TableCell className="text-right font-mono font-bold text-purple-600">
+              <TableRow className="bg-blue-500/5 border-t-2 border-primary/20">
+                <TableCell className="font-bold text-blue-600 uppercase text-[10px]">Cp</TableCell>
+                <TableCell className="text-right font-mono font-bold text-blue-600">
                     {stats?.cp !== undefined && isFinite(stats.cp) ? stats.cp.toFixed(3) : "---"}
                 </TableCell>
               </TableRow>
-              <TableRow className="bg-purple-500/10">
-                <TableCell className="font-bold text-purple-600 uppercase text-[10px]">Cpk</TableCell>
-                <TableCell className="text-right font-mono font-bold text-purple-600">
+              <TableRow className="bg-blue-500/10">
+                <TableCell className="font-bold text-blue-600 uppercase text-[10px]">Cpk</TableCell>
+                <TableCell className="text-right font-mono font-bold text-blue-600">
                     {stats?.cpk !== undefined && isFinite(stats.cpk) ? stats.cpk.toFixed(3) : "---"}
                 </TableCell>
               </TableRow>
               <TableRow className="bg-green-500/5">
                 <TableCell className="font-semibold text-green-600 uppercase text-[10px]">Target</TableCell>
-                <TableCell className="text-right font-mono font-bold text-green-600">{stats?.target.toFixed(3) || "---"}</TableCell>
+                <TableCell className="text-right font-mono font-bold text-green-600">{stats?.target.toFixed(2) || "---"}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">LES</TableCell>
-                <TableCell className="text-right font-mono text-destructive">{stats?.les.toFixed(2) || "---"}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">LEI</TableCell>
-                <TableCell className="text-right font-mono text-destructive">{stats?.lei.toFixed(2) || "---"}</TableCell>
+                <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">LEI / LES</TableCell>
+                <TableCell className="text-right font-mono text-destructive text-xs">{stats?.lei || 0} - {stats?.les || 0} min</TableCell>
               </TableRow>
             </TableBody>
           </Table>
 
-          {stats && (lei !== 0 || les !== 0) && (
+          {stats && stats.hasLimits && (
              <div className="mt-6 space-y-3">
                {stats.cpk < 1 ? (
                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2">
                    <Activity className="h-4 w-4 shrink-0 mt-0.5" />
-                   <p><strong>Baja Capacidad:</strong> Cpk &lt; 1.0. Proceso fuera de control o límites muy estrictos.</p>
+                   <p><strong>Baja Capacidad:</strong> El proceso excede los límites de tiempo establecidos frecuentemente.</p>
                  </div>
                ) : stats.cpk >= 1.33 ? (
                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 text-xs flex items-start gap-2">
                    <Beaker className="h-4 w-4 shrink-0 mt-0.5" />
-                   <p><strong>Proceso Capaz:</strong> Cpk &ge; 1.33. Nivel de calidad excelente.</p>
+                   <p><strong>Proceso Capaz:</strong> Estabilidad de tiempos excelente.</p>
                  </div>
                ) : (
                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-600 text-xs flex items-start gap-2">
                    <Activity className="h-4 w-4 shrink-0 mt-0.5" />
-                   <p><strong>Proceso Aceptable:</strong> 1.0 &le; Cpk &lt; 1.33. Control adecuado.</p>
+                   <p><strong>Control Adecuado:</strong> Los tiempos están mayormente dentro de los límites.</p>
                  </div>
                )}
              </div>

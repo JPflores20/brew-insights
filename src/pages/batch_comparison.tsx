@@ -25,6 +25,9 @@ import { SicAguaMaltaChart } from "@/components/batch-comparison/sic_agua_malta_
 import { SicMaltaCarameloChart } from "@/components/batch-comparison/sic_malta_caramelo_chart";
 import { EmoCapabilityChart } from "@/components/batch-comparison/emo_capability_chart";
 import { StepCapabilityChart } from "@/components/batch-comparison/step_capability_chart";
+import { StepDurationCapabilityChart } from "@/components/batch-comparison/step_duration_capability_chart";
+import { ExcelCapabilityChart } from "@/components/batch-comparison/excel_capability_chart";
+import { StepTrendChart } from "@/components/batch-comparison/step_trend_chart";
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
 import { useBcSeries } from "@/hooks/use_batch_comparison/use_bc_series";
@@ -201,9 +204,15 @@ export default function BatchComparison() {
               onAddSeries={addSeries}
             />
 
+            <StepTrendChart data={data} />
+
             <EmoCapabilityChart data={data} />
             
             <StepCapabilityChart data={data} />
+
+            <StepDurationCapabilityChart data={data} />
+
+            <ExcelCapabilityChart />
 
             <SicAguaAdjuntosChart
               data={wChartData}

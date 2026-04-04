@@ -1,5 +1,5 @@
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard_layout";
 import { EfficiencyChart } from "@/components/dashboard/efficiency_chart";
 import {
@@ -26,9 +26,14 @@ import { DatePickerWithRange } from "@/components/ui/date_range_picker";
 import { DateRange } from "react-day-picker";
 import { useFileUpload } from "@/hooks/use_file_upload";
 export default function Overview() {
-  const { data, setData, isLoaded } = useData();
+  const { data, setData, isLoaded, triggerHotBlockLoad } = useData();
   const { toast } = useToast();
-  const { loading, uploadProgress, processFiles } = useFileUpload();
+  const { loading, uploadProgress, processFiles, maxFiles } = useFileUpload();
+
+  // Trigger hot block data loading on mount if not already loaded
+  useEffect(() => {
+    triggerHotBlockLoad();
+  }, [triggerHotBlockLoad]);
   const [expandedChart, setExpandedChart] = useState<"efficiency" | "distribution" | null>(null);
   const [distributionDateRange, setDistributionDateRange] = useState<DateRange | undefined>();
   const handleExport = () => {
@@ -108,6 +113,7 @@ export default function Overview() {
           loading={loading} 
           uploadProgress={uploadProgress} 
           onFilesSelected={processFiles} 
+          maxFiles={maxFiles}
         />
       </DashboardLayout>
     );

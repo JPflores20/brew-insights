@@ -23,7 +23,8 @@ import {
     Lock,
     Wrench,
     Activity,
-    Trash2
+    Trash2,
+    Thermometer
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth_context";
@@ -31,7 +32,16 @@ import { useData } from "@/context/data_context";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
-const navItems = [
+
+interface NavItem {
+    title: string;
+    url: string;
+    icon: React.ElementType;
+    isActive?: boolean;
+    badge?: string;
+}
+
+const cocimientosNavItems: NavItem[] = [
     {
         title: "Resumen",
         url: "/cocimientos",
@@ -78,11 +88,25 @@ const navItems = [
         badge: "Beta"
     },
 ];
+
+const coldBlockNavItems: NavItem[] = [
+    {
+        title: "Resumen",
+        url: "/bloque-frio",
+        icon: LayoutDashboard,
+    }
+];
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const location = useLocation();
     const { user } = useAuth();
-    const { data, setData } = useData();
-    const hasData = data && data.length > 0;
+    const { data, coldBlockData, setHotBlockData, setColdBlockData } = useData();
+    
+    const isColdBlock = location.pathname.startsWith('/bloque-frio');
+    const navItems = isColdBlock ? coldBlockNavItems : cocimientosNavItems;
+    const currentData = isColdBlock ? coldBlockData : data;
+    const hasData = currentData && currentData.length > 0;
+    
     const handleLogout = async () => {
         try {
             await signOut(auth);
@@ -90,6 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             console.error("Error al cerrar sesión:", error);
         }
     };
+
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
@@ -97,12 +122,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link to="/">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                    <Beer className="size-4" />
+                                <div className={cn(
+                                    "flex aspect-square size-8 items-center justify-center rounded-lg text-primary-foreground",
+                                    isColdBlock ? "bg-blue-600" : "bg-primary"
+                                )}>
+                                    {isColdBlock ? <Thermometer className="size-4" /> : <Beer className="size-4" />}
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold">Brew Insights</span>
-                                    <span className="truncate text-xs">Cocimientos</span>
+                                    <span className="truncate text-xs">{isColdBlock ? "Bloque Frío" : "Cocimientos"}</span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>
@@ -123,8 +151,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             {navItems.map((item) => {
-                                const isDisabled = item.url !== "/cocimientos" && !hasData;
+                                const isDisabled = !isColdBlock && item.url !== "/cocimientos" && !hasData;
                                 const isActive = location.pathname === item.url;
+                                
                                 if (isDisabled) {
                                     return (
                                         <SidebarMenuItem key={item.title}>
@@ -134,7 +163,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                             >
                                                 <item.icon className="text-muted-foreground" />
                                                 <span className="text-muted-foreground">{item.title}</span>
-                                                {'badge' in item && (
+                                                {item.badge && (
                                                     <span className="ml-2 rounded-md bg-green-500/20 px-1.5 py-0.5 text-[10px] font-medium text-green-600 leading-none">
                                                         {item.badge}
                                                     </span>
@@ -146,11 +175,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 }
                                 return (
                                     <SidebarMenuItem key={item.title}>
-                                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title} className={cn(isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_0_15px_rgba(234,88,12,0.15)]")}>
+                                        <SidebarMenuButton 
+                                            asChild 
+                                            isActive={isActive} 
+                                            tooltip={item.title} 
+                                            className={cn(
+                                                isActive && (isColdBlock 
+                                                    ? "bg-blue-500/10 text-blue-400 font-medium shadow-[0_0_15px_rgba(59,130,246,0.15)] ml-1" 
+                                                    : "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_0_15px_rgba(234,88,12,0.15)]")
+                                            )}
+                                        >
                                             <Link to={item.url} className="flex items-center w-full">
-                                                <item.icon className={cn(isActive && "text-primary")} />
+                                                <item.icon className={cn(isActive && (isColdBlock ? "text-blue-500" : "text-primary"))} />
                                                 <span>{item.title}</span>
-                                                {'badge' in item && (
+                                                {item.badge && (
                                                     <span className="ml-auto rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[10px] font-medium text-green-500 leading-none shadow-sm shadow-green-500/10">
                                                         {item.badge}
                                                     </span>
@@ -178,10 +216,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton
+                                title="Limpiar Base de Datos"
                                 variant="outline"
                                 className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/20 mb-2"
                                 onClick={() => {
-                                    setData([]);
+                                    if (isColdBlock) setColdBlockData([]);
+                                    else setHotBlockData([]);
                                 }}
                             >
                                 <Trash2 className="size-4" />
