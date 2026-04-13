@@ -24,6 +24,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BatchRecord } from "@/types";
 import { Activity, Beaker, FileSpreadsheet, Filter, Clock } from "lucide-react";
 import { FILTER_ALL } from "@/lib/constants";
+import { DateRange } from "react-day-picker";
+import { DatePickerWithRange } from "@/components/ui/date_range_picker";
+import { startOfDay, endOfDay } from "date-fns";
 
 interface StepDurationCapabilityChartProps {
   data: BatchRecord[];
@@ -48,6 +51,25 @@ export function StepDurationCapabilityChart({ data }: StepDurationCapabilityChar
   const [selectedRecipe, setSelectedRecipe] = useState<string>("");
   const [selectedMachine, setSelectedMachine] = useState<string>("");
   const [selectedStep, setSelectedStep] = useState<string>("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Calculate Min/Max Dates from data
+  const { minDataDate, maxDataDate } = useMemo(() => {
+    if (!data || data.length === 0) return { minDataDate: undefined, maxDataDate: undefined };
+    let minT = new Date(data[0].timestamp).getTime();
+    let maxT = minT;
+    data.forEach(d => {
+      const t = new Date(d.timestamp).getTime();
+      if (!isNaN(t)) {
+        if (t < minT) minT = t;
+        if (t > maxT) maxT = t;
+      }
+    });
+    return {
+      minDataDate: isNaN(minT) ? undefined : new Date(minT),
+      maxDataDate: isNaN(maxT) ? undefined : new Date(maxT),
+    };
+  }, [data]);
 
   // Specification Limits (LEI/LES) - Persisted per unique analysis key
   const analysisKey = `step-duration-cap-${selectedMachine}-${selectedStep}`;
@@ -117,7 +139,19 @@ export function StepDurationCapabilityChart({ data }: StepDurationCapabilityChar
       .filter((d) => {
         const recipeMatch = selectedRecipe === FILTER_ALL || d.productName === selectedRecipe;
         const machineMatch = d.TEILANL_GRUPO === selectedMachine;
-        return recipeMatch && machineMatch;
+
+        // Date filter
+        let dateMatch = true;
+        if (dateRange?.from) {
+          const itemDate = new Date(d.timestamp);
+          if (!isNaN(itemDate.getTime())) {
+            const start = startOfDay(dateRange.from);
+            const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+            dateMatch = itemDate >= start && itemDate <= end;
+          }
+        }
+
+        return recipeMatch && machineMatch && dateMatch;
       })
       .flatMap((d) => 
         d.steps
@@ -125,7 +159,7 @@ export function StepDurationCapabilityChart({ data }: StepDurationCapabilityChar
           .map(s => s.durationMin)
       )
       .filter((v): v is number => typeof v === "number" && !isNaN(v));
-  }, [data, selectedRecipe, selectedMachine, selectedStep]);
+  }, [data, selectedRecipe, selectedMachine, selectedStep, dateRange]);
 
   // Statistical calculations
   const stats = useMemo(() => {
@@ -226,7 +260,15 @@ export function StepDurationCapabilityChart({ data }: StepDurationCapabilityChar
                 <Filter className="h-4 w-4" /> Filtros:
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-3 flex-1">
+              <div className="flex flex-col sm:flex-row gap-3 flex-1 flex-wrap">
+                <DatePickerWithRange 
+                  className="w-full sm:w-auto [&>div>button]:h-9"
+                  date={dateRange} 
+                  setDate={setDateRange} 
+                  minDate={minDataDate} 
+                  maxDate={maxDataDate} 
+                />
+
                 <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
                   <SelectTrigger className="w-full sm:w-[200px] h-9 bg-background">
                     <SelectValue placeholder="Receta" />

@@ -19,9 +19,7 @@ import { useBatchComparison } from "@/hooks/use_batch_comparison";
 import { BatchSelectorCard } from "@/components/batch-comparison/batch_selector_card";
 import { BatchComparisonChart } from "@/components/batch-comparison/batch_comparison_chart";
 import { TemperatureTrendChart } from "@/components/machine-detail/temperature_trend_chart";
-import { SicTemperatureChart } from "@/components/batch-comparison/sic_temperature_chart";
-import { SicAguaAdjuntosChart } from "@/components/batch-comparison/sic_agua_adjuntos_chart";
-import { SicAguaMaltaChart } from "@/components/batch-comparison/sic_agua_malta_chart";
+
 import { SicMaltaCarameloChart } from "@/components/batch-comparison/sic_malta_caramelo_chart";
 import { EmoCapabilityChart } from "@/components/batch-comparison/emo_capability_chart";
 import { StepCapabilityChart } from "@/components/batch-comparison/step_capability_chart";
@@ -31,9 +29,8 @@ import { StepTrendChart } from "@/components/batch-comparison/step_trend_chart";
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
 import { useBcSeries } from "@/hooks/use_batch_comparison/use_bc_series";
-import { useSicChart } from "@/hooks/use_batch_comparison/use_sic_chart";
-import { useSicAguaAdjuntos } from "@/hooks/use_batch_comparison/use_sic_agua_adjuntos";
-import { useSicAguaMalta } from "@/hooks/use_batch_comparison/use_sic_agua_malta";
+
+
 
 export default function BatchComparison() {
   const { toast } = useToast();
@@ -53,29 +50,9 @@ export default function BatchComparison() {
     addSeries,
   } = useBatchComparison();
 
-  // Series management and data for SIC Chart
-  const { 
-    seriesList: sicSeriesList, 
-    addSeries: addSicSeries, 
-    seriesOptions: sicSeriesOptions 
-  } = useBcSeries(data, 1);
-  const { chartData: sicChartData } = useSicChart(data, sicSeriesList);
 
-  // Series management and data for Water/Adjuncts SIC Chart
-  const {
-    seriesList: wSeriesList,
-    addSeries: addWSeries,
-    seriesOptions: wSeriesOptions
-  } = useBcSeries(data, 1);
-  const { chartData: wChartData } = useSicAguaAdjuntos(data, wSeriesList);
 
-  // Series management and data for Water/Malt SIC Chart
-  const {
-      seriesList: amSeriesList,
-      addSeries: addAmSeries,
-      seriesOptions: amSeriesOptions
-  } = useBcSeries(data, 1);
-  const { chartData: amChartData } = useSicAguaMalta(data, amSeriesList);
+
 
   // Series management and data for Malta Caramelo SIC Chart
   const {
@@ -214,11 +191,7 @@ export default function BatchComparison() {
 
             <ExcelCapabilityChart />
 
-            <SicAguaAdjuntosChart
-              data={wChartData}
-              series={wSeriesOptions}
-              onAddSeries={addWSeries}
-            />
+
 
             <SicMaltaCarameloChart
               data={data}
@@ -229,19 +202,7 @@ export default function BatchComparison() {
               uniqueRecipes={uniqueRecipes}
             />
 
-            <SicTemperatureChart
-              data={sicChartData}
-              selectedTempIndices={selectedTempIndices}
-              setSelectedTempIndices={setSelectedTempIndices}
-              series={sicSeriesOptions}
-              onAddSeries={addSicSeries}
-            />
 
-            <SicAguaMaltaChart
-              data={amChartData}
-              series={amSeriesOptions}
-              onAddSeries={addAmSeries}
-            />
           </div>
         </div>
       </div>
