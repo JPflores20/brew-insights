@@ -49,6 +49,30 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/bloque-frio/fermentacion"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bloque-frio/historico"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bloque-frio/comparativo"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
               {}
               <Route
                 path="/cocimientos"

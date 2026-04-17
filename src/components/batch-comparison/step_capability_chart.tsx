@@ -21,9 +21,13 @@ import { Input } from "@/components/ui/input";
 import { Label as UILabel } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi_select";
 import { BatchRecord } from "@/types";
 import { Activity, Beaker, FileSpreadsheet, Filter, Thermometer } from "lucide-react";
 import { FILTER_ALL } from "@/lib/constants";
+import { DateRange } from "react-day-picker";
+import { DatePickerWithRange } from "@/components/ui/date_range_picker";
+import { startOfDay, endOfDay } from "date-fns";
 
 interface StepCapabilityChartProps {
   data: BatchRecord[];
@@ -43,15 +47,57 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const calculateStats = (values: number[], leiVal: number, lesVal: number) => {
+  const n = values.length;
+  if (n < 2) return null;
+
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  
+  const sumSqDiff = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0);
+  const variance = sumSqDiff / (n - 1);
+  const stdDev = Math.sqrt(variance);
+
+  const hasLimits = leiVal !== 0 || lesVal !== 0;
+  const cp = hasLimits ? (lesVal - leiVal) / (6 * stdDev) : 0;
+  const cpkUpper = hasLimits ? (lesVal - mean) / (3 * stdDev) : 0;
+  const cpkLower = hasLimits ? (mean - leiVal) / (3 * stdDev) : 0;
+  const cpk = hasLimits ? Math.min(cpkUpper, cpkLower) : 0;
+
+  const target = hasLimits ? (leiVal + lesVal) / 2 : 0;
+
+  return { n, mean, min, max, stdDev, cp, cpk, lei: leiVal, les: lesVal, target };
+};
+
 export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
   // Filters
   const [selectedRecipe, setSelectedRecipe] = useState<string>("");
-  const [selectedMachine, setSelectedMachine] = useState<string>("");
-  const [selectedStep, setSelectedStep] = useState<string>("");
-  const [selectedParam, setSelectedParam] = useState<string>("");
+  const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
+  const [selectedSteps, setSelectedSteps] = useState<string[]>([]);
+  const [selectedParams, setSelectedParams] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Calculate Min/Max Dates from data
+  const { minDataDate, maxDataDate } = useMemo(() => {
+    if (!data || data.length === 0) return { minDataDate: undefined, maxDataDate: undefined };
+    let minT = new Date(data[0].timestamp).getTime();
+    let maxT = minT;
+    data.forEach(d => {
+      const t = new Date(d.timestamp).getTime();
+      if (!isNaN(t)) {
+        if (t < minT) minT = t;
+        if (t > maxT) maxT = t;
+      }
+    });
+    return {
+      minDataDate: isNaN(minT) ? undefined : new Date(minT),
+      maxDataDate: isNaN(maxT) ? undefined : new Date(maxT),
+    };
+  }, [data]);
 
   // Specification Limits (LEI/LES) - Persisted per unique analysis key
-  const analysisKey = `step-cap-${selectedMachine}-${selectedStep}-${selectedParam}`;
+  const analysisKey = `step-cap-${[...selectedMachines].sort().join('-')}-${[...selectedSteps].sort().join('-')}-${[...selectedParams].sort().join('-')}`;
   const [lei, setLei] = useState<number | "">(0);
   const [les, setLes] = useState<number | "">(0);
 
@@ -91,95 +137,127 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
 
   // 3. Unique Steps for the selected Machine
   const uniqueSteps = useMemo(() => {
-    if (selectedMachine === FILTER_ALL) return [];
+    if (selectedMachines.length === 0) return [];
     const steps = new Set<string>();
     data.forEach(d => {
-      if (d.TEILANL_GRUPO === selectedMachine) {
+      if (selectedMachines.includes(d.TEILANL_GRUPO)) {
         d.steps.forEach(s => steps.add(s.stepName));
       }
     });
     return Array.from(steps).sort();
-  }, [data, selectedMachine]);
+  }, [data, selectedMachines]);
 
   // Reset Step when Machine changes
   useEffect(() => {
-    if (selectedMachine !== FILTER_ALL && uniqueSteps.length > 0) {
-      if (!uniqueSteps.includes(selectedStep)) {
-         setSelectedStep(uniqueSteps[0]);
+    setSelectedSteps(prev => {
+      if (selectedMachines.length === 0) return [];
+      const validSelections = prev.filter(s => uniqueSteps.includes(s));
+      if (validSelections.length !== prev.length) {
+        return validSelections;
       }
-    }
-  }, [selectedMachine, uniqueSteps, selectedStep]);
+      return prev;
+    });
+  }, [uniqueSteps, selectedMachines]);
 
   // 4. Unique Parameters for the selected Step/Machine
   const uniqueParams = useMemo(() => {
-    if (selectedMachine === FILTER_ALL || selectedStep === FILTER_ALL) return [];
+    if (selectedMachines.length === 0 || selectedSteps.length === 0) return [];
     const params = new Set<string>();
     data.forEach(d => {
-      if (d.TEILANL_GRUPO === selectedMachine) {
+      if (selectedMachines.includes(d.TEILANL_GRUPO)) {
         d.parameters.forEach(p => {
-          if (p.stepName === selectedStep) {
+          if (selectedSteps.includes(p.stepName)) {
             params.add(p.name);
           }
         });
       }
     });
     return Array.from(params).sort();
-  }, [data, selectedMachine, selectedStep]);
+  }, [data, selectedMachines, selectedSteps]);
 
-  // Auto-select first temperature parameter if available
+  // Reset Param when Steps change
   useEffect(() => {
-    if (uniqueParams.length > 0) {
-      if (selectedParam === FILTER_ALL || !uniqueParams.includes(selectedParam)) {
-        const tempParam = uniqueParams.find(p => p.toUpperCase().includes('TEMP') || p.toUpperCase().includes('TEMP.'));
-        setSelectedParam(tempParam || uniqueParams[0]);
+    setSelectedParams(prev => {
+      if (selectedSteps.length === 0) return [];
+      const validSelections = prev.filter(p => uniqueParams.includes(p));
+      if (validSelections.length !== prev.length) {
+        return validSelections;
       }
-    }
-  }, [uniqueParams, selectedParam]);
+      return prev;
+    });
+  }, [uniqueParams, selectedSteps]);
 
   // Extract Values for Analysis
   const analysisValues = useMemo(() => {
-    if (selectedMachine === FILTER_ALL || selectedStep === FILTER_ALL || selectedParam === FILTER_ALL) return [];
+    if (selectedMachines.length === 0 || selectedSteps.length === 0 || selectedParams.length === 0) return [];
     
     return data
       .filter((d) => {
-        const recipeMatch = selectedRecipe === FILTER_ALL || d.productName === selectedRecipe;
-        const machineMatch = d.TEILANL_GRUPO === selectedMachine;
-        return recipeMatch && machineMatch;
+        const recipeMatch = selectedRecipe === FILTER_ALL || !selectedRecipe || d.productName === selectedRecipe;
+        const machineMatch = selectedMachines.includes(d.TEILANL_GRUPO);
+
+        let dateMatch = true;
+        if (dateRange?.from) {
+          const itemDate = new Date(d.timestamp);
+          if (!isNaN(itemDate.getTime())) {
+            const start = startOfDay(dateRange.from);
+            const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+            dateMatch = itemDate >= start && itemDate <= end;
+          }
+        }
+
+        return recipeMatch && machineMatch && dateMatch;
       })
       .flatMap((d) => 
         d.parameters
-          .filter(p => p.stepName === selectedStep && p.name === selectedParam)
-          .map(p => p.value)
+          .filter(p => selectedSteps.includes(p.stepName) && selectedParams.includes(p.name))
+          .map(p => Number(p.value))
       )
       .filter((v): v is number => typeof v === "number" && !isNaN(v));
-  }, [data, selectedRecipe, selectedMachine, selectedStep, selectedParam]);
+  }, [data, selectedRecipe, selectedMachines, selectedSteps, selectedParams, dateRange]);
 
   // Statistical calculations
   const stats = useMemo(() => {
-    const n = analysisValues.length;
-    if (n < 2) return null;
+    return calculateStats(analysisValues, Number(lei), Number(les));
+  }, [analysisValues, lei, les]);
 
-    const mean = analysisValues.reduce((a, b) => a + b, 0) / n;
-    const min = Math.min(...analysisValues);
-    const max = Math.max(...analysisValues);
-    
-    const sumSqDiff = analysisValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0);
-    const variance = sumSqDiff / (n - 1);
-    const stdDev = Math.sqrt(variance);
+  // Machine-specific stats
+  const machineStats = useMemo(() => {
+    const ms: Record<string, ReturnType<typeof calculateStats>> = {};
+    if (selectedMachines.length <= 1) return ms;
 
-    // Only calculate Cp/Cpk if limits are defined (not both zero)
     const nLei = Number(lei);
     const nLes = Number(les);
-    const hasLimits = nLei !== 0 || nLes !== 0;
-    const cp = hasLimits ? (nLes - nLei) / (6 * stdDev) : 0;
-    const cpkUpper = hasLimits ? (nLes - mean) / (3 * stdDev) : 0;
-    const cpkLower = hasLimits ? (mean - nLei) / (3 * stdDev) : 0;
-    const cpk = hasLimits ? Math.min(cpkUpper, cpkLower) : 0;
 
-    const target = hasLimits ? (nLei + nLes) / 2 : 0;
+    selectedMachines.forEach(machine => {
+      const mValues = data
+        .filter((d) => {
+          const recipeMatch = selectedRecipe === FILTER_ALL || !selectedRecipe || d.productName === selectedRecipe;
+          const machineMatch = d.TEILANL_GRUPO === machine;
 
-    return { n, mean, min, max, stdDev, cp, cpk, lei: nLei, les: nLes, target };
-  }, [analysisValues, lei, les]);
+          let dateMatch = true;
+          if (dateRange?.from) {
+            const itemDate = new Date(d.timestamp);
+            if (!isNaN(itemDate.getTime())) {
+              const start = startOfDay(dateRange.from);
+              const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+              dateMatch = itemDate >= start && itemDate <= end;
+            }
+          }
+
+          return recipeMatch && machineMatch && dateMatch;
+        })
+        .flatMap((d) => 
+          d.parameters
+            .filter(p => selectedSteps.includes(p.stepName) && selectedParams.includes(p.name))
+            .map(p => Number(p.value))
+        )
+        .filter((v): v is number => typeof v === "number" && !isNaN(v));
+
+      ms[machine] = calculateStats(mValues, nLei, nLes);
+    });
+    return ms;
+  }, [data, selectedMachines, selectedRecipe, selectedSteps, selectedParams, dateRange, lei, les]);
 
   // Gaussian Curve Data Generation
   const chartData = useMemo(() => {
@@ -219,7 +297,7 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
                   Capacidad del Proceso - Temperatura por Paso
                 </CardTitle>
                 <CardDescription>
-                  Análisis de {selectedParam === FILTER_ALL ? 'variable' : selectedParam} en el paso {selectedStep === FILTER_ALL ? '...' : selectedStep}
+                  Análisis de {selectedParams.length > 0 ? selectedParams.join(', ') : 'variable(s)'} en paso(s): {selectedSteps.length > 0 ? selectedSteps.join(', ') : '...'}
                 </CardDescription>
               </div>
               
@@ -249,63 +327,67 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
               </div>
             </div>
 
-            {/* Filters Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-muted/20 rounded-lg border border-border/50">
-              <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
-                <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="Receta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={FILTER_ALL}>Todas las recetas</SelectItem>
-                  {uniqueRecipes.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/20 rounded-lg border border-border/50">
+              <div className="flex flex-col sm:flex-row gap-3 flex-1 flex-wrap">
+                <DatePickerWithRange 
+                  className="w-full sm:w-auto [&>div>button]:h-9"
+                  date={dateRange} 
+                  setDate={setDateRange} 
+                  minDate={minDataDate} 
+                  maxDate={maxDataDate} 
+                />
 
-              <Select value={selectedMachine} onValueChange={setSelectedMachine}>
-                <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="Equipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={FILTER_ALL}>Seleccionar equipo</SelectItem>
-                  {uniqueMachines.map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
+                  <SelectTrigger className="w-full sm:w-[150px] h-9 bg-background">
+                    <SelectValue placeholder="Receta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={FILTER_ALL}>Todas las recetas</SelectItem>
+                    {uniqueRecipes.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedStep} onValueChange={setSelectedStep} disabled={selectedMachine === FILTER_ALL}>
-                <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="Paso" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueSteps.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <MultiSelect
+                  options={uniqueMachines}
+                  selected={selectedMachines}
+                  onChange={setSelectedMachines}
+                  placeholder="Equipos"
+                  className="bg-background w-full sm:w-[160px]"
+                />
 
-              <Select value={selectedParam} onValueChange={setSelectedParam} disabled={selectedStep === FILTER_ALL}>
-                <SelectTrigger className="h-9 bg-background font-medium">
-                  <SelectValue placeholder="Variable" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueParams.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <MultiSelect
+                  options={uniqueSteps}
+                  selected={selectedSteps}
+                  onChange={setSelectedSteps}
+                  placeholder="Pasos"
+                  className="bg-background w-full sm:w-[160px]"
+                />
+
+                <MultiSelect
+                  options={uniqueParams}
+                  selected={selectedParams}
+                  onChange={setSelectedParams}
+                  placeholder="Variables"
+                  className="bg-background font-medium w-full sm:w-[180px]"
+                />
+              </div>
+
+              <div className="text-xs text-muted-foreground ml-auto bg-background px-2 py-1 rounded border border-border/50">
+                Muestra: <span className="font-bold text-foreground">{analysisValues.length}</span> registros
+              </div>
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
           <div className="h-[400px] w-full">
-            {selectedMachine === FILTER_ALL ? (
+            {selectedMachines.length === 0 ? (
               <div className="flex h-full items-center justify-center flex-col gap-2 text-muted-foreground p-8 text-center">
                 <Activity className="h-10 w-10 opacity-20" />
-                <p>Selecciona un equipo y paso para comenzar el análisis.</p>
+                <p>Selecciona uno o más equipos y paso para comenzar el análisis.</p>
               </div>
             ) : analysisValues.length === 0 ? (
                <div className="flex h-full items-center justify-center flex-col gap-2 text-muted-foreground">
@@ -379,56 +461,105 @@ export function StepCapabilityChart({ data }: StepCapabilityChartProps) {
         <CardHeader>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-accent" />
-            Performance {selectedParam === FILTER_ALL ? '' : selectedParam}
+            Performance {selectedParams.length > 0 ? selectedParams.join(', ') : ''}
           </CardTitle>
           <CardDescription>Métricas de capacidad del paso</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-[10px]">Métrica</TableHead>
+                <TableHead className="text-right text-[10px]">Global</TableHead>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                  <TableHead key={m} className="text-right text-[10px] truncate max-w-[60px]" title={m}>{m}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">n</TableCell>
                 <TableCell className="text-right font-mono">{stats?.n || 0}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                  <TableCell key={m} className="text-right font-mono text-muted-foreground">{machineStats[m]?.n || 0}</TableCell>
+                ))}
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Media</TableCell>
                 <TableCell className="text-right font-mono font-bold text-purple-600">{stats?.mean.toFixed(2) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                  <TableCell key={m} className="text-right font-mono text-muted-foreground">{machineStats[m]?.mean?.toFixed(2) || "---"}</TableCell>
+                ))}
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Min</TableCell>
                 <TableCell className="text-right font-mono">{stats?.min.toFixed(2) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                  <TableCell key={m} className="text-right font-mono text-muted-foreground">{machineStats[m]?.min?.toFixed(2) || "---"}</TableCell>
+                ))}
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Máx.</TableCell>
                 <TableCell className="text-right font-mono">{stats?.max.toFixed(2) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                  <TableCell key={m} className="text-right font-mono text-muted-foreground">{machineStats[m]?.max?.toFixed(2) || "---"}</TableCell>
+                ))}
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">Desv. Est. σ</TableCell>
                 <TableCell className="text-right font-mono">{stats?.stdDev.toFixed(3) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                  <TableCell key={m} className="text-right font-mono text-muted-foreground">{machineStats[m]?.stdDev?.toFixed(3) || "---"}</TableCell>
+                ))}
               </TableRow>
               <TableRow className="bg-purple-500/5">
                 <TableCell className="font-bold text-purple-600 uppercase text-[10px]">Cp</TableCell>
                 <TableCell className="text-right font-mono font-bold text-purple-600">
                     {stats?.cp !== undefined && isFinite(stats.cp) ? stats.cp.toFixed(3) : "---"}
                 </TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => {
+                  const s = machineStats[m];
+                  return (
+                    <TableCell key={m} className="text-right font-mono font-bold text-purple-600">
+                      {s?.cp !== undefined && isFinite(s.cp) ? s.cp.toFixed(3) : "---"}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
               <TableRow className="bg-purple-500/10">
                 <TableCell className="font-bold text-purple-600 uppercase text-[10px]">Cpk</TableCell>
                 <TableCell className="text-right font-mono font-bold text-purple-600">
                     {stats?.cpk !== undefined && isFinite(stats.cpk) ? stats.cpk.toFixed(3) : "---"}
                 </TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => {
+                  const s = machineStats[m];
+                  return (
+                    <TableCell key={m} className="text-right font-mono font-bold text-purple-600">
+                      {s?.cpk !== undefined && isFinite(s.cpk) ? s.cpk.toFixed(3) : "---"}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
               <TableRow className="bg-green-500/5">
                 <TableCell className="font-semibold text-green-600 uppercase text-[10px]">Target</TableCell>
                 <TableCell className="text-right font-mono font-bold text-green-600">{stats?.target.toFixed(3) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                    <TableCell key={m} className="text-right font-mono text-muted-foreground">---</TableCell>
+                ))}
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">LES</TableCell>
                 <TableCell className="text-right font-mono text-destructive">{stats?.les.toFixed(2) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                    <TableCell key={m} className="text-right font-mono text-muted-foreground">---</TableCell>
+                ))}
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold text-muted-foreground uppercase text-[10px]">LEI</TableCell>
                 <TableCell className="text-right font-mono text-destructive">{stats?.lei.toFixed(2) || "---"}</TableCell>
+                {selectedMachines.length > 1 && selectedMachines.map(m => (
+                    <TableCell key={m} className="text-right font-mono text-muted-foreground">---</TableCell>
+                ))}
               </TableRow>
             </TableBody>
           </Table>

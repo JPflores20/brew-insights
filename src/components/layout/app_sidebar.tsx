@@ -24,7 +24,8 @@ import {
     Wrench,
     Activity,
     Trash2,
-    Thermometer
+    Thermometer,
+    History
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth_context";
@@ -94,6 +95,21 @@ const coldBlockNavItems: NavItem[] = [
         title: "Resumen",
         url: "/bloque-frio",
         icon: LayoutDashboard,
+    },
+    {
+        title: "Fermentación",
+        url: "/bloque-frio/fermentacion",
+        icon: Thermometer,
+    },
+    {
+        title: "Histórico",
+        url: "/bloque-frio/historico",
+        icon: History,
+    },
+    {
+        title: "Comparativo",
+        url: "/bloque-frio/comparativo",
+        icon: GitCompare,
     }
 ];
 
