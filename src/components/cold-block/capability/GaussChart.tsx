@@ -26,7 +26,7 @@ export function GaussChart({ stats, title }: GaussChartProps) {
   if (!stats) return null;
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-full w-full min-h-[250px]">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
           <defs>

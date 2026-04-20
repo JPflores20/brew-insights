@@ -57,7 +57,7 @@ interface ExcelRow {
 }
 
 export function ExcelCapabilityChart() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [extData, setExtData] = useState<ExcelRow[]>([]);
   
@@ -156,28 +156,7 @@ export function ExcelCapabilityChart() {
     reader.readAsBinaryString(file);
   };
 
-  // Load Excel data (optional static fallback)
-  useEffect(() => {
-    const loadDefaultExcel = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/cpcpk/BPI%202026.xlsx");
-        if (!response.ok) {
-           setLoading(false); // Silent fail, let user upload
-           return;
-        }
-        
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
-        processWorkbook(workbook);
-      } catch (err) {
-        console.warn("Default excel not found:", err);
-        setLoading(false);
-      }
-    };
 
-    loadDefaultExcel();
-  }, []);
 
   // Filter options
   const uniqueEtapas = useMemo(() => {
