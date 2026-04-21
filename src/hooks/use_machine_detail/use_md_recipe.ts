@@ -13,7 +13,7 @@ export function useMdRecipe(data: BatchRecord[]) {
 
   const [_selectedRecipe, _setSelectedRecipe] = useLocalStorage<string>(
     "detail-recipe-selection", 
-    FILTER_ALL
+    ""
   );
   const selectedRecipe = _selectedRecipe;
   const setSelectedRecipe = (value: string) => startTransition(() => _setSelectedRecipe(value));
@@ -63,7 +63,7 @@ export function useMdRecipe(data: BatchRecord[]) {
   // ESTADOS ESPECÍFICOS PARA LA PESTAÑA DE COMPARATIVA (PERSISTENTES)
   const [compSelectedRecipe, setCompSelectedRecipe] = useLocalStorage<string>(
     "comp-tab-recipe",
-    FILTER_ALL
+    ""
   );
   
   const [compCompareBatchIds, setCompCompareBatchIds] = useLocalStorage<string[]>(
@@ -83,14 +83,10 @@ export function useMdRecipe(data: BatchRecord[]) {
   }, [selectedBatchId]);
 
   useEffect(() => {
-    if (filteredBatches.length > 0) {
-      if (!selectedBatchId || !filteredBatches.includes(selectedBatchId)) {
-        setSelectedBatchId(filteredBatches[0]);
-      }
-    } else if (filteredBatches.length === 0) {
+    if (filteredBatches.length === 0) {
       setSelectedBatchId("");
     }
-  }, [filteredBatches, selectedBatchId, setSelectedBatchId]);
+  }, [filteredBatches, setSelectedBatchId]);
 
   const availableMachinesForBatch = useMemo(() => {
     if (!selectedBatchId) return [];
@@ -99,14 +95,10 @@ export function useMdRecipe(data: BatchRecord[]) {
   }, [data, selectedBatchId]);
 
   useEffect(() => {
-    if (availableMachinesForBatch.length > 0) {
-      if (!selectedMachine || !availableMachinesForBatch.includes(selectedMachine)) {
-        setSelectedMachine(availableMachinesForBatch[0]);
-      }
-    } else if (availableMachinesForBatch.length === 0) {
+    if (availableMachinesForBatch.length === 0) {
       setSelectedMachine("");
     }
-  }, [availableMachinesForBatch, selectedMachine, setSelectedMachine]);
+  }, [availableMachinesForBatch, setSelectedMachine]);
 
   return {
     uniqueRecipes,

@@ -30,8 +30,8 @@ import {
   FileSpreadsheet
 } from "lucide-react";
 import { parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
-import { SicChart } from "./SicChart";
-import { GaussChart } from "./GaussChart";
+import { SicChart } from "./sic_chart";
+import { GaussChart } from "./gauss_chart";
 import { calculateCapabilityStats, CapabilityStats } from "@/utils/stats_utils";
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -161,14 +161,23 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
       };
 
       if (mode === 'TIEMPOS') {
-        processed = rows.map(row => ({
-          date: parseDate(row[colLetterToIndex('H')]),
-          marca: String(row[colLetterToIndex('F')] || '').trim(),
-          tankType: String(row[colLetterToIndex('I')] || '').trim(),
-          value: timeToHours(row[colLetterToIndex('J')]),
-          lei: timeToHours(row[colLetterToIndex('L')]),
-          les: timeToHours(row[colLetterToIndex('M')]),
-        }));
+        processed = rows.map((row, idx) => {
+          const date = parseDate(row[colLetterToIndex('I')]); 
+          const marca = String(row[colLetterToIndex('G')] || '').trim();
+          
+          if (idx < 5) {
+            console.log(`[DEBUG_TIEMPOS] Row: ${idx + 6}, I: "${row[colLetterToIndex('I')]}", Date: ${date?.toLocaleString()}`);
+          }
+
+          return {
+            date,
+            marca,
+            tankType: String(row[colLetterToIndex('J')] || '').trim(), // J (9) - Tipo Ferm
+            value: timeToHours(row[colLetterToIndex('K')]), // K (10) - Tiempo de llenado
+            lei: timeToHours(row[colLetterToIndex('M')]), // M (12) - LI
+            les: timeToHours(row[colLetterToIndex('N')]), // N (13) - LS
+          };
+        });
       } else if (mode === 'EMO') {
         const metrics = headers.slice(colLetterToIndex('G'), colLetterToIndex('K') + 1).map(h => String(h).trim() || "N/A");
         setAvailableMetrics(metrics);
@@ -222,6 +231,17 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
       if (finalRows.length === 0 && processed.length > 0) {
         throw new Error(`Error: No se detectaron fechas en el archivo. Verifica el formato.`);
       }
+      
+      // Reset filters when a new file is successfully loaded
+      setDateRange(undefined);
+      setSelectedMarcas([]);
+      setSelectedTankTypes([]);
+      setSelectedFiltros([]);
+      setSelectedTurnos([]);
+      setSelectedTiposCerveza([]);
+      setManualLei("");
+      setManualLes("");
+      
       setRawRows(finalRows);
       setError(null);
     } catch (err) {

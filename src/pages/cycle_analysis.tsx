@@ -13,10 +13,10 @@ import { LoadingState } from "@/components/ui/loading_state";
 import { motion } from "framer-motion";
 import { useReactToPrint } from "react-to-print";
 
-import { useCycleData } from "./cycle-analysis/use_cycle_data";
-import { CycleHeader } from "./cycle-analysis/CycleHeader";
-import { CycleFilters } from "./cycle-analysis/CycleFilters";
-import { CycleMetrics } from "./cycle-analysis/CycleMetrics";
+import { useCycleData } from "./cycle_analysis/use_cycle_data";
+import { CycleHeader } from "./cycle_analysis/cycle_header";
+import { CycleFilters } from "./cycle_analysis/cycle_filters";
+import { CycleMetrics } from "./cycle_analysis/cycle_metrics";
 
 export default function CycleAnalysis() {
   const { data } = useData();

@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { BatchRecord } from "@/data/mock_data";
-import { useMachineryData } from "./machinery-tab/use_machinery_data";
-import { FilterCard } from "./machinery-tab/FilterCard";
-import { MaceratorCard } from "./machinery-tab/MaceratorCard";
-import { GeneralSummaryTable } from "./machinery-tab/GeneralSummaryTable";
-import { FluctuationChartCard } from "./machinery-tab/FluctuationChartCard";
-import { HistoricalTrendCard } from "./machinery-tab/HistoricalTrendCard";
+import { useMachineryData } from "./machinery_tab/use_machinery_data";
+import { FilterCard } from "./machinery_tab/filter_card";
+import { MaceratorCard } from "./machinery_tab/macerator_card";
+import { GeneralSummaryTable } from "./machinery_tab/general_summary_table";
+import { FluctuationChartCard } from "./machinery_tab/fluctuation_chart_card";
+import { HistoricalTrendCard } from "./machinery_tab/historical_trend_card";
 
 interface MachineryTabProps {
   data: BatchRecord[];

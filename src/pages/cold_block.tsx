@@ -3,17 +3,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/dashboard_layout";
 import { AnimatedPage } from "@/components/layout/animated_page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ColdBlockSummary } from "@/components/cold-block/summary_tab";
-import { SimpleFermentationChart } from "@/components/cold-block/simple_fermentation_chart";
-import { HistoryTab } from "@/components/cold-block/history_tab";
+import { ColdBlockSummary } from "@/components/cold_block/summary_tab";
+import { SimpleFermentationChart } from "@/components/cold_block/simple_fermentation_chart";
+import { HistoryTab } from "@/components/cold_block/history_tab";
 import { LayoutDashboard, Thermometer, History, BarChart3 } from "lucide-react";
 import { useData } from "@/context/data_context";
 import { useFileUpload } from "@/hooks/use_file_upload";
 import { EmptyStateUploader } from "@/components/dashboard/empty_state_uploader";
-import { SequenceComparisonTab } from "@/components/machine-detail/sequence_comparison_tab";
+import { SequenceComparisonTab } from "@/components/machine_detail/sequence_comparison_tab";
 import { useLocalStorage } from "@/hooks/use_local_storage";
 import { FILTER_ALL } from "@/lib/constants";
-import { CapabilityAnalysisManager } from "@/components/cold-block/capability/CapabilityAnalysisManager";
+import { CapabilityAnalysisManager } from "@/components/cold_block/capability/capability_analysis_manager";
 
 export default function ColdBlock() {
   const { coldBlockData, isLoaded, triggerColdBlockLoad } = useData();

@@ -17,9 +17,9 @@ export function useMdTemp(
   selectedRecipe: string, 
   selectedBatchId: string
 ) {
-  const [trendMachine, setTrendMachine] = useState<string>(FILTER_ALL);
-  const [trendRecipe, setTrendRecipe] = useState<string>(FILTER_ALL);
-  const [trendBatch, setTrendBatch] = useState<string>(FILTER_ALL);
+  const [trendMachine, setTrendMachine] = useState<string>("");
+  const [trendRecipe, setTrendRecipe] = useState<string>("");
+  const [trendBatch, setTrendBatch] = useState<string>("");
   const [selectedTempParam, setSelectedTempParam] = useState<string>("");
   useEffect(() => { 
     if (selectedMachine) {
@@ -32,7 +32,7 @@ export function useMdTemp(
     }
   }, [selectedRecipe]);
   useEffect(() => { 
-    setTrendBatch(FILTER_ALL); 
+    setTrendBatch(""); 
   }, [trendRecipe, trendMachine]);
   const machinesWithTemps = useMemo(() => {
     const machines = new Set<string>();

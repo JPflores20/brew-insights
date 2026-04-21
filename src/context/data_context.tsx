@@ -32,10 +32,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     try {
       const hotFiles = [
-        "/Datos semanales/S2600008.DBF",
-        "/Datos semanales/S2600009.DBF",
-        "/Datos semanales/S2600010.DBF",
-        "/Datos semanales/S2600011.DBF"
+        "/Datos semanales/S2600013.DBF",
+        "/Datos semanales/S2600014.DBF",
+        "/Datos semanales/S2600015.DBF",
+        "/Datos semanales/S2600016.DBF"
       ];
       
       let combinedHot: BatchRecord[] = [];

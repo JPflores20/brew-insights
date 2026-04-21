@@ -4,17 +4,17 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useMachineDetail } from "@/hooks/use_machine_detail";
-import { MachineHeader } from "@/components/machine-detail/machine_header";
-import { GlobalFilters } from "@/components/machine-detail/global_filters";
-import { GlobalTimeline } from "@/components/machine-detail/global_timeline";
-import { MachineryTab } from "@/components/machine-detail/machinery_tab";
+import { MachineHeader } from "@/components/machine_detail/machine_header";
+import { GlobalFilters } from "@/components/machine_detail/global_filters";
+import { GlobalTimeline } from "@/components/machine_detail/global_timeline";
+import { MachineryTab } from "@/components/machine_detail/machinery_tab";
 import { AnimatedPage } from "@/components/layout/animated_page";
 import { LoadingState } from "@/components/ui/loading_state";
-import { SequenceComparisonTab } from "@/components/machine-detail/sequence_comparison_tab";
+import { SequenceComparisonTab } from "@/components/machine_detail/sequence_comparison_tab";
 
 import { useExportMachineDetail } from "@/hooks/use_export_machine_detail";
-import { MachineTabsList } from "@/components/machine-detail/components/machine_tabs_list";
-import { MachineViewTab } from "@/components/machine-detail/tabs/machine_view_tab";
+import { MachineTabsList } from "@/components/machine_detail/components/machine_tabs_list";
+import { MachineViewTab } from "@/components/machine_detail/tabs/machine_view_tab";
 
 export default function MachineDetail() {
   const ctx = useMachineDetail();
