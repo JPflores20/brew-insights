@@ -18,6 +18,7 @@ export interface BatchRecord {
   agua_malta_points?: { aguaHl: number; maltaKg: number; stepName: string }[];
   max_agua_dfm2_hl?: number;
   max_adjuntos_dfm2_kg?: number;
+  mosto_volume_hl?: number;
   steps: BatchStep[];
   materials: BatchMaterial[];
   parameters: BatchParameter[];

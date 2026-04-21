@@ -26,6 +26,7 @@ import { StepCapabilityChart } from "@/components/batch_comparison/step_capabili
 import { StepDurationCapabilityChart } from "@/components/batch_comparison/step_duration_capability_chart";
 import { ExcelCapabilityChart } from "@/components/batch_comparison/excel_capability_chart";
 import { StepTrendChart } from "@/components/batch_comparison/step_trend_chart";
+import { MostoVolumeChart } from "@/components/batch_comparison/mosto_volume_chart";
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
 import { useBcSeries } from "@/hooks/use_batch_comparison/use_bc_series";
@@ -180,6 +181,8 @@ export default function BatchComparison() {
               series={seriesOptions}
               onAddSeries={addSeries}
             />
+
+            <MostoVolumeChart data={data} />
 
             <StepTrendChart data={data} />
 

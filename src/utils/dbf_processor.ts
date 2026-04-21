@@ -232,7 +232,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       row_premacerar_hl, 
       row_descarga_kg, 
       row_dfm2_hl: raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0, 
-      row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0, 
+      row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0,
+      row_dfm2_val: raw_dfm2_num,
       materials: rowMaterials, 
       parameters: rowParams 
     };
@@ -262,6 +263,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     let max_agua_dfm2_hl = 0;
     let max_adjuntos_dfm2_kg = 0;
     let emo_iw_dfm8: number | undefined;
+    let mosto_volume_hl = 0;
 
     group.forEach((evt, index) => {
       if (evt.row_dfm2_hl > max_agua_dfm2_hl) max_agua_dfm2_hl = evt.row_dfm2_hl;
@@ -318,6 +320,14 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       if (emoParam && emo_iw_dfm8 === undefined) {
         emo_iw_dfm8 = emoParam.val;
       }
+
+      // Robust check for mosto volume step
+      const normalizedGop = normalizeText(evt.GOP_NAME);
+      const targetGop = normalizeText("DLM PRIMERO Most.");
+      
+      if (normalizedGop.includes(targetGop) || targetGop.includes(normalizedGop)) {
+        mosto_volume_hl = evt.row_dfm2_val || evt.row_dfm2_hl || evt.row_dfm2_kg;
+      }
     });
     return {
       CHARG_NR: group[0].CHARG_NR,
@@ -336,6 +346,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       agua_malta_points: aguaMaltaPoints,
       max_agua_dfm2_hl,
       max_adjuntos_dfm2_kg,
+      mosto_volume_hl,
       steps,
       materials: Array.from(materialsMap.values()),
       parameters: parametersList,
