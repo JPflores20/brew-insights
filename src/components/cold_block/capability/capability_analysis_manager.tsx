@@ -204,10 +204,10 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
         processed = rows
           .filter(row => Object.values(row).some(cell => cell !== ""))
           .map(row => ({
-            date: parseDate(row["B"]),
-            marca: String(row["A"] || '').trim(),
-            tankType: String(row["D"] || '').trim(),
-            value: parseFloat(String(row["N"] || 0).replace(',', '.')) || 0,
+            date: parseDate(row["E"]), // Columna E: Fecha Inicio Llenado
+            marca: String(row["A"] || '').trim(), // Columna A: Marca
+            tankType: String(row["D"] || '').trim(), // Columna D: Tipo de fermentador
+            value: parseFloat(String(row["N"] || 0).replace(',', '.')) || 0, // Columna N: Inoculo Vol. (HL)
           }));
       } else if (mode === 'CONTEO') {
         const headers = jsonData[0];
