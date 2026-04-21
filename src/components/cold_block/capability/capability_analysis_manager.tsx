@@ -141,14 +141,32 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
       let processed: ExcelDataRow[] = [];
 
       const timeToHours = (val: any) => {
-        if (val === null || val === undefined || val === "" || val === 0) return 0;
-        if (typeof val === 'number') return val * 24;
-        const str = String(val).trim();
-        if (str.includes(':')) {
-          const parts = str.split(':').map(Number);
-          return (parts[0] || 0) + (parts[1] || 0) / 60 + (parts[2] || 0) / 3600;
+        if (val === null || val === undefined || val === "") return 0;
+        
+        if (val instanceof Date) {
+           return val.getHours() + val.getMinutes() / 60 + val.getSeconds() / 3600;
         }
-        return parseFloat(str.replace(',', '.')) || 0;
+
+        const strVal = String(val).trim();
+        if (!strVal || strVal === "0") return 0;
+
+        if (strVal.includes(':') && !strVal.toLowerCase().includes('gmt')) {
+          const parts = strVal.split(':');
+          if (parts.length >= 2) {
+             const h = parseInt(parts[0], 10) || 0;
+             const m = parseInt(parts[1], 10) || 0;
+             const s = parts[2] ? parseInt(parts[2], 10) : 0;
+             return h + (m / 60) + (s / 3600);
+          }
+        }
+        
+        const floatVal = parseFloat(strVal.replace(',', '.'));
+        // Excel often reads fractional days (0.5 = 12h)
+        if (!isNaN(floatVal) && floatVal > 0 && floatVal <= 10) {
+           return floatVal * 24;
+        }
+        
+        return isNaN(floatVal) ? 0 : floatVal;
       };
 
       if (mode === 'TIEMPOS') {
@@ -487,7 +505,10 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
               {[
                 { label: 'N', val: stats?.n || 0, color: 'text-slate-200' },
                 { label: 'MEDIA', val: stats?.mean.toFixed(3) || "---", color: MODES[mode].color },
+                { label: 'MÍNIMO', val: stats?.min !== undefined && isFinite(stats.min) ? stats.min.toFixed(3) : "---", color: 'text-slate-400' },
+                { label: 'MÁXIMO', val: stats?.max !== undefined && isFinite(stats.max) ? stats.max.toFixed(3) : "---", color: 'text-slate-400' },
                 { label: 'DESV. EST. σ', val: stats?.stdDev.toFixed(4) || "---", color: 'text-slate-200' },
+                { label: 'CP', val: stats?.cp !== undefined && isFinite(stats.cp) ? stats.cp.toFixed(3) : "---", color: 'text-emerald-500 font-bold' },
                 { label: 'CPK', val: stats?.cpk !== undefined ? stats.cpk.toFixed(3) : "---", color: 'text-amber-500 font-bold' },
                 { label: 'LEI', val: stats?.lei.toFixed(2) || "---", color: 'text-red-500 opacity-60' },
                 { label: 'LES', val: stats?.les.toFixed(2) || "---", color: 'text-red-500 opacity-60' },

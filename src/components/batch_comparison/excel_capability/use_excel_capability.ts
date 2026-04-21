@@ -15,6 +15,35 @@ export interface ExcelRow {
   Date: Date | null;
 }
 
+// 1. NUEVA FUNCIÓN: Identifica si un valor es de tiempo y lo convierte correctamente a horas enteras decimales.
+const parseParamValue = (rawVal: any, isTimeParam: boolean): number => {
+  if (rawVal === undefined || rawVal === null || rawVal === "") return NaN;
+  
+  const strVal = String(rawVal).trim();
+  
+  // Caso A: Si el dato viene como un texto del estilo "11:30:00" (frecuente en CSV o celdas de texto)
+  if (strVal.includes(':')) {
+    const parts = strVal.split(':');
+    if (parts.length >= 2) {
+      const h = parseInt(parts[0], 10) || 0;
+      const m = parseInt(parts[1], 10) || 0;
+      const s = parts[2] ? parseInt(parts[2], 10) : 0;
+      return h + (m / 60) + (s / 3600);
+    }
+  }
+  
+  // Caso B: Si es un número normal o fracción de día de Excel
+  const floatVal = parseFloat(strVal);
+  
+  // Si la columna corresponde a un parámetro de "tiempo" y Excel lo leyó como una fracción de día.
+  // (Ejemplo: Excel guarda 12:00 como 0.5. Al multiplicarlo por 24 obtenemos 12 horas reales)
+  if (isTimeParam && !isNaN(floatVal) && floatVal > 0 && floatVal <= 10) {
+    return floatVal * 24;
+  }
+  
+  return floatVal;
+};
+
 export function useExcelCapability() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,11 +81,20 @@ export function useExcelCapability() {
     const validRows = jsonData.filter((row, idx) => {
         if (idx === 0) return false;
         if (row.length <= Math.max(iVal, iParam, iLEI, iLES)) return false;
-        const valStr = row[iVal];
-        if (valStr === undefined || valStr === null || valStr === "") return false;
-        const val = parseFloat(valStr);
-        return !isNaN(val);
+        
+        // Detectamos dinámicamente si el parámetro es de tiempo
+        const paramName = String(row[iParam] || "").toLowerCase();
+        const isTimeParam = paramName.includes("tiempo");
+        
+        // Parseamos el valor usando nuestra nueva función
+        const val = parseParamValue(row[iVal], isTimeParam);
+        
+        // Ignoramos si es NaN o si el tiempo es 0 (para no corromper la media)
+        return !isNaN(val) && val > 0; 
     }).map(row => {
+        const paramName = String(row[iParam] || "").toLowerCase();
+        const isTimeParam = paramName.includes("tiempo");
+
         let rowDate: Date | null = null;
         const dateStr = String(row[0]).trim();
         if (dateStr) {
@@ -70,13 +108,19 @@ export function useExcelCapability() {
           }
         }
 
+        // Limpieza: Excel evalúa los campos vacíos en fecha como "1899"
+        if (rowDate && rowDate.getFullYear() < 1900) {
+           rowDate = null;
+        }
+
+        // 2. Extraemos todos los valores limpiándolos con nuestra función de ayuda.
         return {
-          Val: parseFloat(row[iVal]),
+          Val: parseParamValue(row[iVal], isTimeParam),
           Param: row[iParam] || "N/A",
           Etapa: row[iEtapa] || "N/A",
           Marca: row[iMarca] || "N/A",
-          LEI: parseFloat(row[iLEI]) || 0,
-          LES: parseFloat(row[iLES]) || 0,
+          LEI: parseParamValue(row[iLEI], isTimeParam) || 0,
+          LES: parseParamValue(row[iLES], isTimeParam) || 0,
           Date: rowDate
         };
     });
