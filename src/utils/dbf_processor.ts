@@ -258,6 +258,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     const parametersList: BatchRecord['parameters'] = [];
     let lastEnd = group[0].end?.getTime() ?? group[0].start?.getTime() ?? 0;
     let waitCounter = 0;
+    const stepOccurrences = new Map<string, number>();
     
     let malta_caramelo_clo = 0;
     let descarga_am_m2b = 0;
@@ -275,6 +276,16 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
 
       real_total += evt.iwMin;
       esperado_total += evt.swMin;
+      
+      let gopNameDisplay = evt.GOP_NAME || `Paso ${index + 1}`;
+      if (gopNameDisplay.toUpperCase().includes('PAUSA')) {
+        const occ = (stepOccurrences.get(gopNameDisplay) || 0) + 1;
+        stepOccurrences.set(gopNameDisplay, occ);
+        if (occ > 1) {
+          gopNameDisplay = `${gopNameDisplay} (${occ})`;
+        }
+      }
+
       if (index > 0 && evt.start) {
         const currentStart = evt.start.getTime();
         if (currentStart > lastEnd) {
@@ -284,7 +295,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
             if (gapMin > max_gap) max_gap = gapMin;
             waitCounter++;
             steps.push({ stepName: `⏳ Espera ${waitCounter}`, stepNr: '', durationMin: +gapMin.toFixed(2), expectedDurationMin: 0, startTime: new Date(lastEnd).toISOString(), endTime: evt.start.toISOString() });
-            if (gapMin > 15) alerts.push(`Espera de ${Math.round(gapMin)} min antes de ${evt.GOP_NAME}`);
+            if (gapMin > 15) alerts.push(`Espera de ${Math.round(gapMin)} min antes de ${gopNameDisplay}`);
           }
         }
       }
@@ -296,9 +307,9 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
         existing.totalExpected += mat.exp;
       });
       evt.parameters.forEach((param) => {
-        parametersList.push({ name: param.name, value: param.val, target: param.target, unit: param.unit, stepName: evt.GOP_NAME, timestamp: evt.start?.toISOString(), dfmCode: param.dfmCode });
+        parametersList.push({ name: param.name, value: param.val, target: param.target, unit: param.unit, stepName: gopNameDisplay, timestamp: evt.start?.toISOString(), dfmCode: param.dfmCode });
       });
-      steps.push({ stepName: evt.GOP_NAME || `Paso ${index + 1}`, stepNr: evt.GOP_NR, durationMin: +evt.iwMin.toFixed(2), expectedDurationMin: +evt.swMin.toFixed(2), startTime: evt.start?.toISOString() ?? '', endTime: evt.end?.toISOString() ?? '' });
+      steps.push({ stepName: gopNameDisplay, stepNr: evt.GOP_NR, durationMin: +evt.iwMin.toFixed(2), expectedDurationMin: +evt.swMin.toFixed(2), startTime: evt.start?.toISOString() ?? '', endTime: evt.end?.toISOString() ?? '' });
       if (evt.end && evt.end.getTime() > lastEnd) lastEnd = evt.end.getTime();
       
       if (!foundNumerator && (evt.row_clo_val || 0) > 0) {
