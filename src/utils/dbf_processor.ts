@@ -138,7 +138,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
   
   if (!rawData || rawData.length === 0) return [];
   
-  const events = rawData.map((row) => {
+  const events = rawData.map((row, idx) => {
     const chargNr = String(row['CHARG_NR'] ?? row['COCIMIENTO'] ?? '').trim();
     const teilanl = String(row['TEILANL'] ?? '').trim();
     const swMin = (parseFloat(String(row['SW_ZEIT'] ?? 0)) || 0) / 60;
@@ -216,6 +216,11 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     }
     const rezeptNr = String(row['REZEPT_NR'] ?? '').trim();
 
+    const isMostoStep = gopNameUpper.includes('PRIMER MOSTO') || gopNameUpper.includes('PRIMERO MOST');
+    if (isMostoStep && raw_dfm2_num > 0 && idx < 50) {
+       console.log(`[DBF_DEBUG] Paso: ${gopName}, Valor: ${raw_dfm2_num}, Lote: ${chargNr}`);
+    }
+
     return { 
       CHARG_NR: chargNr, 
       TEILANL_GRUPO: teilGroup(teilanl, raw_dfm3_val_str, rezeptNr), 
@@ -231,9 +236,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       row_am_m2b_val, 
       row_premacerar_hl, 
       row_descarga_kg, 
-      row_dfm2_hl: raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0, 
-      row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0,
-      row_dfm2_val: raw_dfm2_num,
+      row_dfm2_hl: isMostoStep ? raw_dfm2_num : (raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0), 
+      row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0, 
       materials: rowMaterials, 
       parameters: rowParams 
     };
@@ -262,8 +266,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     const aguaMaltaPoints: BatchRecord['agua_malta_points'] = [];
     let max_agua_dfm2_hl = 0;
     let max_adjuntos_dfm2_kg = 0;
-    let emo_iw_dfm8: number | undefined;
     let mosto_volume_hl = 0;
+    let emo_iw_dfm8: number | undefined;
 
     group.forEach((evt, index) => {
       if (evt.row_dfm2_hl > max_agua_dfm2_hl) max_agua_dfm2_hl = evt.row_dfm2_hl;
@@ -311,6 +315,10 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
         aguaMaltaPoints.push({ aguaHl: lastPremacerarHl, maltaKg: evt.row_descarga_kg, stepName: evt.GOP_NAME });
       }
 
+      if (evt.GOP_NAME?.toUpperCase().includes('PRIMER MOSTO') || evt.GOP_NAME?.toUpperCase().includes('PRIMERO MOST')) {
+        mosto_volume_hl = Math.max(mosto_volume_hl, evt.row_dfm2_hl);
+      }
+
       const emoParam = evt.parameters.find(p => 
         p.dfmCode === 'DFM8' || 
         p.dfmCode === 'DFM08' || 
@@ -319,14 +327,6 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       );
       if (emoParam && emo_iw_dfm8 === undefined) {
         emo_iw_dfm8 = emoParam.val;
-      }
-
-      // Robust check for mosto volume step
-      const normalizedGop = normalizeText(evt.GOP_NAME);
-      const targetGop = normalizeText("DLM PRIMERO Most.");
-      
-      if (normalizedGop.includes(targetGop) || targetGop.includes(normalizedGop)) {
-        mosto_volume_hl = evt.row_dfm2_val || evt.row_dfm2_hl || evt.row_dfm2_kg;
       }
     });
     return {
@@ -396,6 +396,7 @@ export function mergeBatchRecords(records: BatchRecord[]): BatchRecord[] {
       materials: allMaterials, // Could be grouped too but usually fine
       alerts: Array.from(new Set(allAlerts)),
       agua_malta_points: allAguaMalta,
+      mosto_volume_hl: group.reduce((maxVal, g) => Math.max(maxVal, g.mosto_volume_hl || 0), 0),
       real_total_min: group.reduce((sum, g) => sum + (g.real_total_min || 0), 0),
       esperado_total_min: group.reduce((sum, g) => sum + (g.esperado_total_min || 0), 0),
       // Recalculate other totals if needed

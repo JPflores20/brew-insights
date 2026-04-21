@@ -167,32 +167,18 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
             };
           });
       } else if (mode === 'EMO') {
-        const headers = jsonData[0]; 
         const rows = jsonData.slice(1);
-        const metricCols = ['G', 'H', 'I', 'J', 'K'];
-        const metrics = metricCols.map(col => String(headers[col] || '').trim() || "N/A").filter(m => m !== "N/A");
-        
-        setAvailableMetrics(metrics);
-        const defaultMetric = metrics.find(m => m.toUpperCase().includes("EMO CFR")) || metrics[0];
-        if (metrics.length > 0) setSelectedMetric(defaultMetric);
         
         processed = rows
           .filter(row => Object.values(row).some(cell => cell !== ""))
           .map(row => {
-            const dynamicValues: Record<string, number> = {};
-            metricCols.forEach((col, i) => {
-              if (metrics[i] && metrics[i] !== "N/A") {
-                dynamicValues[metrics[i]] = parseFloat(String(row[col]).replace(',', '.')) || 0;
-              }
-            });
             return {
               date: parseDate(row["C"]),
               filtroNum: String(row["D"] || '').trim(),
               turno: String(row["E"] || '').trim(),
               marca: String(row["F"] || '').trim(),
-              tipoCerveza: String(row["L"] || '').trim(),
-              value: 0,
-              dynamicValues
+              tipoCerveza: String(row["L"] || '').trim(), // Kept backwards compatibility
+              value: parseFloat(String(row["G"] || 0).replace(',', '.')) || 0, // EMO CFR
             };
         });
       } else if (mode === 'VOLUMEN') {
@@ -293,7 +279,7 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
       if (selectedTurnos.length > 0 && row.turno && !selectedTurnos.includes(row.turno)) return false;
       if (selectedTiposCerveza.length > 0 && row.tipoCerveza && !selectedTiposCerveza.includes(row.tipoCerveza)) return false;
       return true;
-    }).map(row => ((mode === 'CONTEO' || mode === 'EMO') && selectedMetric ? { ...row, value: row.dynamicValues?.[selectedMetric] || 0 } : row));
+    }).map(row => ((mode === 'CONTEO') && selectedMetric ? { ...row, value: row.dynamicValues?.[selectedMetric] || 0 } : row));
   }, [timeFilteredRows, selectedMarcas, selectedTankTypes, selectedFiltros, mode, selectedMetric, selectedTurnos, selectedTiposCerveza]);
   
   const uniqueMarcas = useMemo(() => {
@@ -423,7 +409,7 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
                {uniqueFiltros.length > 0 && <MultiSelect options={uniqueFiltros} selected={selectedFiltros} onChange={setSelectedFiltros} placeholder="Filtro #" className="h-9 bg-slate-900 border-slate-800 min-w-[120px]" />}
                {uniqueTurnos.length > 0 && <MultiSelect options={uniqueTurnos} selected={selectedTurnos} onChange={setSelectedTurnos} placeholder="Turno" className="h-9 bg-slate-900 border-slate-800 min-w-[120px]" />}
                {uniqueTiposCerveza.length > 0 && <MultiSelect options={uniqueTiposCerveza} selected={selectedTiposCerveza} onChange={setSelectedTiposCerveza} placeholder="Tipo Cerveza" className="h-9 bg-slate-900 border-slate-800 min-w-[150px]" />}
-               {(mode === 'CONTEO' || mode === 'EMO') && (
+               {(mode === 'CONTEO') && (
                  <Select value={selectedMetric} onValueChange={setSelectedMetric}>
                    <SelectTrigger className="h-9 w-40 bg-slate-900 border-slate-800"><SelectValue /></SelectTrigger>
                    <SelectContent className="bg-slate-900 border-slate-800">{availableMetrics.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
@@ -478,7 +464,7 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
                   yKey="value" 
                   lei={manualLei !== "" ? manualLei : (filteredData.find(d => d.lei !== undefined)?.lei || 0)}
                   les={manualLes !== "" ? manualLes : (filteredData.find(d => d.les !== undefined)?.les || 100)}
-                  yLabel={selectedMetric || MODES[mode].label}
+                  yLabel={mode === 'EMO' ? 'EMO CFR' : (selectedMetric || MODES[mode].label)}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center text-slate-500 italic text-xs">Sin información de control SIC</div>
