@@ -3,6 +3,7 @@ import { BatchRecord } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertTriangle, TrendingUp, Info, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { calculateDegradationAlerts } from "@/utils/math_utils";
 interface DegradationAlertsProps {
   data: BatchRecord[];
@@ -46,6 +47,7 @@ export function DegradationAlerts({ data, onSelectAlert }: DegradationAlertsProp
                       <TableHead className="w-[40px]"></TableHead>
                       <TableHead>Equipo</TableHead>
                       <TableHead>Operación</TableHead>
+                      <TableHead className="text-right">Riesgo</TableHead>
                       <TableHead className="text-right">Incremento <span className="text-muted-foreground font-normal ml-1">(vs. inicial)</span></TableHead>
                       <TableHead className="text-right">Promedio Reciente</TableHead>
                       <TableHead className="w-[40px]"></TableHead>
@@ -63,6 +65,11 @@ export function DegradationAlerts({ data, onSelectAlert }: DegradationAlertsProp
                           </TableCell>
                           <TableCell className="font-semibold text-foreground">{alert.machine}</TableCell>
                           <TableCell className="text-muted-foreground">{alert.stepName}</TableCell>
+                          <TableCell className="text-right font-medium">
+                              {alert.severity === 'Alta' && <Badge variant="destructive" className="ml-2 bg-red-500/20 text-red-500 hover:bg-red-500/30">ALTA</Badge>}
+                              {alert.severity === 'Media' && <Badge variant="warning" className="ml-2 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30">MEDIA</Badge>}
+                              {alert.severity === 'Baja' && <Badge variant="secondary" className="ml-2 bg-slate-500/20 text-slate-400 hover:bg-slate-500/30">BAJA</Badge>}
+                          </TableCell>
                           <TableCell className="text-right text-red-500 font-semibold">
                               +{alert.percentIncrease.toFixed(1)}%
                           </TableCell>

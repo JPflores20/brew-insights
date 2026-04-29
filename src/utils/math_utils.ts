@@ -6,6 +6,7 @@ export interface AlertData {
   slope: number;
   recentAvg: number;
   percentIncrease: number;
+  severity: "Alta" | "Media" | "Baja";
 }
 
 const UNKNOWN_MACHINE = "Desconocida";
@@ -69,7 +70,11 @@ export function calculateDegradationAlerts(data: BatchRecord[]): AlertData[] {
 
     if (percentIncrease > 5 && slope > 0) {
       const [machine, stepName] = key.split(KEY_DELIMITER);
-      activeAlerts.push({ machine, stepName, slope, recentAvg: lastAverage, percentIncrease });
+      let severity: "Alta" | "Media" | "Baja" = "Baja";
+      if (percentIncrease >= 15) severity = "Alta";
+      else if (percentIncrease >= 10) severity = "Media";
+      
+      activeAlerts.push({ machine, stepName, slope, recentAvg: lastAverage, percentIncrease, severity });
     }
   });
 

@@ -1,7 +1,9 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { BatchRecord } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label as UILabel } from "@/components/ui/label";
 import {
   LineChart,
   Line,
@@ -28,6 +30,7 @@ export function DegradationTrendChart({
     selectedStep, 
     setSelectedStep 
 }: DegradationTrendChartProps) {
+  const [threshold, setThreshold] = useState<number | "">("");
   const { machineNames, machineStepsMap } = useMemo(() => {
      const machines = new Set<string>();
      const map = new Map<string, Set<string>>();
@@ -84,8 +87,8 @@ export function DegradationTrendChart({
           };
       }).filter(Boolean) as any[]; 
   }, [data, selectedMachine, selectedStep]);
-  const trendData = useMemo(() => {
-      if (chartData.length < 2) return chartData;
+  const { trendData, projectedBatchesLeft } = useMemo(() => {
+      if (chartData.length < 2) return { trendData: chartData, projectedBatchesLeft: null };
       const n = chartData.length;
       let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
       for (let i = 0; i < n; i++) {
@@ -94,13 +97,36 @@ export function DegradationTrendChart({
           sumXY += i * chartData[i]["Tiempo Real (min)"];
           sumXX += i * i;
       }
-      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      const slope = (n * sumXY - sumX * sumY) / Math.max(1, (n * sumXX - sumX * sumX));
       const intercept = (sumY - slope * sumX) / n;
-      return chartData.map((point, i) => ({
+      
+      const baseData = chartData.map((point, i) => ({
           ...point,
           "Línea de Tendencia": parseFloat((slope * i + intercept).toFixed(2))
       }));
-  }, [chartData]);
+
+      let projectedBatchesLeft: number | null = null;
+      if (typeof threshold === "number" && threshold > 0 && slope > 0) {
+          const currentTrendVal = slope * (n - 1) + intercept;
+          if (currentTrendVal < threshold) {
+              projectedBatchesLeft = Math.ceil((threshold - currentTrendVal) / slope);
+              const maxExtraPoints = Math.min(projectedBatchesLeft + 3, 50); 
+              for (let i = 1; i <= maxExtraPoints; i++) {
+                  const projectedIndex = (n - 1) + i;
+                  baseData.push({
+                      batchId: `Predicción +${i}`,
+                      sequence: (chartData[n-1].sequence || n) + i,
+                      "Tiempo Real (min)": null as any,
+                      "Línea de Tendencia": parseFloat((slope * projectedIndex + intercept).toFixed(2))
+                  });
+              }
+          } else {
+              projectedBatchesLeft = 0; 
+          }
+      }
+
+      return { trendData: baseData, projectedBatchesLeft };
+  }, [chartData, threshold]);
   const averageDuration = useMemo(() => {
       if (chartData.length === 0) return 0;
       const sum = chartData.reduce((acc, curr) => acc + curr["Tiempo Real (min)"], 0);
@@ -138,9 +164,27 @@ export function DegradationTrendChart({
                     ))}
                 </SelectContent>
             </Select>
+            <div className="flex flex-col ml-4">
+                <UILabel htmlFor="threshold-val" className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Cota Máx (min)</UILabel>
+                <Input
+                    id="threshold-val"
+                    type="number"
+                    value={threshold}
+                    onChange={(e) => setThreshold(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    className="h-8 w-24 text-xs font-mono"
+                    placeholder="Ej. 120"
+                />
+            </div>
         </div>
       </CardHeader>
       <CardContent className="p-6 pt-0">
+         {projectedBatchesLeft !== null && (
+             <div className="mb-4 text-sm font-medium border border-warning/30 bg-warning/10 text-warning px-4 py-2 rounded-md">
+                 {projectedBatchesLeft === 0 
+                     ? "⚠️ El equipo ya ha superado el umbral máximo de degradación establecido." 
+                     : `⏱️ Proyección RUL: Según la tendencia, el equipo superará el límite en aproximadamente ${projectedBatchesLeft} cocimientos más.`}
+             </div>
+         )}
          {trendData.length > 0 ? (
             <div className="w-full h-[400px] mt-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -170,7 +214,14 @@ export function DegradationTrendChart({
                             strokeDasharray="5 5"
                             label={{ position: 'insideTopLeft', value: 'Promedio Histórico', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} 
                         />
-                        {}
+                        {typeof threshold === "number" && threshold > 0 && (
+                            <ReferenceLine 
+                                y={threshold} 
+                                stroke="hsl(var(--destructive))" 
+                                strokeDasharray="3 3"
+                                label={{ position: 'insideBottomLeft', value: 'Umbral Máximo Permisible', fill: 'hsl(var(--destructive))', fontSize: 11 }} 
+                            />
+                        )}
                         <Line
                             type="monotone"
                             dataKey="Tiempo Real (min)"
