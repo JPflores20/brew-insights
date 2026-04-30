@@ -152,10 +152,10 @@ export function MostoVolumeChart({ data = [] }: MostoVolumeChartProps) {
                     labelFormatter={(label, payload) => {
                        const d = payload?.[0]?.payload;
                        return (
-                         <div className="flex flex-col gap-0.5">
+                         <span className="flex flex-col gap-0.5">
                            <span>Lote: {label} ({d?.receta})</span>
                            {d?.date && <span className="text-[10px] text-slate-400 font-normal">{d.date}</span>}
-                         </div>
+                         </span>
                        );
                     }}
                   />

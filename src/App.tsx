@@ -73,6 +73,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/bloque-frio/skapbd"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
               {}
               <Route
                 path="/cocimientos"

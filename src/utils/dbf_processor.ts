@@ -238,6 +238,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       row_descarga_kg, 
       row_dfm2_hl: isMostoStep ? raw_dfm2_num : (raw_dim_dfm2 === 'hl' ? raw_dfm2_num : 0), 
       row_dfm2_kg: raw_dim_dfm2 === 'kg' ? raw_dfm2_num : 0, 
+      raw_dfm2_num,
       materials: rowMaterials, 
       parameters: rowParams 
     };
@@ -269,6 +270,9 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
     let max_adjuntos_dfm2_kg = 0;
     let mosto_volume_hl = 0;
     let emo_iw_dfm8: number | undefined;
+    
+    let last_lavado_new_val: number | null = null;
+    let first_vaciar_val: number | null = null;
 
     group.forEach((evt, index) => {
       if (evt.row_dfm2_hl > max_agua_dfm2_hl) max_agua_dfm2_hl = evt.row_dfm2_hl;
@@ -339,7 +343,26 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       if (emoParam && emo_iw_dfm8 === undefined) {
         emo_iw_dfm8 = emoParam.val;
       }
+
+      const gopNameUpper = (evt.GOP_NAME || '').toUpperCase();
+      if (gopNameUpper === 'LAVADO NEW') {
+        last_lavado_new_val = evt.raw_dfm2_num;
+      }
+      if (gopNameUpper === 'VACIAR' && first_vaciar_val === null) {
+        first_vaciar_val = evt.raw_dfm2_num;
+      }
     });
+
+    let ultima_agua_hl: number | undefined;
+    if (last_lavado_new_val !== null && first_vaciar_val !== null) {
+      ultima_agua_hl = Math.abs(last_lavado_new_val - first_vaciar_val);
+      console.log(`[ULTIMA_AGUA] Lote ${group[0].CHARG_NR} ${group[0].TEILANL_GRUPO}: LAVADO NEW=${last_lavado_new_val}, VACIAR=${first_vaciar_val}, DIFF=${ultima_agua_hl}`);
+    } else {
+      // Si no encuentra ambos, registrar para depuración
+      if (group[0].TEILANL_GRUPO.toUpperCase().includes('FILTRO MOSTO')) {
+        console.log(`[ULTIMA_AGUA_MISSING] Lote ${group[0].CHARG_NR} ${group[0].TEILANL_GRUPO}: LAVADO NEW=${last_lavado_new_val}, VACIAR=${first_vaciar_val}`);
+      }
+    }
     return {
       CHARG_NR: group[0].CHARG_NR,
       TEILANL_GRUPO: group[0].TEILANL_GRUPO,
@@ -362,6 +385,7 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
       materials: Array.from(materialsMap.values()),
       parameters: parametersList,
       alerts,
+      ultima_agua_hl,
     } satisfies BatchRecord;
   });
 
@@ -408,6 +432,7 @@ export function mergeBatchRecords(records: BatchRecord[]): BatchRecord[] {
       alerts: Array.from(new Set(allAlerts)),
       agua_malta_points: allAguaMalta,
       mosto_volume_hl: group.reduce((maxVal, g) => Math.max(maxVal, g.mosto_volume_hl || 0), 0),
+      ultima_agua_hl: group.find(g => g.ultima_agua_hl !== undefined)?.ultima_agua_hl,
       real_total_min: group.reduce((sum, g) => sum + (g.real_total_min || 0), 0),
       esperado_total_min: group.reduce((sum, g) => sum + (g.esperado_total_min || 0), 0),
       // Recalculate other totals if needed

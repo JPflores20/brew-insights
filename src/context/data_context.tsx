@@ -16,7 +16,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [data, setData, isLoaded] = useIndexedDB<BatchRecord[]>("brew-insights-data-v6", []);
+  const [data, setData, isLoaded] = useIndexedDB<BatchRecord[]>("brew-insights-data-v8", []);
   const [coldData, setColdData, isColdLoaded] = useIndexedDB<BatchRecord[]>("brew-insights-cold-v1", []);
   
   const [isHotLoading, setIsHotLoading] = useState(false);

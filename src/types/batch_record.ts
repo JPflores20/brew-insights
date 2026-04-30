@@ -23,4 +23,5 @@ export interface BatchRecord {
   materials: BatchMaterial[];
   parameters: BatchParameter[];
   alerts: string[];
+  ultima_agua_hl?: number;
 }

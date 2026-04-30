@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard_layout";
 import {
@@ -27,6 +26,7 @@ import { StepDurationCapabilityChart } from "@/components/batch_comparison/step_
 import { ExcelCapabilityChart } from "@/components/batch_comparison/excel_capability_chart";
 import { StepTrendChart } from "@/components/batch_comparison/step_trend_chart";
 import { MostoVolumeChart } from "@/components/batch_comparison/mosto_volume_chart";
+import { LastWaterVolumeChart } from "@/components/batch_comparison/last_water_volume_chart";
 import { getBatchById } from "@/data/mock_data";
 import { ChartType } from "@/types";
 import { useBcSeries } from "@/hooks/use_batch_comparison/use_bc_series";
@@ -183,6 +183,7 @@ export default function BatchComparison() {
             />
 
             <MostoVolumeChart data={data} />
+            <LastWaterVolumeChart data={data} />
 
             <StepTrendChart data={data} />
 
