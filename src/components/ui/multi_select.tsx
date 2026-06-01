@@ -78,6 +78,20 @@ export function MultiSelect({
           <CommandInput placeholder="Buscar..." />
           <CommandList>
             <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+            <CommandGroup className="border-b">
+              <CommandItem
+                onSelect={() => onChange([...options])}
+                className="cursor-pointer justify-center font-medium"
+              >
+                Seleccionar todos
+              </CommandItem>
+              <CommandItem
+                onSelect={() => onChange([])}
+                className="cursor-pointer justify-center font-medium"
+              >
+                Deseleccionar todos
+              </CommandItem>
+            </CommandGroup>
             <CommandGroup className="max-h-64 overflow-auto">
               {options.map((option) => (
                 <CommandItem

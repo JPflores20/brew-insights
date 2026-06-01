@@ -55,4 +55,4 @@ function readDBF(filePath: string) {
   }
 }
 
-readDBF(path.join(process.cwd(), 'public/Datos semanales/S2600013.DBF'));
+readDBF(path.join(process.cwd(), 'public/Datos semanales/S2600018.DBF'));

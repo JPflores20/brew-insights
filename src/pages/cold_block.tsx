@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColdBlockSummary } from "@/components/cold_block/summary_tab";
 import { SimpleFermentationChart } from "@/components/cold_block/simple_fermentation_chart";
 import { HistoryTab } from "@/components/cold_block/history_tab";
-import { LayoutDashboard, Thermometer, History, BarChart3, Database } from "lucide-react";
+import { LayoutDashboard, Thermometer, History, BarChart3, Database, ClipboardList, ScanLine } from "lucide-react";
 import { useData } from "@/context/data_context";
 import { useFileUpload } from "@/hooks/use_file_upload";
 import { EmptyStateUploader } from "@/components/dashboard/empty_state_uploader";
@@ -14,6 +14,8 @@ import { SequenceComparisonTab } from "@/components/machine_detail/sequence_comp
 import { useLocalStorage } from "@/hooks/use_local_storage";
 import { FILTER_ALL } from "@/lib/constants";
 import { CapabilityAnalysisManager } from "@/components/cold_block/capability/capability_analysis_manager";
+import { UnitanquesTab } from "@/components/cold_block/unitanques_tab";
+import { DigitizerTab } from "@/components/cold_block/digitizer_tab";
 
 export default function ColdBlock() {
   const { coldBlockData, isLoaded, triggerColdBlockLoad } = useData();
@@ -47,6 +49,8 @@ export default function ColdBlock() {
     if (path.endsWith("/fermentacion")) return "fermentacion";
     if (path.endsWith("/historico")) return "historico";
     if (path.endsWith("/comparativo")) return "comparativo";
+    if (path.endsWith("/gobierno")) return "gobierno";
+    if (path.endsWith("/digitalizador")) return "digitalizador";
     if (path.endsWith("/skapbd")) return "skapbd";
     return "resumen";
   }, [location.pathname]);
@@ -88,6 +92,14 @@ export default function ColdBlock() {
             <TabsTrigger value="comparativo" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2 px-6">
               <BarChart3 className="h-4 w-4" />
               Comparativo
+            </TabsTrigger>
+            <TabsTrigger value="gobierno" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2 px-6">
+              <ClipboardList className="h-4 w-4" />
+              Gobierno
+            </TabsTrigger>
+            <TabsTrigger value="digitalizador" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2 px-6">
+              <ScanLine className="h-4 w-4" />
+              Digitalizador OCR
             </TabsTrigger>
             <TabsTrigger value="skapbd" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2 px-6">
               <Database className="h-4 w-4" />
@@ -159,6 +171,14 @@ export default function ColdBlock() {
                 Esta sección se encuentra en construcción. Próximamente estarán disponibles las métricas y análisis de SKAPBD.
               </p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="gobierno" className="mt-0 outline-none">
+            <UnitanquesTab />
+          </TabsContent>
+          
+          <TabsContent value="digitalizador" className="mt-0 outline-none">
+            <DigitizerTab />
           </TabsContent>
         </Tabs>
       </AnimatedPage>

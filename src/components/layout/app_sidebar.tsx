@@ -26,7 +26,9 @@ import {
     Trash2,
     Thermometer,
     History,
-    Database
+    Database,
+    ClipboardList,
+    ScanLine
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth_context";
@@ -111,6 +113,16 @@ const coldBlockNavItems: NavItem[] = [
         title: "Comparativo",
         url: "/bloque-frio/comparativo",
         icon: GitCompare,
+    },
+    {
+        title: "Gobierno",
+        url: "/bloque-frio/gobierno",
+        icon: ClipboardList,
+    },
+    {
+        title: "Digitalizador OCR",
+        url: "/bloque-frio/digitalizador",
+        icon: ScanLine,
     },
     {
         title: "SKAPBD",

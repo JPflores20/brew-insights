@@ -1,0 +1,697 @@
+BBT 1
+Modelo Exp
+BBT 2
+Corona Nal
+HL
+1129
+ppb
+6
+Hrs
+32
+BBT 3
+Corona-L Nal
+HL
+1913
+ppb
+0
+Hrs
+118
+BBT 4
+Corona-L Nal
+HL
+1166
+ppb
+2
+Hrs
+69
+BBT 5
+Modelo Exp
+HL
+1269
+ppb
+0
+Hrs
+10
+BBT 6
+Modelo Exp
+HL
+70
+ppb
+0
+Hrs
+10
+BBT 7
+Pacífico
+HL
+314
+ppb
+32767
+Hrs
+247
+BBT 8
+Modelo Exp
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 9
+Corona-L Nal
+HL
+805
+ppb
+6
+Hrs
+69
+BBT 10
+Corona Nal
+HL
+62
+ppb
+9
+Hrs
+33
+BBT 11
+NO SELECT
+HL
+1493
+ppb
+21
+Hrs
+19
+BBT 12
+Victoria Nal
+HL
+2450
+ppb
+15
+Hrs
+608
+BBT 13
+Corona Nal
+HL
+1688
+ppb
+32
+Hrs
+12
+BBT 14
+Barrilito
+HL
+612
+ppb
+32767
+Hrs
+53
+BBT 15
+Barrilito
+HL
+1007
+ppb
+28
+Hrs
+8
+BBT 16
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 17
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 18
+Victoria Nal
+HL
+79
+ppb
+2
+Hrs
+10
+BBT 19
+Victoria Nal
+HL
+1222
+ppb
+0
+Hrs
+10
+BBT 20
+Victoria Nal
+HL
+1211
+ppb
+0
+Hrs
+4
+BBT 21
+Barrilito
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 22
+Barrilito
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 23
+Barrilito
+HL
+1704
+ppb
+0
+Hrs
+27
+BBT 24
+Victoria Nal
+HL
+432
+ppb
+34
+Hrs
+79
+BBT 25
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 26
+NO SELECT
+HL
+6
+ppb
+0
+Hrs
+0
+BBT 27
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 28
+Victoria Nal
+HL
+1771
+ppb
+32767
+Hrs
+483
+BBT 29
+Cerv. Restos
+HL
+524
+ppb
+38
+Hrs
+785
+BBT 30
+Corona Nal
+HL
+499
+ppb
+16
+Hrs
+368
+BBT 31
+Victoria Nal
+HL
+504
+ppb
+65
+Hrs
+339
+BBT 32
+Cerv. Restos
+HL
+331
+ppb
+0
+Hrs
+81
+BBT 33
+Cerv. Restos
+HL
+602
+ppb
+0
+Hrs
+82
+BBT 34
+Cerv. Restos
+HL
+23
+ppb
+0
+Hrs
+65
+BBT 35
+Cerv. Restos
+HL
+71
+ppb
+0
+Hrs
+92
+BBT 36
+Cerv. Restos
+HL
+602
+ppb
+32767
+Hrs
+693
+BBT 37
+Cerv. Restos
+HL
+544
+ppb
+0
+Hrs
+174
+BBT 38
+NO SELECT
+HL
+262
+ppb
+0
+Hrs
+0
+BBT 39
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 40
+NO SELECT
+HL
+271
+ppb
+0
+Hrs
+2
+BBT 41
+Modelo E.
+HL
+1014
+ppb
+9
+Hrs
+85
+BBT 42
+Negra Modelo
+HL
+111
+ppb
+0
+Hrs
+5
+BBT 43
+Corona-L Nal
+HL
+671
+ppb
+5
+Hrs
+24
+BBT 44
+Corona-L Exp
+HL
+1734
+ppb
+23
+Hrs
+7
+BBT 45
+Corona-L Exp
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 46
+Corona-L Exp
+HL
+2755
+ppb
+0
+Hrs
+5
+BBT 47
+Montejo-E
+HL
+458
+ppb
+0
+Hrs
+85
+BBT 48
+Victoria Nal
+HL
+1686
+ppb
+0
+Hrs
+5
+BBT 49
+Corona-L Exp
+HL
+29
+ppb
+0
+Hrs
+1
+BBT 50
+Pacífico
+HL
+531
+ppb
+10
+Hrs
+57
+BBT 51
+Corona-L Exp
+HL
+1121
+ppb
+22
+Hrs
+1
+BBT 52
+Bud Light
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 53
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 54
+Corona-L Nal
+HL
+12
+ppb
+5
+Hrs
+31
+BBT 55
+Corona Nal
+HL
+0
+ppb
+28
+Hrs
+10
+BBT 56
+Corona Nal
+HL
+2295
+ppb
+12
+Hrs
+6
+BBT 57
+Corona Nal
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 58
+Corona Nal
+HL
+2293
+ppb
+12
+Hrs
+4
+BBT 59
+Corona Nal
+HL
+1367
+ppb
+11
+Hrs
+2
+BBT 60
+Corona Nal
+HL
+2324
+ppb
+12
+Hrs
+7
+BBT 61
+Victoria Nal
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 62
+Corona Nal
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 63
+Corona Nal
+HL
+1364
+ppb
+12
+Hrs
+8
+BBT 64
+Corona Nal
+HL
+282
+ppb
+32767
+Hrs
+170
+BBT 65
+Busch Light
+HL
+940
+ppb
+0
+Hrs
+455
+BBT 66
+Corona Nal
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 67
+F---------
+HL
+769
+ppb
+2
+Hrs
+30
+BBT 68
+F---------
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 69
+NO SELECT
+HL
+1179
+ppb
+140
+Hrs
+4
+BBT 70
+Bud Light
+HL
+2085
+ppb
+7
+Hrs
+247
+BBT 71
+Corona Nal
+HL
+2570
+ppb
+2
+Hrs
+577
+BBT 72
+Bud Light
+HL
+674
+ppb
+32767
+Hrs
+58
+BBT 73
+Bud Light
+HL
+68
+ppb
+0
+Hrs
+19
+BBT 74
+Budweiser
+HL
+1136
+ppb
+0
+Hrs
+528
+BBT 75
+Bud Light
+HL
+16
+ppb
+0
+Hrs
+4
+BBT 76
+Bud Light
+HL
+129
+ppb
+8
+Hrs
+8
+BBT 77
+Modelo Exp
+HL
+70
+ppb
+3
+Hrs
+27
+BBT 78
+Modelo Exp
+HL
+664
+ppb
+19
+Hrs
+92
+BBT 79
+Montejo-E
+HL
+1290
+ppb
+11
+Hrs
+152
+BBT 80
+Negra Modelo
+HL
+675
+ppb
+0
+Hrs
+280
+BBT 81
+NO SELECT
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 82
+Victoria Nal
+HL
+2062
+ppb
+0
+Hrs
+4
+BBT 83
+Modelo Exp
+HL
+38
+ppb
+2
+Hrs
+30
+BBT 84
+Negra Modelo
+HL
+0
+ppb
+0
+Hrs
+0
+BBT 85
+Negra Modelo
+HL
+572
+ppb
+32767
+Hrs
+2
+BBT 86
+Victoria Nal
+HL
+2502
+ppb
+0
+Hrs
+259
+BBT 87
+Victoria Nal
+HL
+758
+ppb
+32767
+Hrs
+80
+BBT 88
+Victoria Nal
+HL
+46
+ppb
+0
+Hrs

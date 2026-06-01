@@ -81,6 +81,22 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/bloque-frio/gobierno"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bloque-frio/digitalizador"
+                element={
+                  <ProtectedRoute>
+                    <ColdBlock />
+                  </ProtectedRoute>
+                }
+              />
               {}
               <Route
                 path="/cocimientos"

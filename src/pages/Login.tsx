@@ -52,7 +52,7 @@ export default function Login() {
               Brew Insights
             </CardTitle>
             <CardDescription className="text-slate-400 text-base">
-              Plataforma de Analítica Industrial
+              Análisis de tendencias
             </CardDescription>
           </div>
         </CardHeader>
