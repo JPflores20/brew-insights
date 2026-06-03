@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode, useState, useEffect, useRe
 import { BatchRecord } from "@/data/mock_data";
 import { useIndexedDB } from "@/hooks/use_indexed_db"; 
 import { processDbfBuffer } from "@/utils/dbf_processor";
+import { useToast } from "@/hooks/use_toast";
 
 interface DataContextType {
   data: BatchRecord[];          // Hot Block Data (Cocimientos)
@@ -24,33 +25,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [loadingText, setLoadingText] = useState("Cargando...");
   const hasStartedHotLoad = useRef(false);
   const hasStartedColdLoad = useRef(false);
+  const { toast } = useToast();
 
   const triggerHotBlockLoad = async () => {
     if (data.length > 0 || hasStartedHotLoad.current) return;
     hasStartedHotLoad.current = true;
     setIsHotLoading(true);
+    setLoadingText("Cargando Cocimientos (Optimizados)...");
     
     try {
-      const hotFiles = [
-        "/Datos semanales/S2600018.DBF",
-        "/Datos semanales/S2600019.DBF",
-        "/Datos semanales/S2600020.DBF",
-        "/Datos semanales/S2600021.DBF"
-      ];
+      const response = await fetch("/preloaded_data.json");
+      const contentType = response.headers.get("content-type");
       
-      let combinedHot: BatchRecord[] = [];
-      for (let i = 0; i < hotFiles.length; i++) {
-        setLoadingText(`Cargando Cocimientos (${i+1}/${hotFiles.length})...`);
-        const response = await fetch(hotFiles[i]);
-        if (response.ok) {
-          const buffer = await response.arrayBuffer();
-          const fileData = await processDbfBuffer(buffer);
-          if (fileData) combinedHot.push(...fileData);
+      if (response.ok && contentType?.includes("application/json")) {
+        const jsonData = await response.json();
+        if (jsonData && Array.isArray(jsonData) && jsonData.length > 0) {
+          setData(jsonData);
+          toast({ title: "Datos cargados", description: "Se cargaron los datos de producción exitosamente." });
+        } else {
+          toast({ variant: "destructive", title: "Datos vacíos", description: "El archivo de datos optimizado está vacío." });
         }
+      } else {
+        toast({ variant: "destructive", title: "Error de carga", description: "No se encontró el archivo de datos optimizado. Por favor carga los archivos manualmente." });
       }
-      if (combinedHot.length > 0) setData(combinedHot);
     } catch (error) {
       console.error("Error loading hot block data:", error);
+      toast({ variant: "destructive", title: "Error de conexión", description: "No se pudo conectar para descargar los datos." });
     } finally {
       setIsHotLoading(false);
     }
