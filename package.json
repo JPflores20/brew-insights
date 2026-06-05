@@ -50,6 +50,7 @@
     "embla-carousel-react": "^8.6.0",
     "file-saver": "^2.0.5",
     "firebase": "^12.9.0",
+    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.34.0",
     "idb-keyval": "^6.2.2",
     "input-otp": "^1.4.2",
@@ -96,5 +97,18 @@
     "typescript-eslint": "^8.38.0",
     "vite": "^7.3.1",
     "vitest": "^3.2.4"
-  }
+  },
+  "description": "**Brew Insights** es una plataforma de analítica industrial diseñada para visualizar, comparar y optimizar procesos de producción por lotes en cervecerías. La aplicación permite la ingesta de datos mediante archivos Excel (`.xlsx`) y archivos de base de datos (`.DBF`), ofreciendo dashboards interactivos para análisis de tiempos de ciclo, eficiencia de equipos, capacidad de proceso y desviaciones operativas.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JPflores20/brew-insights.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JPflores20/brew-insights/issues"
+  },
+  "homepage": "https://github.com/JPflores20/brew-insights#readme"
 }
