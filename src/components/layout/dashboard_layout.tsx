@@ -11,6 +11,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useLocation, Link } from "react-router-dom";
+import { useAuth } from "@/context/auth_context";
+import { Settings } from "lucide-react";
 interface DashboardLayoutProps {
   children: ReactNode;
 }
@@ -22,6 +24,9 @@ const routeNames: Record<string, string> = {
 };
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
+  const { permissions } = useAuth();
+  const isAdmin = permissions.includes('admin');
+  
   const pathSegments = location.pathname.split("/").filter(Boolean);
   const breadcrumbs = pathSegments.map((segment, index) => {
     const url = `/${pathSegments.slice(0, index + 1).join("/")}`;
@@ -46,7 +51,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 backdrop-blur-sm bg-background/80 sticky top-0 z-10 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 backdrop-blur-sm bg-background/80 sticky top-0 z-10 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -62,6 +67,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          {isAdmin && (
+            <div className="flex items-center px-4">
+              <Link 
+                to="/admin" 
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors flex items-center justify-center"
+                title="Administración"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+            </div>
+          )}
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min mt-4">

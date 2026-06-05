@@ -1,7 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useGetUsers, type PermissionType } from '@/hooks/use_get_users';
 import { useAuth } from '@/context/auth_context';
-import { Loader2, AlertCircle, Users, Check } from 'lucide-react';
+import { Loader2, AlertCircle, Users, Check, ShieldAlert } from 'lucide-react';
+import { DashboardLayout } from "@/components/layout/dashboard_layout";
+import { AnimatedPage } from "@/components/layout/animated_page";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 const PERMISSION_LABELS: Record<PermissionType, string> = {
   admin: 'Admin',
@@ -12,7 +17,6 @@ const PERMISSION_LABELS: Record<PermissionType, string> = {
 const Admin: React.FC = () => {
   const { user } = useAuth();
   const { users, loading, error, updateUserPermissions, refetch } = useGetUsers();
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<Record<string, PermissionType[]>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -27,48 +31,39 @@ const Admin: React.FC = () => {
 
   if (!user?.uid) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600 dark:text-gray-400">No autorizado</p>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="text-muted-foreground">No autorizado</p>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Acceso denegado
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No tienes permisos de administrador.
-          </p>
-          
-          <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded text-left text-xs text-gray-700 dark:text-gray-300 space-y-2 font-mono border border-gray-300 dark:border-gray-600">
-            <div><strong>Tu UID:</strong><br/><span className="break-all text-blue-600 dark:text-blue-400">{user?.uid}</span></div>
-            <div><strong>Tu Email:</strong><br/>{user?.email}</div>
-            <div><strong>Usuarios en Firestore:</strong> {users.length}</div>
-            {loading && <div className="text-blue-600 dark:text-blue-400">⏳ Cargando...</div>}
-            {error && <div className="text-red-600 dark:text-red-400">❌ {error}</div>}
-            {users.length > 0 && (
-              <div>
-                <strong>UIDs que coinciden:</strong>
-                <ul className="mt-2 space-y-1 bg-gray-900 p-2 rounded">
-                  {users.map(u => {
-                    const matches = u.uid === user?.uid;
-                    return (
-                      <li key={u.uid} className={matches ? 'text-green-400 font-bold' : 'text-gray-400'}>
-                        {matches ? '✅ ' : '  '}{u.uid} → {u.permissions?.join(', ') || 'sin permisos'}
-                      </li>
-                    );
-                  })}
-                </ul>
+      <DashboardLayout>
+        <AnimatedPage>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+            <div className="text-center max-w-md">
+              <ShieldAlert className="w-16 h-16 text-destructive mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                Acceso denegado
+              </h1>
+              <p className="text-muted-foreground mb-6">
+                No tienes permisos de administrador.
+              </p>
+              
+              <div className="mt-8 p-4 bg-muted rounded-lg text-left text-xs text-muted-foreground space-y-2 font-mono border border-border">
+                <div><strong>Tu UID:</strong><br/><span className="break-all text-primary">{user?.uid}</span></div>
+                <div><strong>Tu Email:</strong><br/>{user?.email}</div>
+                <div><strong>Usuarios en Firestore:</strong> {users.length}</div>
+                {loading && <div className="text-primary">⏳ Cargando...</div>}
+                {error && <div className="text-destructive">❌ {error}</div>}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </AnimatedPage>
+      </DashboardLayout>
     );
   }
 
@@ -83,9 +78,9 @@ const Admin: React.FC = () => {
   const handleSavePermissions = async (uid: string) => {
     setSaving(uid);
     try {
-      const user = users.find(u => u.uid === uid);
-      const userPerms = permissions[uid] || (user?.permissions || []);
-      const success = await updateUserPermissions(uid, userPerms, user?.email);
+      const userToUpdate = users.find(u => u.uid === uid);
+      const userPerms = permissions[uid] || (userToUpdate?.permissions || []);
+      const success = await updateUserPermissions(uid, userPerms, userToUpdate?.email);
       if (success) {
         setSaved(uid);
         setTimeout(() => setSaved(null), 2000);
@@ -96,98 +91,93 @@ const Admin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <DashboardLayout>
+      <AnimatedPage>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-8 h-8" />
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <Users className="w-8 h-8 text-primary" />
             Gestión de Permisos de Usuarios
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Administra los permisos de acceso de los usuarios registrados
+          <p className="text-muted-foreground mt-2">
+            Administra los permisos de acceso de los usuarios registrados en la plataforma.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-red-900 dark:text-red-100">Error al cargar usuarios</h3>
-              <p className="text-red-700 dark:text-red-200 text-sm mt-1">{error}</p>
+              <h3 className="font-semibold text-destructive">Error al cargar usuarios</h3>
+              <p className="text-destructive/80 text-sm mt-1">{error}</p>
             </div>
           </div>
         )}
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600 dark:text-gray-400">Cargando usuarios...</span>
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-3 text-muted-foreground">Cargando usuarios...</span>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {users.length === 0 ? (
-              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg text-center text-gray-600 dark:text-gray-400">
-                No hay usuarios registrados
+              <div className="p-8 text-center bg-card rounded-xl border border-border">
+                <p className="text-muted-foreground">No hay usuarios registrados</p>
               </div>
             ) : (
               users.map((userItem) => {
                 const userPerms = permissions[userItem.uid] ?? (userItem.permissions || []);
                 return (
-                  <div
-                    key={userItem.uid}
-                    className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {userItem.email}
-                        </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          ID: {userItem.uid}
-                        </p>
-                      </div>
-                      {saved === userItem.uid && (
-                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                          <Check className="w-5 h-5" />
-                          <span className="text-sm font-medium">Guardado</span>
-                        </div>
-                      )}
+                  <Card key={userItem.uid} className="flex flex-col md:flex-row md:items-center justify-between p-5 gap-4 hover:border-primary/50 transition-colors">
+                    <div className="flex-1 min-w-0 md:mr-6">
+                      <h3 className="text-lg font-semibold truncate text-foreground" title={userItem.email}>
+                        {userItem.email}
+                      </h3>
+                      <p className="text-sm text-muted-foreground truncate" title={userItem.uid}>
+                        ID: {userItem.uid}
+                      </p>
                     </div>
 
-                    <div className="space-y-3 mb-4">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4 md:gap-6 flex-1 justify-end">
                       {(Object.keys(PERMISSION_LABELS) as PermissionType[]).map((permission) => (
-                        <label
-                          key={permission}
-                          className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <input
-                            type="checkbox"
+                        <div key={permission} className="flex items-center gap-2">
+                          <Switch
+                            id={`${userItem.uid}-${permission}`}
                             checked={userPerms.includes(permission)}
-                            onChange={() => handleTogglePermission(userItem.uid, permission)}
-                            className="w-4 h-4 rounded cursor-pointer"
+                            onCheckedChange={() => handleTogglePermission(userItem.uid, permission)}
                           />
-                          <span className="text-gray-700 dark:text-gray-300 font-medium">
+                          <label htmlFor={`${userItem.uid}-${permission}`} className="text-sm font-medium text-foreground cursor-pointer select-none">
                             {PERMISSION_LABELS[permission]}
-                          </span>
-                        </label>
+                          </label>
+                        </div>
                       ))}
                     </div>
 
-                    <button
-                      onClick={() => handleSavePermissions(userItem.uid)}
-                      disabled={saving === userItem.uid}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                      {saving === userItem.uid ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Guardando...
-                        </>
-                      ) : (
-                        'Guardar cambios'
-                      )}
-                    </button>
-                  </div>
+                    <div className="flex items-center justify-end min-w-[140px] mt-4 md:mt-0 ml-auto border-t border-border pt-4 md:border-none md:pt-0">
+                      <div className="mr-3 flex items-center justify-end w-20">
+                        {saved === userItem.uid && (
+                          <div className="flex items-center gap-1 text-green-500">
+                            <Check className="w-4 h-4" />
+                            <span className="text-xs font-medium">Guardado</span>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        onClick={() => handleSavePermissions(userItem.uid)}
+                        disabled={saving === userItem.uid}
+                        size="sm"
+                      >
+                        {saving === userItem.uid ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          'Guardar'
+                        )}
+                      </Button>
+                    </div>
+                  </Card>
                 );
               })
             )}
@@ -195,14 +185,14 @@ const Admin: React.FC = () => {
         )}
 
         {users.length > 0 && (
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
+          <div className="mt-8 p-4 bg-primary/10 border border-primary/20 rounded-lg inline-block">
+            <p className="text-sm text-primary">
               <span className="font-semibold">Total de usuarios:</span> {users.length}
             </p>
           </div>
         )}
-      </div>
-    </div>
+      </AnimatedPage>
+    </DashboardLayout>
   );
 };
 
