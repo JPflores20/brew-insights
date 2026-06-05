@@ -67,20 +67,27 @@ const Admin: React.FC = () => {
     );
   }
 
-  const handleTogglePermission = (uid: string, permission: PermissionType) => {
-    const userPerms = permissions[uid] || (users.find(u => u.uid === uid)?.permissions || []);
-    const newPerms = userPerms.includes(permission)
-      ? userPerms.filter(p => p !== permission)
-      : [...userPerms, permission];
+  const handleTogglePermission = async (uid: string, permission: PermissionType) => {
+    const userToUpdate = users.find(u => u.uid === uid);
+    const userPerms = permissions[uid] || (userToUpdate?.permissions || []);
+    
+    let newPerms: PermissionType[];
+    if (userPerms.includes(permission)) {
+      newPerms = userPerms.filter(p => p !== permission);
+    } else {
+      if (permission === 'admin') {
+        const permsToAdd: PermissionType[] = ['admin', 'hot_block', 'cold_block'];
+        newPerms = Array.from(new Set([...userPerms, ...permsToAdd]));
+      } else {
+        newPerms = [...userPerms, permission];
+      }
+    }
+    
     setPermissions({ ...permissions, [uid]: newPerms });
-  };
-
-  const handleSavePermissions = async (uid: string) => {
+    
     setSaving(uid);
     try {
-      const userToUpdate = users.find(u => u.uid === uid);
-      const userPerms = permissions[uid] || (userToUpdate?.permissions || []);
-      const success = await updateUserPermissions(uid, userPerms, userToUpdate?.email);
+      const success = await updateUserPermissions(uid, newPerms, userToUpdate?.email);
       if (success) {
         setSaved(uid);
         setTimeout(() => setSaved(null), 2000);
@@ -89,6 +96,8 @@ const Admin: React.FC = () => {
       setSaving(null);
     }
   };
+
+
 
   return (
     <DashboardLayout>
@@ -144,6 +153,7 @@ const Admin: React.FC = () => {
                           <Switch
                             id={`${userItem.uid}-${permission}`}
                             checked={userPerms.includes(permission)}
+                            disabled={saving === userItem.uid}
                             onCheckedChange={() => handleTogglePermission(userItem.uid, permission)}
                           />
                           <label htmlFor={`${userItem.uid}-${permission}`} className="text-sm font-medium text-foreground cursor-pointer select-none">
@@ -153,29 +163,18 @@ const Admin: React.FC = () => {
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-end min-w-[140px] mt-4 md:mt-0 ml-auto border-t border-border pt-4 md:border-none md:pt-0">
-                      <div className="mr-3 flex items-center justify-end w-20">
-                        {saved === userItem.uid && (
-                          <div className="flex items-center gap-1 text-green-500">
-                            <Check className="w-4 h-4" />
-                            <span className="text-xs font-medium">Guardado</span>
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        onClick={() => handleSavePermissions(userItem.uid)}
-                        disabled={saving === userItem.uid}
-                        size="sm"
-                      >
-                        {saving === userItem.uid ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Guardando...
-                          </>
-                        ) : (
-                          'Guardar'
-                        )}
-                      </Button>
+                    <div className="flex items-center justify-end min-w-[120px] mt-4 md:mt-0 ml-auto border-t border-border pt-4 md:border-none md:pt-0">
+                      {saving === userItem.uid ? (
+                        <div className="flex items-center gap-2 text-primary">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm font-medium">Guardando...</span>
+                        </div>
+                      ) : saved === userItem.uid ? (
+                        <div className="flex items-center gap-2 text-green-500">
+                          <Check className="w-4 h-4" />
+                          <span className="text-sm font-medium">Guardado</span>
+                        </div>
+                      ) : null}
                     </div>
                   </Card>
                 );
