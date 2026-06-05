@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth,firestore } from "@/lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Loader2, Beer, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { doc, getDoc } from "firebase/firestore";
+import { permission } from "process";
+import { log } from "util";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,8 +25,31 @@ export default function Login() {
     setLoading(true);
     try {
       await setPersistence(auth, browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); 
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const userDocRef = doc(firestore, "user_permissions", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        const permissions: string[] = userData.permissions || [];  
+        if (permissions.includes("admin")) {
+            console.log("Acceso concedido: Administrador");
+            navigate("/"); // Entra a todo (Panel Principal)
+          } else if (permissions.includes("hot_block")) {
+            console.log("Acceso concedido: Hot Block");
+            navigate("/cocimientos"); // Redirige a su sección específica
+          } else if (permissions.includes("cold_block")) {
+            console.log("Acceso concedido: Cold Block");
+            navigate("/bloque-frio"); // Redirige a su sección específica
+          } else {
+            // El usuario existe pero el arreglo de permisos está vacío o no coincide
+            setError("No tienes secciones asignadas en tu perfil. Contacta al administrador.");
+          }
+      } else {
+          // Caso en el que el usuario se autenticó en Auth, pero no fue registrado en Firestore
+        setError("Usuario autenticado, pero no cuenta con un registro de permisos en el sistema.");
+      }
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {

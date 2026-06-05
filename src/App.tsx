@@ -19,6 +19,7 @@ import PredictiveMaintenance from "./pages/predictive_maintenance";
 import QualityConsistency from "./pages/quality_consistency";
 import Indicadores from "./pages/indicadores";
 import NotFound from "./pages/not_found";
+import Admin from "./pages/admin";
 const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,12 +31,20 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {}
+              <Route path="/admin" 
+                element={ 
+                  <ProtectedRoute allowedRoles={['admin']}> 
+                  <Admin /> 
+                  </ProtectedRoute> 
+                } 
+              />
+              {}
               <Route path="/login" element={<Login />} />
               {}
               <Route
                 path="/"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin']}>
                     <MainMenu />
                   </ProtectedRoute>
                 }
@@ -44,7 +53,7 @@ const App = () => (
               <Route
                 path="/bloque-frio"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -52,7 +61,7 @@ const App = () => (
               <Route
                 path="/bloque-frio/fermentacion"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -60,7 +69,7 @@ const App = () => (
               <Route
                 path="/bloque-frio/historico"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -68,7 +77,7 @@ const App = () => (
               <Route
                 path="/bloque-frio/comparativo"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -76,7 +85,7 @@ const App = () => (
               <Route
                 path="/bloque-frio/skapbd"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -84,7 +93,7 @@ const App = () => (
               <Route
                 path="/bloque-frio/gobierno"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -92,7 +101,7 @@ const App = () => (
               <Route
                 path="/bloque-frio/digitalizador"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
                     <ColdBlock />
                   </ProtectedRoute>
                 }
@@ -101,7 +110,7 @@ const App = () => (
               <Route
                 path="/cocimientos"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <Overview />
                   </ProtectedRoute>
                 }
@@ -109,7 +118,7 @@ const App = () => (
               <Route
                 path="/cocimientos/maquinaria"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <MachineDetail />
                   </ProtectedRoute>
                 }
@@ -117,7 +126,7 @@ const App = () => (
               <Route
                 path="/cocimientos/comparacion"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <BatchComparison />
                   </ProtectedRoute>
                 }
@@ -125,7 +134,7 @@ const App = () => (
               <Route
                 path="/cocimientos/ciclos"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <CycleAnalysis />
                   </ProtectedRoute>
                 }
@@ -133,7 +142,7 @@ const App = () => (
               <Route
                 path="/cocimientos/recetas"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <RecipeAnalysis />
                   </ProtectedRoute>
                 }
@@ -141,7 +150,7 @@ const App = () => (
               <Route
                 path="/cocimientos/mantenimiento"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <PredictiveMaintenance />
                   </ProtectedRoute>
                 }
@@ -149,7 +158,7 @@ const App = () => (
               <Route
                 path="/cocimientos/calidad"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <QualityConsistency />
                   </ProtectedRoute>
                 }
@@ -157,7 +166,7 @@ const App = () => (
               <Route
                 path="/cocimientos/indicadores"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'hot_block']}>
                     <Indicadores />
                   </ProtectedRoute>
                 }
