@@ -180,7 +180,7 @@ const extractParamValues = (sortedData: BatchRecord[], selectedProduct: string, 
   return { rawItems, values };
 };
 
-const calculateStatisticalBounds = (values: number[]) => {
+export const calculateStatisticalBounds = (values: number[]) => {
   const count = values.length;
   if (count === 0) return null;
 
