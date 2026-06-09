@@ -1,3 +1,11 @@
+/**
+ * Dashboard Layout
+ * ----------------
+ * Este es el componente contenedor principal (Layout) de la aplicación.
+ * Provee la barra lateral de navegación (Sidebar), el encabezado (Header) 
+ * con las migas de pan (Breadcrumbs) y el área central donde se renderizan 
+ * las diferentes páginas (children).
+ */
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app_sidebar";
@@ -25,12 +33,17 @@ const routeNames: Record<string, string> = {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const { permissions } = useAuth();
+  
+  // Verificamos si el usuario es administrador para mostrarle el botón de configuración
   const isAdmin = permissions.includes('admin');
   
+  // Generación dinámica de "migas de pan" (breadcrumbs) basándose en la URL actual.
+  // Ej: /cocimientos/maquinaria -> Brew Insights / Resumen / Maquinaria
   const pathSegments = location.pathname.split("/").filter(Boolean);
   const breadcrumbs = pathSegments.map((segment, index) => {
     const url = `/${pathSegments.slice(0, index + 1).join("/")}`;
     const isLast = index === pathSegments.length - 1;
+    // Traduce la ruta a un nombre legible, o usa el nombre capitalizado por defecto
     const name = routeNames[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
     return (
       <div key={url} className="flex items-center">
@@ -67,6 +80,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          {/* Botón de Administración (solo visible para admins) */}
           {isAdmin && (
             <div className="flex items-center px-4">
               <Link 
@@ -79,6 +93,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           )}
         </header>
+        {/* Contenedor Principal donde se inyectan las páginas (children) */}
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min mt-4">
             {children}

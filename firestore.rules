@@ -1,7 +1,14 @@
+// Reglas de seguridad de Firebase Firestore
+// Define qué usuarios pueden leer y escribir en la base de datos de la nube.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // La regla `{document=**}` aplica a todas las colecciones y documentos en la base de datos.
     match /{document=**} {
+      // PERMISO TEMPORAL (Modo Prueba): 
+      // Permite lectura y escritura a CUALQUIER persona, sin importar si ha iniciado sesión o no.
+      // ¡ADVERTENCIA! Esta regla expira en la fecha indicada (5 de Julio de 2026).
+      // Después de esta fecha, nadie podrá acceder a la base de datos si no se cambian las reglas.
       allow read, write: if request.time < timestamp.date(2026, 7, 5);
     }
   }

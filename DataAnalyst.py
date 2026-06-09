@@ -37,9 +37,13 @@ DEFAULT_OUTDIR = "salidas"
 
 
 # =========================
-# HELPERS
+# HELPERS (Funciones Auxiliares)
 # =========================
 def ensure_dir(path: str):
+    """
+    Crea un directorio si no existe. 
+    Útil para asegurar que la carpeta 'salidas' esté lista antes de guardar archivos.
+    """
     os.makedirs(path, exist_ok=True)
 
 
@@ -56,6 +60,12 @@ def read_input(path: str) -> pd.DataFrame:
 
 
 def build_timestamp(df: pd.DataFrame, prefix: str) -> pd.Series:
+    """
+    Reconstruye una fecha completa (timestamp) a partir de columnas separadas.
+    El software industrial a menudo divide las fechas en columnas como:
+    SZ_JAHR (año), SZ_MONAT (mes), SZ_TAG (día), etc.
+    Esta función las une en un formato DateTime entendible por Python.
+    """
     y = pd.to_numeric(df.get(f"{prefix}_JAHR"), errors="coerce")
     y = np.where(pd.notna(y) & (y < 100), y + 2000, y)
 
@@ -172,6 +182,11 @@ def normalize_id_series(s: pd.Series) -> pd.Series:
 
 
 def prompt_cocimiento() -> str | None:
+    """
+    Pide al usuario que ingrese por consola un número de cocimiento específico
+    si solo quiere analizar un lote en particular. Si se deja en blanco (Enter),
+    analizará todos los datos.
+    """
     print("\n=== ANALISIS INDUSTRIAL ===")
     print("Te voy a pedir el número de cocimiento.")
     print("TIP: si presionas ENTER sin escribir nada, se analizan TODOS.\n")
@@ -184,9 +199,18 @@ def prompt_cocimiento() -> str | None:
 
 
 # =========================
-# MAIN
+# MAIN (Lógica Principal)
 # =========================
 def run(path_in: str, out_dir: str) -> None:
+    """
+    Función principal que ejecuta todo el flujo de limpieza y análisis:
+    1. Lee el archivo base.
+    2. Filtra por cocimiento (opcional).
+    3. Normaliza las fechas y agrupa la maquinaria (TEILANL_GRUPO).
+    4. Calcula tiempos de ciclo reales vs esperados.
+    5. Detecta "gaps" o tiempos muertos entre pasos de la máquina.
+    6. Exporta los resultados a múltiples archivos Excel, CSV y JSON (para la Web).
+    """
     ensure_dir(out_dir)
 
     cocimiento_in = prompt_cocimiento()

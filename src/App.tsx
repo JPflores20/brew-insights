@@ -1,4 +1,13 @@
 
+/**
+ * App.tsx
+ * -------
+ * Punto de entrada principal de React para la aplicación web.
+ * Aquí se configuran:
+ * 1. Los "Providers" (Proveedores) globales como QueryClient, Auth y Data.
+ * 2. El enrutamiento (React Router) definiendo qué componente cargar en cada URL.
+ * 3. Las rutas protegidas (ProtectedRoute) basadas en los roles del usuario.
+ */
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,7 +29,9 @@ import QualityConsistency from "./pages/quality_consistency";
 import Indicadores from "./pages/indicadores";
 import NotFound from "./pages/not_found";
 import Admin from "./pages/admin";
+// QueryClient se encarga de manejar el caché y las peticiones asíncronas de datos (usando React Query)
 const queryClient = new QueryClient();
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -28,9 +39,10 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          {/* Inicia la configuración de Rutas (URLs de la app) */}
           <BrowserRouter>
             <Routes>
-              {}
+              {/* Ruta de Administración (Solo para rol 'admin') */}
               <Route path="/admin" 
                 element={ 
                   <ProtectedRoute allowedRoles={['admin']}> 
@@ -38,9 +50,11 @@ const App = () => (
                   </ProtectedRoute> 
                 } 
               />
-              {}
+              
+              {/* Ruta Pública: Login */}
               <Route path="/login" element={<Login />} />
-              {}
+              
+              {/* Ruta Raíz: Menú Principal (Protegida) */}
               <Route
                 path="/"
                 element={
@@ -171,7 +185,8 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              {}
+              
+              {/* Redirecciones automáticas (Alias de URLs viejas a las nuevas) */}
               <Route path="/machine-detail" element={<Navigate to="/cocimientos/maquinaria" replace />} />
               <Route path="/batch-comparison" element={<Navigate to="/cocimientos/comparacion" replace />} />
               <Route path="/cycle-analysis" element={<Navigate to="/cocimientos/ciclos" replace />} />

@@ -1,3 +1,10 @@
+/**
+ * Contexto de Autenticación (AuthContext)
+ * ---------------------------------------
+ * Administra el estado global de inicio de sesión de los usuarios usando Firebase Auth.
+ * También se encarga de consultar Firestore para obtener los roles/permisos 
+ * específicos del usuario autenticado (ej: admin, hot_block, cold_block).
+ */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, onAuthStateChanged, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth,firestore } from "@/lib/firebase";

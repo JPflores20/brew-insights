@@ -1,4 +1,5 @@
 {
+  "_comment": "Configuración de despliegue para Firebase Hosting. Indica que la carpeta pública a subir es 'dist' y asegura que todas las URLs redirijan a index.html (esencial para Single Page Apps como React).",
   "hosting": {
     "public": "dist",
     "ignore": [

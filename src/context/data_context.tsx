@@ -1,3 +1,11 @@
+/**
+ * Contexto de Datos (DataContext)
+ * -------------------------------
+ * Administra el estado global de los datos de la aplicación, guardándolos en IndexedDB
+ * del navegador para que persistan entre recargas de página.
+ * Maneja la carga inicial del JSON optimizado generado por Python y las lógicas de
+ * purga de datos antiguos.
+ */
 import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from "react";
 import { BatchRecord } from "@/data/mock_data";
 import { useIndexedDB } from "@/hooks/use_indexed_db"; 

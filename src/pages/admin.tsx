@@ -1,3 +1,10 @@
+/**
+ * Página de Administración (Admin)
+ * --------------------------------
+ * Esta página permite a los usuarios con rol 'admin' gestionar los permisos 
+ * de acceso de otros usuarios de la aplicación (e.g. acceso a Hot Block, Cold Block o ser Admin).
+ * Utiliza hooks personalizados para obtener la lista de usuarios desde Firebase Firestore.
+ */
 import React, { useState, useMemo } from 'react';
 import { useGetUsers, type PermissionType } from '@/hooks/use_get_users';
 import { useAuth } from '@/context/auth_context';
@@ -15,18 +22,25 @@ const PERMISSION_LABELS: Record<PermissionType, string> = {
 };
 
 const Admin: React.FC = () => {
+  // Obtiene el estado del usuario actualmente autenticado
   const { user } = useAuth();
+  // Obtiene la lista completa de usuarios y las funciones para actualizarlos desde nuestro hook personalizado
   const { users, loading, error, updateUserPermissions, refetch } = useGetUsers();
+  
+  // Estado local para manejar los permisos mientras se actualizan en la UI (optimistic update)
   const [permissions, setPermissions] = useState<Record<string, PermissionType[]>>({});
+  // Estados para mostrar indicadores de "Guardando..." o "Guardado" por cada usuario (basado en su UID)
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
 
+  // Calcula los permisos del usuario actual logueado para verificar si es 'admin'
   const currentUserPermissions = useMemo(() => {
     if (!user?.uid) return [];
     const currentUserDoc = users.find(u => u.uid === user.uid);
     return currentUserDoc?.permissions || [];
   }, [users, user?.uid]);
 
+  // Booleano que indica si el usuario actual es administrador
   const isAdmin = currentUserPermissions.includes('admin');
 
   if (!user?.uid) {
@@ -67,14 +81,25 @@ const Admin: React.FC = () => {
     );
   }
 
+  /**
+   * handleTogglePermission
+   * Función que se ejecuta al encender o apagar un switch de permiso para un usuario.
+   * @param uid El ID del usuario al que se le cambiará el permiso.
+   * @param permission El permiso específico a activar/desactivar ('admin', 'hot_block', 'cold_block').
+   */
   const handleTogglePermission = async (uid: string, permission: PermissionType) => {
     const userToUpdate = users.find(u => u.uid === uid);
+    // Tomamos los permisos actuales del usuario, ya sea del estado local o de Firestore
     const userPerms = permissions[uid] || (userToUpdate?.permissions || []);
     
     let newPerms: PermissionType[];
+    // Si el usuario ya tiene el permiso, se lo quitamos
     if (userPerms.includes(permission)) {
       newPerms = userPerms.filter(p => p !== permission);
     } else {
+      // Si no lo tiene, se lo agregamos
+      // Regla de negocio especial: Si se le da permiso de 'admin', automáticamente
+      // obtiene acceso a todo lo demás ('hot_block', 'cold_block').
       if (permission === 'admin') {
         const permsToAdd: PermissionType[] = ['admin', 'hot_block', 'cold_block'];
         newPerms = Array.from(new Set([...userPerms, ...permsToAdd]));
@@ -99,6 +124,7 @@ const Admin: React.FC = () => {
 
 
 
+  // Render principal de la vista de administrador
   return (
     <DashboardLayout>
       <AnimatedPage>
