@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useTransition } from "react";
+import { useMemo, useEffect, useTransition, useCallback } from "react";
 import { BatchRecord } from "@/types";
 import { getUniqueBatchIds } from "@/data/mock_data";
 import { useLocalStorage } from "@/hooks/use_local_storage";
@@ -16,7 +16,7 @@ export function useMdRecipe(data: BatchRecord[]) {
     ""
   );
   const selectedRecipe = _selectedRecipe;
-  const setSelectedRecipe = (value: string) => startTransition(() => _setSelectedRecipe(value));
+  const setSelectedRecipe = useCallback((value: string) => startTransition(() => _setSelectedRecipe(value)), [_setSelectedRecipe]);
 
   const filteredBatches = useMemo(() => {
     let filtered = selectedRecipe && selectedRecipe !== FILTER_ALL 
@@ -40,25 +40,25 @@ export function useMdRecipe(data: BatchRecord[]) {
     ""
   );
   const selectedBatchId = _selectedBatchId;
-  const setSelectedBatchId = (value: string) => startTransition(() => _setSelectedBatchId(value));
+  const setSelectedBatchId = useCallback((value: string) => startTransition(() => _setSelectedBatchId(value)), [_setSelectedBatchId]);
 
   const [_selectedMachine, _setSelectedMachine] = useLocalStorage<string>(
     "detail-machine-selection-v2", 
     ""
   );
   const selectedMachine = _selectedMachine;
-  const setSelectedMachine = (value: string) => startTransition(() => _setSelectedMachine(value));
+  const setSelectedMachine = useCallback((value: string) => startTransition(() => _setSelectedMachine(value)), [_setSelectedMachine]);
 
   const [_compareBatchIds, _setCompareBatchIds] = useLocalStorage<string[]>(
     "detail-compare-batches",
     [selectedBatchId]
   );
   const compareBatchIds = _compareBatchIds;
-  const setCompareBatchIds = (value: string[] | ((prev: string[]) => string[])) => {
+  const setCompareBatchIds = useCallback((value: string[] | ((prev: string[]) => string[])) => {
     startTransition(() => {
       _setCompareBatchIds(value);
     });
-  };
+  }, [_setCompareBatchIds]);
 
   // ESTADOS ESPECÍFICOS PARA LA PESTAÑA DE COMPARATIVA (PERSISTENTES)
   const [compSelectedRecipe, setCompSelectedRecipe] = useLocalStorage<string>(
