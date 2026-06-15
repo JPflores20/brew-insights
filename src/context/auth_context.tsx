@@ -8,7 +8,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, onAuthStateChanged, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth,firestore } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 interface AuthContextType {
   user: User | null;
@@ -39,12 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         unsubscribeFirebase = onAuthStateChanged(auth, async (currentUser) => {
           if (currentUser) {
             try {
-              // Consultamos el documento exacto en la BD 'brewinsights' usando su UID real
-              const docRef = doc(firestore, "user_permissions", currentUser.uid);
-              const docSnap = await getDoc(docRef);
+              // Consultamos el documento exacto en la BD 'brewinsights' buscando por email
+              const q = query(collection(firestore, "user_permissions"), where("email", "==", currentUser.email));
+              const querySnapshot = await getDocs(q);
 
-              if (docSnap.exists()) {
-                const data = docSnap.data();
+              if (!querySnapshot.empty) {
+                const data = querySnapshot.docs[0].data();
                 setPermissions(data.permissions || []);
               } else {
                 console.warn(`⚠️ El usuario ${currentUser.email} no tiene un documento de permisos.`);
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             } catch (firestoreError) {
               console.error("❌ Error al obtener permisos desde Firestore:", firestoreError);
-              setPermissions([]);
+              setPermissions([]); // Fallback a ningún permiso
             }
             // Guardamos el usuario de Auth una vez recuperados sus permisos
             setUser(currentUser);

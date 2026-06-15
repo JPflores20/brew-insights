@@ -112,3 +112,27 @@
       inset 0 0 5px hsla(30, 90%, 50%, 0.1);
   }
 }
+
+/* Fallback direct animations to ensure they run regardless of Tailwind config cache */
+@keyframes orb-float-a {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(8vw, 6vh) scale(1.15); }
+}
+@keyframes orb-float-b {
+  0% { transform: translate(0, 0) scale(1.05); }
+  100% { transform: translate(-10vw, -4vh) scale(0.9); }
+}
+@keyframes orb-float-c {
+  0% { transform: translate(0, 0) scale(0.95); }
+  100% { transform: translate(6vw, -8vh) scale(1.1); }
+}
+@keyframes orb-float-d {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-7vw, 9vh) scale(1.2); }
+}
+
+.animate-orb-a { animation: orb-float-a 16s ease-in-out infinite alternate !important; }
+.animate-orb-b { animation: orb-float-b 20s ease-in-out infinite alternate !important; }
+.animate-orb-c { animation: orb-float-c 14s ease-in-out infinite alternate !important; }
+.animate-orb-d { animation: orb-float-d 18s ease-in-out infinite alternate !important; }
+
