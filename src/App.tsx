@@ -97,14 +97,6 @@ const App = () => (
                 }
               />
               <Route
-                path="/bloque-frio/skapbd"
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'cold_block']}>
-                    <ColdBlock />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/bloque-frio/gobierno"
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'cold_block']}>

@@ -4,6 +4,8 @@ import { processDbfFile, mergeBatchRecords } from "@/utils/dbf_processor";
 import { useToast } from "@/hooks/use_toast";
 import { BatchRecord } from "@/types";
 import { useMemo } from "react";
+import { writeBatch, doc, collection } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
 
 export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
   const { setData, setColdBlockData } = useData();
@@ -69,11 +71,46 @@ export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
       if (combinedData.length > 0) {
         const uniqueData = mergeBatchRecords(combinedData);
         setter(uniqueData);
-        toast({
-          title: target === 'cold' ? "¡Tanque frío lleno!" : "¡Tanque lleno!",
-          description: `Se han procesado ${successCount} archivo(s) resultando en ${uniqueData.length} lotes consolidados.`,
-          className: "bg-primary text-primary-foreground border-none",
-        });
+        
+        if (target === 'hot') {
+          try {
+            const hotBlockRef = collection(firestore, "hot_block_records");
+            const CHUNK_SIZE = 500;
+            let uploadedCount = 0;
+            
+            for (let i = 0; i < uniqueData.length; i += CHUNK_SIZE) {
+              const chunk = uniqueData.slice(i, i + CHUNK_SIZE);
+              const batch = writeBatch(firestore);
+              
+              chunk.forEach((record) => {
+                const docRef = doc(hotBlockRef, record.CHARG_NR);
+                batch.set(docRef, record, { merge: true });
+              });
+              
+              await batch.commit();
+              uploadedCount += chunk.length;
+            }
+            
+            toast({
+              title: "¡Tanque lleno y sincronizado!",
+              description: `Se procesaron y subieron a la nube ${uploadedCount} lotes.`,
+              className: "bg-primary text-primary-foreground border-none",
+            });
+          } catch (uploadError) {
+             console.error("Error uploading to Firebase:", uploadError);
+             toast({
+              variant: "destructive",
+              title: "Datos procesados localmente",
+              description: "Los datos se cargaron, pero hubo un error al sincronizarlos con Firebase.",
+            });
+          }
+        } else {
+          toast({
+            title: "¡Tanque frío lleno!",
+            description: `Se han procesado ${successCount} archivo(s) resultando en ${uniqueData.length} lotes consolidados (Local).`,
+            className: "bg-primary text-primary-foreground border-none",
+          });
+        }
       } else {
         throw new Error("No se encontraron datos válidos en los archivos.");
       }

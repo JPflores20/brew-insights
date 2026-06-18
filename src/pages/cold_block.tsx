@@ -37,8 +37,10 @@ export default function ColdBlock() {
 
   // Trigger cold block data loading on mount if not already loaded
   useEffect(() => {
-    triggerColdBlockLoad();
-  }, [triggerColdBlockLoad]);
+    if (isLoaded) {
+      triggerColdBlockLoad();
+    }
+  }, [triggerColdBlockLoad, isLoaded]);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,7 +53,6 @@ export default function ColdBlock() {
     if (path.endsWith("/comparativo")) return "comparativo";
     if (path.endsWith("/gobierno")) return "gobierno";
     if (path.endsWith("/digitalizador")) return "digitalizador";
-    if (path.endsWith("/skapbd")) return "skapbd";
     return "resumen";
   }, [location.pathname]);
 
@@ -100,10 +101,6 @@ export default function ColdBlock() {
             <TabsTrigger value="digitalizador" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2 px-6">
               <ScanLine className="h-4 w-4" />
               Digitalizador OCR
-            </TabsTrigger>
-            <TabsTrigger value="skapbd" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white gap-2 px-6">
-              <Database className="h-4 w-4" />
-              SKAPBD
             </TabsTrigger>
           </TabsList>
 
@@ -159,18 +156,6 @@ export default function ColdBlock() {
                 <CapabilityAnalysisManager />
               </TabsContent>
             </Tabs>
-          </TabsContent>
-
-          <TabsContent value="skapbd" className="mt-0 outline-none">
-            <div className="flex flex-col items-center justify-center py-24 bg-slate-900/30 border border-slate-800 rounded-xl">
-              <div className="bg-blue-500/10 p-4 rounded-full mb-4">
-                <Database className="h-12 w-12 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-medium text-white mb-2">SKAPBD</h3>
-              <p className="text-slate-400 text-center max-w-md">
-                Esta sección se encuentra en construcción. Próximamente estarán disponibles las métricas y análisis de SKAPBD.
-              </p>
-            </div>
           </TabsContent>
 
           <TabsContent value="gobierno" className="mt-0 outline-none">

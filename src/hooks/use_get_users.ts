@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 
 import { collection, query, getDocs, getFirestore, doc, updateDoc, setDoc } from 'firebase/firestore';
-import { firestore } from '../lib/firebase';
+import { firestore, firebaseConfig } from '../lib/firebase';
 import { useAuth } from '../context/auth_context';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+
 export type PermissionType = 'admin' | 'hot_block' | 'cold_block';
 
 export interface UserData {
@@ -73,5 +76,34 @@ export const useGetUsers = () => {
     }
   };
 
-  return { users, loading, error, updateUserPermissions, refetch: fetchUsers };
+  const createUserAccount = async (email: string, password: string, permissions: PermissionType[]) => {
+    let secondaryApp;
+    try {
+      secondaryApp = initializeApp(firebaseConfig, `SecondaryApp_${Date.now()}`);
+      const secondaryAuth = getAuth(secondaryApp);
+      
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const newUid = userCredential.user.uid;
+      
+      const userRef = doc(firestore, 'user_permissions', newUid);
+      
+      await setDoc(userRef, {
+        email,
+        permissions,
+        createdAt: new Date().toISOString()
+      });
+      
+      await fetchUsers();
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error creating user:', err);
+      return { success: false, error: err.message || 'Error al crear usuario' };
+    } finally {
+      if (secondaryApp) {
+        await deleteApp(secondaryApp).catch(console.error);
+      }
+    }
+  };
+
+  return { users, loading, error, updateUserPermissions, createUserAccount, refetch: fetchUsers };
 };

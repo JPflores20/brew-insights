@@ -7,12 +7,14 @@ interface EmptyStateUploaderProps {
     uploadProgress: number;
     onFilesSelected: (files: File[]) => void;
     maxFiles?: number;
+    onCancel?: () => void;
 }
 export function EmptyStateUploader({
     loading,
     uploadProgress,
     onFilesSelected,
     maxFiles = 4,
+    onCancel,
 }: EmptyStateUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -169,9 +171,11 @@ export function EmptyStateUploader({
                         <Button 
                             variant="ghost" 
                             className="text-muted-foreground hover:text-foreground"
-                            onClick={() => setPendingFiles([])}
+                            onClick={() => {
+                                setPendingFiles([]);
+                            }}
                         >
-                            Cancelar
+                            Cancelar Selección
                         </Button>
                     </div>
                 </div>
@@ -223,6 +227,11 @@ export function EmptyStateUploader({
                             <p className="text-xs text-muted-foreground">
                                 Soporta unicamente archivos .dbf
                             </p>
+                        )}
+                        {onCancel && (
+                            <Button variant="ghost" className="mt-4 text-muted-foreground" onClick={onCancel}>
+                                Cancelar y volver
+                            </Button>
                         )}
                     </div>
                 </>

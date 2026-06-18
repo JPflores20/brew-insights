@@ -32,10 +32,13 @@ export default function Overview() {
 
   // Trigger hot block data loading on mount if not already loaded
   useEffect(() => {
-    triggerHotBlockLoad();
-  }, [triggerHotBlockLoad]);
+    if (isLoaded) {
+      triggerHotBlockLoad();
+    }
+  }, [triggerHotBlockLoad, isLoaded]);
   const [expandedChart, setExpandedChart] = useState<"efficiency" | "distribution" | null>(null);
   const [distributionDateRange, setDistributionDateRange] = useState<DateRange | undefined>();
+  const [showUploader, setShowUploader] = useState(false);
   const handleExport = () => {
     if (data.length === 0) {
       toast({ variant: "destructive", title: "Sin datos", description: "No hay datos para exportar." });
@@ -136,7 +139,7 @@ export default function Overview() {
                 <Download className="mr-2 h-4 w-4" /> Exportar CSV
               </Button>
             )}
-            <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => setData([])}>
+            <Button variant="outline" className="shadow-sm hover:border-primary/50 transition-colors" onClick={() => setShowUploader(true)}>
               <Upload className="mr-2 h-4 w-4" /> Cargar nuevos archivos
             </Button>
           </div>
@@ -232,6 +235,22 @@ export default function Overview() {
             <div className="flex-1 w-full min-h-0 mt-4">
               {expandedChart === "efficiency" && <EfficiencyChart data={data} className="h-[60vh]" titleClassName="hidden" />}
               {expandedChart === "distribution" && <ProductPieChart data={pieData} totalBatches={filteredTotalBatches} expanded={true} />}
+            </div>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={showUploader} onOpenChange={setShowUploader}>
+          <DialogContent className="max-w-4xl bg-transparent border-none shadow-none">
+            <div className="bg-background rounded-xl border border-border shadow-2xl">
+              <EmptyStateUploader 
+                loading={loading} 
+                uploadProgress={uploadProgress} 
+                onFilesSelected={(files) => {
+                  processFiles(files);
+                  setShowUploader(false);
+                }} 
+                maxFiles={maxFiles}
+                onCancel={() => setShowUploader(false)}
+              />
             </div>
           </DialogContent>
         </Dialog>

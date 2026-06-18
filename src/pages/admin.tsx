@@ -14,6 +14,10 @@ import { AnimatedPage } from "@/components/layout/animated_page";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { UserPlus, Search } from 'lucide-react';
+import { useToast } from "@/hooks/use_toast";
 
 const PERMISSION_LABELS: Record<PermissionType, string> = {
   admin: 'Admin',
@@ -32,6 +36,19 @@ const Admin: React.FC = () => {
   // Estados para mostrar indicadores de "Guardando..." o "Guardado" por cada usuario (basado en su UID)
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  
+  // Estado para búsqueda
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Estados para creación de usuario
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPermissions, setNewPermissions] = useState<PermissionType[]>([]);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const { toast } = useToast();
+  const { createUserAccount } = useGetUsers();
 
   // Calcula los permisos del usuario actual logueado para verificar si es 'admin'
   const currentUserPermissions = useMemo(() => {
@@ -122,20 +139,83 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateError('');
 
+    if (newPermissions.length === 0) {
+      setCreateError('Debes asignar al menos un permiso al usuario.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setCreateError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setIsCreatingUser(true);
+    const result = await createUserAccount(newEmail, newPassword, newPermissions);
+    setIsCreatingUser(false);
+
+    if (result.success) {
+      toast({
+        title: "Usuario Creado",
+        description: "El usuario ha sido registrado exitosamente.",
+        className: "bg-primary text-primary-foreground border-none"
+      });
+      setShowAddUser(false);
+      setNewEmail('');
+      setNewPassword('');
+      setNewPermissions([]);
+    } else {
+      setCreateError(result.error || 'Error desconocido al crear usuario');
+    }
+  };
+
+  const toggleNewPermission = (permission: PermissionType) => {
+    setNewPermissions(prev => {
+      if (prev.includes(permission)) {
+        return prev.filter(p => p !== permission);
+      } else {
+        if (permission === 'admin') {
+          return Array.from(new Set([...prev, 'admin', 'hot_block', 'cold_block']));
+        }
+        return [...prev, permission];
+      }
+    });
+  };
 
   // Render principal de la vista de administrador
   return (
     <DashboardLayout>
       <AnimatedPage>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-8 h-8 text-primary" />
-            Gestión de Permisos de Usuarios
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Administra los permisos de acceso de los usuarios registrados en la plataforma.
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+              <Users className="w-8 h-8 text-primary" />
+              Gestión de Permisos de Usuarios
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Administra los permisos de acceso de los usuarios registrados en la plataforma.
+            </p>
+          </div>
+          <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            Agregar Usuario
+          </Button>
+        </div>
+
+        <div className="mb-6 relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <Input
+            type="text"
+            placeholder="Buscar por correo electrónico o ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         {error && (
@@ -160,9 +240,14 @@ const Admin: React.FC = () => {
                 <p className="text-muted-foreground">No hay usuarios registrados</p>
               </div>
             ) : (
-              users.map((userItem) => {
-                const userPerms = permissions[userItem.uid] ?? (userItem.permissions || []);
-                return (
+              users
+                .filter(u => 
+                  u.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                  u.uid.includes(searchQuery)
+                )
+                .map((userItem) => {
+                  const userPerms = permissions[userItem.uid] ?? (userItem.permissions || []);
+                  return (
                   <Card key={userItem.uid} className="flex flex-col md:flex-row md:items-center justify-between p-5 gap-4 hover:border-primary/50 transition-colors">
                     <div className="flex-1 min-w-0 md:mr-6">
                       <h3 className="text-lg font-semibold truncate text-foreground" title={userItem.email}>
@@ -217,6 +302,81 @@ const Admin: React.FC = () => {
           </div>
         )}
       </AnimatedPage>
+
+      <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+            <DialogDescription>
+              Registra un nuevo usuario y asigna sus permisos de acceso.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateUser} className="space-y-6 mt-4">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Correo Electrónico</label>
+                <Input 
+                  type="email" 
+                  required 
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="usuario@ab-inbev.com"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Contraseña Temporal</label>
+                <Input 
+                  type="password" 
+                  required 
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              
+              <div className="pt-2">
+                <label className="text-sm font-medium mb-3 block">Permisos de Acceso <span className="text-destructive">*</span></label>
+                <div className="space-y-3 p-3 bg-muted/50 rounded-lg border border-border">
+                  {(Object.keys(PERMISSION_LABELS) as PermissionType[]).map((permission) => (
+                    <div key={`new-${permission}`} className="flex items-center justify-between">
+                      <label htmlFor={`new-${permission}`} className="text-sm font-medium cursor-pointer">
+                        {PERMISSION_LABELS[permission]}
+                      </label>
+                      <Switch
+                        id={`new-${permission}`}
+                        checked={newPermissions.includes(permission)}
+                        onCheckedChange={() => toggleNewPermission(permission)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {createError && (
+              <div className="text-sm text-destructive font-medium p-2 bg-destructive/10 rounded border border-destructive/20">
+                {createError}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddUser(false)} disabled={isCreatingUser}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isCreatingUser}>
+                {isCreatingUser ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Creando...
+                  </>
+                ) : (
+                  'Crear Usuario'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

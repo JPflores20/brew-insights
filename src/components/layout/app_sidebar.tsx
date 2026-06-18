@@ -123,11 +123,6 @@ const coldBlockNavItems: NavItem[] = [
         title: "Digitalizador OCR",
         url: "/bloque-frio/digitalizador",
         icon: ScanLine,
-    },
-    {
-        title: "SKAPBD",
-        url: "/bloque-frio/skapbd",
-        icon: Database,
     }
 ];
 

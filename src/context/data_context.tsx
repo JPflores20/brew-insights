@@ -6,11 +6,13 @@
  * Maneja la carga inicial del JSON optimizado generado por Python y las lógicas de
  * purga de datos antiguos.
  */
-import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { BatchRecord } from "@/data/mock_data";
 import { useIndexedDB } from "@/hooks/use_indexed_db"; 
 import { processDbfBuffer } from "@/utils/dbf_processor";
 import { useToast } from "@/hooks/use_toast";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
 
 interface DataContextType {
   data: BatchRecord[];          // Hot Block Data (Cocimientos)
@@ -35,36 +37,70 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const hasStartedColdLoad = useRef(false);
   const { toast } = useToast();
 
-  const triggerHotBlockLoad = async () => {
-    if (data.length > 0 || hasStartedHotLoad.current) return;
+  const triggerHotBlockLoad = useCallback(async () => {
+    if (hasStartedHotLoad.current) return;
     hasStartedHotLoad.current = true;
+
     setIsHotLoading(true);
-    setLoadingText("Cargando Cocimientos (Optimizados)...");
+    setLoadingText(data.length > 0 ? "Buscando actualizaciones..." : "Cargando Cocimientos (Firebase)...");
     
     try {
-      const response = await fetch("/preloaded_data.json");
-      const contentType = response.headers.get("content-type");
+      const hotBlockRef = collection(firestore, "hot_block_records");
+      let q = query(hotBlockRef);
       
-      if (response.ok && contentType?.includes("application/json")) {
-        const jsonData = await response.json();
-        if (jsonData && Array.isArray(jsonData) && jsonData.length > 0) {
-          setData(jsonData);
-          toast({ title: "Datos cargados", description: "Se cargaron los datos de producción exitosamente." });
-        } else {
-          toast({ variant: "destructive", title: "Datos vacíos", description: "El archivo de datos optimizado está vacío." });
+      if (data.length > 0) {
+        const maxTimestamp = data.reduce((max, record) => 
+          record.timestamp > max ? record.timestamp : max, 
+          "1970-01-01T00:00:00Z"
+        );
+        q = query(hotBlockRef, where("timestamp", ">", maxTimestamp));
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const newRecords: BatchRecord[] = [];
+      querySnapshot.forEach((doc) => {
+        newRecords.push(doc.data() as BatchRecord);
+      });
+      
+      if (newRecords.length > 0) {
+        const mergedData = [...data, ...newRecords];
+        const uniqueDataMap = new Map<string, BatchRecord>();
+        mergedData.forEach(r => uniqueDataMap.set(r.CHARG_NR, r));
+        const finalData = Array.from(uniqueDataMap.values());
+        
+        setData(finalData);
+        toast({ 
+          title: "Datos sincronizados", 
+          description: `Se descargaron ${newRecords.length} nuevos lotes de Firebase.` 
+        });
+      } else if (data.length === 0) {
+        // Fallback local file if Firebase is empty and we have no local data
+        const response = await fetch("/preloaded_data.json");
+        const contentType = response.headers.get("content-type");
+        
+        if (response.ok && contentType?.includes("application/json")) {
+          const jsonData = await response.json();
+          if (jsonData && Array.isArray(jsonData) && jsonData.length > 0) {
+            setData(jsonData);
+            toast({ title: "Datos cargados (Local)", description: "Se cargó el archivo predeterminado local." });
+          } else {
+            // Silently fail, user will see the Empty State Uploader
+          }
         }
       } else {
-        toast({ variant: "destructive", title: "Error de carga", description: "No se encontró el archivo de datos optimizado. Por favor carga los archivos manualmente." });
+        console.log("No hay datos nuevos en Firebase.");
       }
     } catch (error) {
       console.error("Error loading hot block data:", error);
-      toast({ variant: "destructive", title: "Error de conexión", description: "No se pudo conectar para descargar los datos." });
+      if (data.length === 0) {
+         toast({ variant: "destructive", title: "Error de conexión", description: "No se pudo conectar a Firebase para descargar los datos." });
+      }
     } finally {
       setIsHotLoading(false);
     }
-  };
+  }, [data, setData, toast]);
 
-  const triggerColdBlockLoad = async () => {
+  const triggerColdBlockLoad = useCallback(async () => {
     if (hasStartedColdLoad.current) return;
     hasStartedColdLoad.current = true;
     
@@ -74,7 +110,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setColdData([]);
       localStorage.setItem('cold_data_cleaned', 'true');
     }
-  };
+  }, [coldData.length, setColdData]);
 
   // Automatización: Limpiar datos de prueba heredados (Semanas 6-9) si se detectan
   useEffect(() => {

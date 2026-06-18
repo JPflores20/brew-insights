@@ -86,7 +86,7 @@ export function DigitizerTab() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   // Selected Template Type
-  const [templateType, setTemplateType] = useState<"ocupacion" | "operacion">("ocupacion");
+  const [templateType, setTemplateType] = useState<"ocupacion" | "operacion">("operacion");
   
   // Dynamic columns and rows
   const [columns, setColumns] = useState<string[]>([]);
@@ -112,29 +112,23 @@ export function DigitizerTab() {
       tipo: "Tipo Tanque",
       tcc: "TCC (Tanque)",
       tanque: "Tanque",
+      estado_modo: "Modo",
+      estado_detalle: "Detalle Edo.",
       marca: "Marca",
       volumen: "Volumen (hl)",
+      oxigeno: "Oxígeno (ppb)",
+      ciclos_acido_1: "Acido 1",
+      ciclos_acido_2: "Acido 2",
+      ciclos_sosa_1: "Sosa 1",
+      ciclos_sosa_2: "Sosa 2",
       porcentaje: "Porcentaje (%)",
       estado: "Estado",
-      oxigeno: "Oxígeno (ppb)",
       ciclos: "Ciclos"
     };
     return labels[key.toLowerCase()] || key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   };
 
-  // Save API Key
-  const handleSaveApiKey = () => {
-    if (apiKey.trim()) {
-      localStorage.setItem("gemini_ocr_api_key", apiKey.trim());
-      setIsApiKeySaved(true);
-      setShowConfig(false);
-    } else {
-      localStorage.removeItem("gemini_ocr_api_key");
-      setIsApiKeySaved(false);
-    }
-  };
-
-  // Drag and Drop
+  // Translate keys to friendly Spanish labels
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -184,12 +178,15 @@ export function DigitizerTab() {
     reader.readAsDataURL(file);
   };
 
+  const [rawOcrText, setRawOcrText] = useState<string | null>(null);
+
   // Process OCR
   const runOCR = async (base64Image: string, fileName: string) => {
     setIsLoading(true);
     setError(null);
     setExtractedData([]);
     setColumns([]);
+    setRawOcrText(null);
 
     const base64Data = base64Image.split(",")[1];
 
@@ -200,7 +197,7 @@ export function DigitizerTab() {
         if (templateType === "ocupacion") {
           promptText = "Analyze this image representing 'OCUPACION EN UNITANQUES' containing tables under categories TIPO C, TIPO B, TIPO A with columns TCC, M., hl, %. Extract all rows and return a JSON object with properties 'columns' (exactly: ['tipo', 'tcc', 'marca', 'volumen', 'porcentaje']) and 'rows' (an array of objects). 'tipo' should capture the category (e.g. 'Tipo C', 'Tipo B', 'Tipo A'). 'tcc' is the tank code. 'marca' is the brand ID. 'volumen' is the volume in hl (number). 'porcentaje' is the percentage (number). Return ONLY the raw JSON object. Do not wrap it in markdown blocks.";
         } else {
-          promptText = "Extract the operation table in this image containing columns like Tanque, Estado, Marca, Volumen (hl), Oxígeno (ppb), Ciclos. Return a JSON object with properties 'columns' (exactly: ['tanque', 'estado', 'marca', 'volumen', 'oxigeno', 'ciclos']) and 'rows' (an array of objects). Return ONLY the raw JSON object. Do not wrap it in markdown blocks.";
+          promptText = "Extract the operation table in this image (e.g. TANQUE, ESTADO, MARCA, VOL, OXY, CICLOS ACIDO, CICLOS SOSA). Return a JSON object with properties 'columns' (exactly: ['tanque', 'estado_modo', 'estado_detalle', 'marca', 'volumen', 'oxigeno', 'ciclos_acido_1', 'ciclos_acido_2', 'ciclos_sosa_1', 'ciclos_sosa_2']) and 'rows' (an array of objects). For 'estado_modo' capture the single letter inside the color box (A, M, etc). For 'estado_detalle' capture the text next to it (e.g., '........', 'Mo. vac'). Extract ONLY the numbers for 'volumen' and 'oxigeno' without units (e.g., 266 instead of '266 hl'). Under 'CICLOS ACIDO', split into two columns: 'ciclos_acido_1' (first box, e.g. cyan) and 'ciclos_acido_2' (second box, e.g. yellow). Do the same for 'CICLOS SOSA' -> 'ciclos_sosa_1' and 'ciclos_sosa_2'. Return ONLY the raw JSON object. Do not wrap it in markdown blocks.";
         }
 
         const response = await fetch(
@@ -278,27 +275,32 @@ export function DigitizerTab() {
       setColumns(["tipo", "tcc", "marca", "volumen", "porcentaje"]);
       setExtractedData(SIMULATED_OCUPACION_DATA);
     } else {
-      setColumns(["tanque", "estado", "marca", "volumen", "oxigeno", "ciclos"]);
+      setColumns(["tanque", "estado_modo", "estado_detalle", "marca", "volumen", "oxigeno", "ciclos_acido_1", "ciclos_acido_2", "ciclos_sosa_1", "ciclos_sosa_2"]);
       
-      const brands = ["Corona Nal", "Corona-L Exp", "Modelo Exp", "Victoria Nal", "Pacífico", "Negra Modelo", "NO SELECT"];
-      const statuses = ["Lleno", "Vacío", "Lavando", "En Transición", "Filtrando"];
+      const brands = ["CORONA", "NEGRA M. E", "VICTORIA", "PACIFICO", "MICHELOB", "COR EUROP", "--------"];
+      const modos = ["A", "M"];
+      const detalles = ["........", "Mo. vac", "Ce.1 fill", "Ce.2 fill"];
       const simData = [];
       
       for (let i = 1; i <= 10; i++) {
         const isSelect = Math.random() > 0.15;
-        const brand = isSelect ? brands[Math.floor(Math.random() * (brands.length - 1))] : "NO SELECT";
-        const status = brand === "NO SELECT" ? "Vacío" : statuses[Math.floor(Math.random() * statuses.length)];
-        const volume = status === "Vacío" || status === "Lavando" ? 0 : Math.floor(Math.random() * 2000) + 300;
-        const oxygen = status === "Vacío" || status === "Lavando" ? 0 : Math.floor(Math.random() * 25);
-        const cycles = Math.floor(Math.random() * 6) + 1;
-
+        const brand = isSelect ? brands[Math.floor(Math.random() * (brands.length - 1))] : "--------";
+        const modo = modos[Math.floor(Math.random() * modos.length)];
+        const detalle = detalles[Math.floor(Math.random() * detalles.length)];
+        const volume = brand === "--------" ? 0 : Math.floor(Math.random() * 2000) + 100;
+        const oxygen = brand === "--------" ? 0 : Math.floor(Math.random() * 30);
+        
         simData.push({
-          tanque: `BBT ${i}`,
-          estado: status,
+          tanque: `TQ ${i.toString().padStart(2, '0')}`,
+          estado_modo: modo,
+          estado_detalle: detalle,
           marca: brand,
           volumen: volume,
           oxigeno: oxygen,
-          ciclos: cycles
+          ciclos_acido_1: Math.floor(Math.random() * 60) + 1,
+          ciclos_acido_2: Math.floor(Math.random() * 4),
+          ciclos_sosa_1: 60,
+          ciclos_sosa_2: Math.floor(Math.random() * 60)
         });
       }
       setExtractedData(simData);
@@ -318,7 +320,14 @@ export function DigitizerTab() {
     const updated = [...extractedData];
     
     // Parse values depending on template and cell type
-    if (field === "volumen" || field === "oxigeno" || field === "ciclos" || field === "porcentaje") {
+    if (
+      field === "volumen" || 
+      field === "oxigeno" || 
+      field === "ciclos" || 
+      field === "porcentaje" ||
+      field === "ciclos_acido_1" || field === "ciclos_acido_2" ||
+      field === "ciclos_sosa_1" || field === "ciclos_sosa_2"
+    ) {
       const parsedNum = Number(editValue);
       updated[rowIndex][field] = isNaN(parsedNum) ? 0 : parsedNum;
     } else {
@@ -372,11 +381,14 @@ export function DigitizerTab() {
   // Badges styles
   const getBrandBadgeClass = (brand: string) => {
     const b = String(brand).toLowerCase();
+    if (b.includes("cor europ")) return "bg-orange-500/10 text-orange-400 border-orange-500/20";
     if (b.includes("corona")) return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     if (b.includes("modelo") || b.includes("negra")) return "bg-blue-500/10 text-blue-400 border-blue-500/20";
     if (b.includes("victoria")) return "bg-red-500/10 text-red-400 border-red-500/20";
     if (b.includes("pacífico") || b.includes("pacifico")) return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
-    if (b.includes("no select") || b === "vacío") return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+    if (b.includes("michelob")) return "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+    if (b.includes("barrilito")) return "bg-orange-600/10 text-orange-500 border-orange-600/20";
+    if (b.includes("no select") || b === "vacío" || b.includes("---")) return "bg-slate-500/10 text-slate-500 border-slate-500/20";
     return "bg-slate-500/10 text-slate-300 border-slate-700/30";
   };
 
@@ -485,8 +497,18 @@ export function DigitizerTab() {
         </Card>
       )}
 
-      {/* Main Drag & Drop Zone */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* DISABLED STATE */}
+      <Card className="bg-slate-900/30 border-amber-500/20 p-12 flex flex-col items-center justify-center text-center">
+        <AlertCircle className="h-12 w-12 text-amber-500 mb-4 opacity-80" />
+        <h3 className="text-lg font-medium text-white mb-2">Módulo Deshabilitado</h3>
+        <p className="text-slate-400 max-w-md text-sm">
+          El digitalizador se encuentra temporalmente deshabilitado por razones de seguridad. 
+          Por favor, genera una nueva clave de API antes de reactivarlo.
+        </p>
+      </Card>
+
+      {/* Main Drag & Drop Zone (Oculto) */}
+      <div className="hidden">
         
         {/* Left Side: Upload zone */}
         <div className="lg:col-span-1 space-y-4">
@@ -587,14 +609,30 @@ export function DigitizerTab() {
                     </span>
                   )}
                   {extractedData.length > 0 && !isLoading && (
-                    <span className="flex items-center gap-1.5 text-green-500 font-semibold">
-                      <CheckCircle2 className="h-4 w-4" /> Extracción completada ({extractedData.length} tanques detectados).
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-1.5 text-green-500 font-semibold">
+                        <CheckCircle2 className="h-4 w-4" /> Extracción completada ({extractedData.length} tanques detectados).
+                      </span>
+                      {!isApiKeySaved && (
+                        <span className="flex items-center gap-1.5 text-amber-500 font-semibold bg-amber-500/10 p-1.5 rounded-md border border-amber-500/20">
+                          <AlertCircle className="h-4 w-4" /> ATENCIÓN: Estás en Modo Simulación. Los datos mostrados son aleatorios porque no has configurado una Clave API.
+                        </span>
+                      )}
+                    </div>
                   )}
                   {error && (
-                    <span className="flex items-center gap-1.5 text-red-500">
-                      <AlertCircle className="h-4 w-4" /> {error}
-                    </span>
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                      <span className="flex items-center gap-1.5 text-red-500 font-semibold bg-red-500/10 p-2 rounded-md border border-red-500/20">
+                        <AlertCircle className="h-4 w-4 shrink-0" /> 
+                        {error}
+                      </span>
+                      {rawOcrText && (
+                        <div className="text-left mt-2 border border-slate-700 bg-slate-900 rounded p-2 overflow-auto max-h-40">
+                          <p className="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">Texto Crudo Extraído (Cópialo para enviarlo):</p>
+                          <pre className="text-[10px] font-mono text-slate-300 whitespace-pre-wrap">{rawOcrText}</pre>
+                        </div>
+                      )}
+                    </div>
                   )}
                   {!isLoading && extractedData.length === 0 && !error && (
                     <span>Carga una captura para iniciar el procesamiento automático.</span>
@@ -636,7 +674,7 @@ export function DigitizerTab() {
                       <TableHead 
                         key={colKey} 
                         className={`text-slate-300 font-semibold ${
-                          colKey === "volumen" || colKey === "oxigeno" || colKey === "ciclos" || colKey === "porcentaje" 
+                          colKey === "volumen" || colKey === "oxigeno" || colKey === "ciclos" || colKey === "porcentaje" || colKey.startsWith("ciclos_")
                             ? "text-right" 
                             : "text-left"
                         }`}
@@ -652,12 +690,13 @@ export function DigitizerTab() {
                       {columns.map((colKey) => {
                         const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.field === colKey;
                         const val = row[colKey];
+                        const isNumericCol = colKey === "volumen" || colKey === "oxigeno" || colKey === "ciclos" || colKey === "porcentaje" || colKey.startsWith("ciclos_");
                         
                         return (
                           <TableCell 
                             key={colKey} 
                             className={
-                              colKey === "volumen" || colKey === "oxigeno" || colKey === "ciclos" || colKey === "porcentaje" 
+                              isNumericCol
                                 ? "text-right font-mono" 
                                 : colKey === "tcc" || colKey === "tanque" 
                                 ? "font-semibold font-mono text-slate-200" 
@@ -714,15 +753,13 @@ export function DigitizerTab() {
                               ) : (
                                 <Input
                                   value={editValue}
-                                  type={colKey === "volumen" || colKey === "oxigeno" || colKey === "ciclos" || colKey === "porcentaje" ? "number" : "text"}
+                                  type={isNumericCol ? "number" : "text"}
                                   onChange={(e) => setEditValue(e.target.value)}
                                   onBlur={saveCell}
                                   onKeyDown={handleKeyDown}
                                   autoFocus
                                   className={`h-8 bg-slate-900 border-slate-700 text-white text-xs w-full py-0.5 px-2 focus-visible:ring-blue-500/50 ${
-                                    colKey === "volumen" || colKey === "oxigeno" || colKey === "ciclos" || colKey === "porcentaje" 
-                                      ? "text-right font-mono" 
-                                      : ""
+                                    isNumericCol ? "text-right font-mono" : ""
                                   }`}
                                 />
                               )
@@ -736,6 +773,13 @@ export function DigitizerTab() {
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getBrandBadgeClass(val)}`}>
                                       {val}
                                     </span>
+                                  ) : colKey === "estado_modo" ? (
+                                    <span className={`inline-flex items-center w-6 h-6 justify-center rounded text-xs font-bold ${
+                                      val === 'A' ? 'bg-green-500 text-slate-900' : 
+                                      val === 'M' ? 'bg-yellow-400 text-slate-900' : 'bg-slate-700 text-slate-300'
+                                    }`}>
+                                      {val}
+                                    </span>
                                   ) : colKey === "estado" ? (
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClass(val)}`}>
                                       {val}
@@ -744,6 +788,14 @@ export function DigitizerTab() {
                                     <span className="text-blue-400 font-bold">{Number(val).toLocaleString()}</span>
                                   ) : colKey === "porcentaje" ? (
                                     <span>{Number(val).toLocaleString()}%</span>
+                                  ) : colKey === "ciclos_acido_1" || colKey === "ciclos_sosa_1" ? (
+                                    <span className="inline-block bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded min-w-[28px] text-center font-bold">
+                                      {val}
+                                    </span>
+                                  ) : colKey === "ciclos_acido_2" || colKey === "ciclos_sosa_2" ? (
+                                    <span className="inline-block bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded min-w-[28px] text-center font-bold">
+                                      {val}
+                                    </span>
                                   ) : (
                                     String(val ?? "")
                                   )}
