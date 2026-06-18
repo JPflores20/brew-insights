@@ -18,6 +18,7 @@ Construido con **React**, **Vite** y **TypeScript**, utilizando **Shadcn UI** pa
 - **Mantenimiento Predictivo**: Análisis de tendencias de degradación de equipos con proyección RUL (Remaining Useful Life).
 - **Exportación a Excel**: Descarga de reportes filtrados en formato `.xlsx`.
 - **Insights con IA**: Análisis automatizado con Google Gemini para generar diagnósticos sobre ineficiencias y tiempos muertos.
+- **Gestión de Usuarios y Roles**: Administración de permisos de acceso (Admin, Bloque Caliente, Bloque Frío) mediante Firebase.
 - **Diseño Responsivo**: Interfaz adaptativa con soporte para modo claro/oscuro.
 
 ---
@@ -35,6 +36,7 @@ Construido con **React**, **Vite** y **TypeScript**, utilizando **Shadcn UI** pa
 - [Tailwind CSS](https://tailwindcss.com/) — Framework CSS utility-first.
 - [Shadcn UI](https://ui.shadcn.com/) — Componentes reutilizables basados en Radix UI.
 - [Lucide React](https://lucide.dev/) — Iconografía.
+- [Framer Motion](https://www.framer.com/motion/) — Animaciones fluidas.
 
 **Datos y Gráficas:**
 
@@ -131,9 +133,10 @@ brew-insights/
 │   ├── setupTests.ts                # Configuración para tests con Vitest
 │   │
 │   ├── pages/                       # ── PÁGINAS PRINCIPALES ──
-│   │   ├── login.tsx                # Página de inicio de sesión (Firebase Auth)
+│   │   ├── Login.tsx                # Página de inicio de sesión (Firebase Auth)
 │   │   ├── main_menu.tsx            # Menú principal de navegación
-│   │   ├── overview.tsx             # Resumen general: KPIs, distribución de lotes, eficiencia
+│   │   ├── Overview.tsx             # Resumen general: KPIs, distribución de lotes, eficiencia
+│   │   ├── admin.tsx                # Panel de administración de usuarios y roles
 │   │   ├── cycle_analysis.tsx       # Análisis de ciclos: tiempos reales vs ideales
 │   │   ├── machine_detail.tsx       # Detalle de maquinaria: Gantt, pasos, anomalías
 │   │   ├── batch_comparison.tsx     # Comparativo: volumen de mosto, última agua, tendencias, Cp/Cpk
@@ -292,6 +295,7 @@ brew-insights/
 │   │
 │   ├── hooks/                       # ── HOOKS PERSONALIZADOS ──
 │   │   ├── use_file_upload.ts       # Procesamiento de archivos Excel/DBF subidos
+│   │   ├── use_get_users.ts         # Obtención y gestión de permisos de usuarios
 │   │   ├── use_batch_comparison.ts  # Lógica de comparación entre lotes
 │   │   ├── use_machine_detail.ts    # Lógica del detalle de maquinaria
 │   │   ├── use_export_machine_detail.ts # Exportación de datos de maquinaria
@@ -353,25 +357,25 @@ brew-insights/
 
 ## 🔄 Flujo de Datos
 
-```
-Archivos .xlsx / .dbf
+```text
+Firebase Firestore (hot_block_records)
         │
         ▼
-  use_file_upload.ts ──► dbf_processor.ts
-        │                      │
-        ▼                      ▼
-  data_context.tsx ◄── BatchRecord[]
+  data_context.tsx (Descarga y Sincronización)
+        │
+        ▼
+  IndexedDB (Caché local) ──► BatchRecord[]
         │
         ▼
   Páginas y Componentes
   (gráficas, tablas, KPIs)
 ```
 
-1. El usuario sube archivos desde el **Empty State Uploader** o la interfaz principal.
-2. `use_file_upload.ts` delega el procesamiento a `dbf_processor.ts` (para `.dbf`) o al parser de Excel.
-3. Los datos se transforman en un arreglo de `BatchRecord[]` y se almacenan en el `DataContext`.
-4. Todos los componentes de gráficas y tablas consumen datos del contexto global.
-5. Los datos se persisten opcionalmente en **IndexedDB** para mantenerlos entre sesiones.
+1. La aplicación se conecta automáticamente a **Firebase Firestore** al iniciar sesión.
+2. `data_context.tsx` consulta la colección `hot_block_records` para descargar los lotes de producción más recientes.
+3. Los datos se sincronizan y guardan localmente en la caché del navegador (**IndexedDB**) para permitir cargas instantáneas en sesiones futuras.
+4. Todos los componentes de gráficas, tablas y KPIs consumen esta información reactiva del contexto global.
+5. *(Opcional)* Como mecanismo de respaldo o ingesta manual especializada, el sistema aún soporta la carga de archivos locales mediante `use_file_upload.ts` y `dbf_processor.ts`.
 
 ---
 
@@ -387,6 +391,8 @@ Archivos .xlsx / .dbf
 | Bloque Frío              | `/cold-block`             | Fermentación, historial de tanques                          |
 | Mantenimiento Predictivo | `/predictive-maintenance` | Tendencias de degradación, proyección RUL                   |
 | Indicadores              | `/indicadores`            | Métricas de calidad globales                                |
+| Consistencia de Calidad  | `/quality-consistency`    | Análisis de consistencia de calidad entre lotes             |
+| Administración           | `/admin`                  | Gestión de usuarios y control de acceso (RBAC)              |
 
 ---
 
