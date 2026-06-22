@@ -246,7 +246,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
 
   const groupedEvents = new Map<string, typeof events>();
   events.forEach((evt) => {
-    const key = `${evt.CHARG_NR}|${evt.TEILANL_GRUPO}`;
+    const safeName = (evt.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+    const key = `${evt.CHARG_NR}|${evt.TEILANL_GRUPO}|${safeName}`;
     if (!groupedEvents.has(key)) groupedEvents.set(key, []);
     groupedEvents.get(key)!.push(evt);
   });
@@ -397,7 +398,8 @@ export function mergeBatchRecords(records: BatchRecord[]): BatchRecord[] {
   const grouped = new Map<string, BatchRecord[]>();
   
   records.forEach(r => {
-    const key = `${r.CHARG_NR.trim()}|${r.TEILANL_GRUPO.trim()}`;
+    const safeName = (r.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+    const key = `${r.CHARG_NR.trim()}|${r.TEILANL_GRUPO.trim()}|${safeName}`;
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key)!.push(r);
   });

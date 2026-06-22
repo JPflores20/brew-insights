@@ -30,7 +30,7 @@ const filterByRecipe = (data: BatchRecord[], recipe: string, emptyReturnsAll: bo
   if (recipe === "") return emptyReturnsAll ? data : [];
   return isValidSelection(recipe) ? data.filter((d) => d.productName === recipe) : data;
 };
-const getUniqueValues = (data: string[]) => Array.from(new Set(data.filter(Boolean))).sort();
+const getUniqueValues = (data: string[]) => Array.from(new Set(data.filter(Boolean))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 const hasTemperatureParam = (record: BatchRecord) => 
   record.parameters?.some((p) => isTemperatureParam(p.name, p.unit || ""));
 export function computeOptions(

@@ -16,7 +16,7 @@ import {
   AlertCircle,
   Download
 } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 export interface UnitanqueData {
@@ -196,10 +196,9 @@ export function UnitanquesTab() {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (parsedData.length === 0) return;
     
-    // Convert to JSON row structure with all 5 fields
     const rows = parsedData.map(row => ({
       "Tanque": row.tanque,
       "Marca": row.marca,
@@ -208,7 +207,6 @@ export function UnitanquesTab() {
       "Tiempo (hrs)": row.hrs
     }));
     
-    // Append total row for volume
     rows.push({
       "Tanque": "TOTAL",
       "Marca": "",
@@ -217,11 +215,15 @@ export function UnitanquesTab() {
       "Tiempo (hrs)": null as any
     });
     
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Datos Gobierno");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Datos Gobierno");
+    const headers = Object.keys(rows[0]);
+    worksheet.addRow(headers);
+    rows.forEach(r => {
+      worksheet.addRow(Object.values(r));
+    });
     
-    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const buf = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buf], { type: "application/octet-stream" }), "datos_gobierno.xlsx");
   };
 

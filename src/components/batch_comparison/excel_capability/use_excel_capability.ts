@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { parse, startOfDay, endOfDay } from "date-fns";
 import { useLocalStorage } from "@/hooks/use_local_storage";
 import { DateRange } from "react-day-picker";
@@ -58,11 +58,24 @@ export function useExcelCapability() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const processWorkbook = (workbook: XLSX.WorkBook) => {
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
+  const processWorkbook = async (workbook: ExcelJS.Workbook) => {
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) throw new Error("Archivo Excel vacío");
     
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as any[][];
+    const jsonData: any[][] = [];
+    worksheet.eachRow({ includeEmpty: true }, (row) => {
+      const vals = Array.isArray(row.values) ? row.values.slice(1) : [];
+      const cleanVals = vals.map(v => {
+        if (v && typeof v === 'object') {
+          if ('result' in v) return (v as any).result;
+          if (v instanceof Date) return v;
+          if ('text' in v) return (v as any).text;
+        }
+        return v;
+      });
+      jsonData.push(cleanVals);
+    });
+
     if (jsonData.length === 0) throw new Error("Archivo Excel vacío");
 
     const headers = (jsonData[0] || []).map(h => String(h).toLowerCase().trim());
@@ -130,27 +143,20 @@ export function useExcelCapability() {
     setLoading(false);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setLoading(true);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const workbook = XLSX.read(bstr, { type: 'binary' });
-        processWorkbook(workbook);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al procesar el archivo");
-        setLoading(false);
-      }
-    };
-    reader.onerror = () => {
-      setError("Error al leer el archivo");
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buffer);
+      await processWorkbook(workbook);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al procesar el archivo");
       setLoading(false);
-    };
-    reader.readAsBinaryString(file);
+    }
   };
 
   const uniqueEtapas = useMemo(() => Array.from(new Set(extData.map(d => d.Etapa).filter(Boolean))).sort(), [extData]);

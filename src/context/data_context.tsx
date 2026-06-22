@@ -65,7 +65,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (newRecords.length > 0) {
         const mergedData = [...data, ...newRecords];
         const uniqueDataMap = new Map<string, BatchRecord>();
-        mergedData.forEach(r => uniqueDataMap.set(r.CHARG_NR, r));
+        mergedData.forEach(r => {
+          const safeName = (r.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+          const safeTeil = (r.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
+          const key = `${r.CHARG_NR}_${safeTeil}_${safeName}`;
+          uniqueDataMap.set(key, r);
+        });
         const finalData = Array.from(uniqueDataMap.values());
         
         setData(finalData);
@@ -136,11 +141,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [isLoaded, isColdLoaded, data, coldData, setData, setColdData, isHotLoading, isColdLoading]);
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     setIsHotLoading(false);
     setIsColdLoading(false);
     hasStartedHotLoad.current = true;
     hasStartedColdLoad.current = true;
+    
+    if (data.length === 0) {
+      try {
+        const response = await fetch("/preloaded_data.json");
+        const contentType = response.headers.get("content-type");
+        if (response.ok && contentType?.includes("application/json")) {
+          const jsonData = await response.json();
+          if (jsonData && Array.isArray(jsonData) && jsonData.length > 0) {
+            setData(jsonData);
+            toast({ title: "Datos cargados (Local)", description: "Se cargó el archivo local al omitir Firebase." });
+          }
+        }
+      } catch (e) {
+        console.error("Error loading local fallback:", e);
+      }
+    }
   };
 
   const isInitializing = isHotLoading || isColdLoading;

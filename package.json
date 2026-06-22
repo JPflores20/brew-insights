@@ -48,9 +48,9 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^3.4.0",
     "file-saver": "^2.0.5",
     "firebase": "^12.9.0",
-    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.34.0",
     "idb-keyval": "^6.2.2",
     "input-otp": "^1.4.2",
@@ -70,7 +70,6 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
-    "xlsx": "^0.18.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -110,5 +109,8 @@
   "bugs": {
     "url": "https://github.com/JPflores20/brew-insights/issues"
   },
-  "homepage": "https://github.com/JPflores20/brew-insights#readme"
+  "homepage": "https://github.com/JPflores20/brew-insights#readme",
+  "overrides": {
+    "tmp": "^0.2.3"
+  }
 }

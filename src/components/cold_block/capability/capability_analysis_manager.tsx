@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from "react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { 
   Card, 
   CardContent, 
@@ -130,13 +130,26 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
     return resultDate;
   };
 
-  const processWorkbook = (workbook: XLSX.WorkBook) => {
+  const processWorkbook = async (workbook: ExcelJS.Workbook) => {
     try {
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "" }) as Record<string, any>[];
-      if (jsonData.length <= 1) throw new Error("Archivo vacío o inválido.");
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet) throw new Error("No se encontraron hojas en el archivo Excel");
+
+      const jsonData: Record<string, any>[] = [];
+      worksheet.eachRow({ includeEmpty: true }, (row) => {
+        const rowObj: Record<string, any> = {};
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const letter = worksheet.getColumn(colNumber).letter;
+          let val = cell.value;
+          if (val && typeof val === 'object' && 'result' in val) {
+            val = (val as any).result;
+          }
+          rowObj[letter] = val || "";
+        });
+        jsonData.push(rowObj);
+      });
+
+      if (jsonData.length === 0) throw new Error("El archivo Excel está vacío o inválido.");
       
       let processed: ExcelDataRow[] = [];
 
@@ -253,25 +266,23 @@ function CapabilitySlot({ mode }: { mode: AnalysisMode }) {
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       setError("Solo se admiten archivos Excel (.xlsx, .xls)");
       return;
     }
     setLoading(true);
     setError(null);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        processWorkbook(workbook);
-      } catch (err) {
-        setError("Error al leer el archivo Excel");
-        setLoading(false);
-      }
-    };
-    reader.readAsArrayBuffer(file);
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buffer);
+      await processWorkbook(workbook);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Error al procesar el archivo");
+      setLoading(false);
+    }
   };
 
   const timeFilteredRows = useMemo(() => {

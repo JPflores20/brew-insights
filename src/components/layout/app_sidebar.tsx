@@ -128,9 +128,10 @@ const coldBlockNavItems: NavItem[] = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, permissions } = useAuth();
     const { data, coldBlockData, setHotBlockData, setColdBlockData } = useData();
     
+    const isAdmin = permissions?.includes("admin");
     const isColdBlock = location.pathname.startsWith('/bloque-frio');
     const navItems = isColdBlock ? coldBlockNavItems : cocimientosNavItems;
     const currentData = isColdBlock ? coldBlockData : data;
@@ -243,20 +244,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </div>
                     </div>
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                title="Limpiar Base de Datos"
-                                variant="outline"
-                                className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/20 mb-2"
-                                onClick={() => {
-                                    if (isColdBlock) setColdBlockData([]);
-                                    else setHotBlockData([]);
-                                }}
-                            >
-                                <Trash2 className="size-4" />
-                                <span>Limpiar Base de Datos</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        {isAdmin && (
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    title="Limpiar Base de Datos"
+                                    variant="outline"
+                                    className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/20 mb-2"
+                                    onClick={() => {
+                                        if (isColdBlock) setColdBlockData([]);
+                                        else setHotBlockData([]);
+                                    }}
+                                >
+                                    <Trash2 className="size-4" />
+                                    <span>Limpiar Base de Datos</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )}
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 variant="outline"

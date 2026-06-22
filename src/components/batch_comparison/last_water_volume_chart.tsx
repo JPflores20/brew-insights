@@ -15,7 +15,7 @@ import {
   BarChart3,
   Download
 } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { 
   AreaChart, 
@@ -302,7 +302,7 @@ export function LastWaterVolumeChart({ data = [] }: LastWaterVolumeChartProps) {
                 variant="outline"
                 size="sm"
                 disabled={!hasData}
-                onClick={() => {
+                onClick={async () => {
                   const rows = chartData.map(row => ({
                       "Lote": row.lote,
                       "Receta": row.receta,
@@ -312,10 +312,16 @@ export function LastWaterVolumeChart({ data = [] }: LastWaterVolumeChartProps) {
                     }));
                   rows.push({ "Lote": "", "Receta": "", "Equipo": "", "Fecha": "", "Diferencia (hl)": "" as any });
                   rows.push({ "Lote": "PROMEDIO", "Receta": "", "Equipo": "", "Fecha": "", "Diferencia (hl)": parseFloat(averageVolume.toFixed(2)) });
-                  const ws = XLSX.utils.json_to_sheet(rows);
-                  const wb = XLSX.utils.book_new();
-                  XLSX.utils.book_append_sheet(wb, ws, "Última Agua");
-                  const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+                  
+                  const workbook = new ExcelJS.Workbook();
+                  const worksheet = workbook.addWorksheet("Última Agua");
+                  const headers = Object.keys(rows[0]);
+                  worksheet.addRow(headers);
+                  rows.forEach(r => {
+                      worksheet.addRow(Object.values(r));
+                  });
+                  
+                  const buf = await workbook.xlsx.writeBuffer();
                   saveAs(new Blob([buf], { type: "application/octet-stream" }), "ultima_agua_reporte.xlsx");
                 }}
                 className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-cyan-400 gap-2"

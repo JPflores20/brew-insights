@@ -83,7 +83,10 @@ export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
               const batch = writeBatch(firestore);
               
               chunk.forEach((record) => {
-                const docRef = doc(hotBlockRef, record.CHARG_NR);
+                const safeName = (record.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+                const safeTeil = (record.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
+                const docId = `${record.CHARG_NR}_${safeTeil}_${safeName}`;
+                const docRef = doc(hotBlockRef, docId);
                 batch.set(docRef, record, { merge: true });
               });
               

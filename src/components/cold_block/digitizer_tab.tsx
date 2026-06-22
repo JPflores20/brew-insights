@@ -19,8 +19,9 @@ import {
   ChevronUp,
   LayoutGrid
 } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { toast } from "@/hooks/use_toast";
 
 // Real transcribed data from the user's screenshot ("OCUPACION EN UNITANQUES")
 const SIMULATED_OCUPACION_DATA = [
@@ -347,10 +348,9 @@ export function DigitizerTab() {
   };
 
   // Export Excel
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (extractedData.length === 0) return;
 
-    // Convert columns to friendly labels for Excel header
     const exportRows = extractedData.map(row => {
       const formattedRow: Record<string, any> = {};
       columns.forEach(col => {
@@ -359,15 +359,28 @@ export function DigitizerTab() {
       return formattedRow;
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Datos Digitalizados");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Datos Digitalizados");
+    const headers = Object.keys(exportRows[0]);
+    worksheet.addRow(headers);
+    exportRows.forEach(r => {
+      worksheet.addRow(Object.values(r));
+    });
 
     const today = new Date().toISOString().split("T")[0];
     const fileName = `bloque_frio_datos_${today}.xlsx`;
 
-    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const buf = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buf], { type: "application/octet-stream" }), fileName);
+  };
+
+  const handleSaveApiKey = () => {
+    localStorage.setItem("gemini_ocr_api_key", apiKey);
+    setIsApiKeySaved(true);
+    toast({
+      title: "API Key guardada",
+      description: "Tu clave se ha guardado de forma segura en tu navegador.",
+    });
   };
 
   const clearAll = () => {
