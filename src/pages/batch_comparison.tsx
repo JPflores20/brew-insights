@@ -148,6 +148,7 @@ export default function BatchComparison() {
           </div>
 
           <BatchSelectorCard
+            data={data}
             batchIds={batchIds}
             selectedBatches={selectedBatches}
             batchProductMap={batchProductMap}

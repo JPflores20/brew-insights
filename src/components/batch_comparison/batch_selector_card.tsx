@@ -27,8 +27,18 @@ export function BatchSelectorCard({
   machines,
   selectedMachines,
   onChangeMachines,
-}: BatchSelectorCardProps) {
-  const batchOptions = batchIds.map(id => `${id} - ${batchProductMap.get(id) || "Sin producto"}`);
+  data, // We need data to filter batches by machine
+}: BatchSelectorCardProps & { data?: any[] }) {
+  // If machines are selected, filter the batchIds to only those that ran on the selected machines
+  let filteredBatchIds = batchIds;
+  if (data && selectedMachines.length > 0) {
+    const batchesOnSelectedMachines = new Set(
+      data.filter(d => selectedMachines.includes(d.TEILANL_GRUPO)).map(d => d.CHARG_NR)
+    );
+    filteredBatchIds = batchIds.filter(id => batchesOnSelectedMachines.has(id));
+  }
+
+  const batchOptions = filteredBatchIds.map(id => `${id} - ${batchProductMap.get(id) || "Sin producto"}`);
   
   const handleOnBatchChange = (selectedOptions: string[]) => {
     const ids = selectedOptions.map(opt => opt.split(' - ')[0]);
