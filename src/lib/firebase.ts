@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,14 +17,12 @@ export const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Inicializar App Check si existe una clave de ReCaptcha v3 en las variables de entorno
+// Inicializar App Check si existe una clave de ReCaptcha en las variables de entorno
 let appCheck;
 if (typeof window !== "undefined" && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
   try {
-    // Si estás probando en localhost descomenta esto window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    //window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+      provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
       // isTokenAutoRefreshEnabled renueva el token en segundo plano automáticamente
       isTokenAutoRefreshEnabled: true
     });
