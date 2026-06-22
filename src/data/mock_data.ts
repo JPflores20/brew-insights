@@ -8,10 +8,10 @@ export type {
 } from "@/types";
 import type { BatchRecord, BatchParameter } from "@/types";
 export function getUniqueBatchIds(data: BatchRecord[]): string[] {
-  return Array.from(new Set(data.map(d => d.CHARG_NR))).sort();
+  return Array.from(new Set(data.map(d => d.CHARG_NR))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 }
 export function getUniqueMachineGroups(data: BatchRecord[]): string[] {
-  return Array.from(new Set(data.map(d => d.TEILANL_GRUPO))).sort();
+  return Array.from(new Set(data.map(d => d.TEILANL_GRUPO))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 }
 export function getBatchById(data: BatchRecord[], batchId: string): BatchRecord[] {
   return data.filter(d => d.CHARG_NR === batchId);
