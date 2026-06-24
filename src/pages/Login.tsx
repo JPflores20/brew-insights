@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "firebase/auth";
+import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, sendPasswordResetEmail } from "firebase/auth";
 import { auth,firestore } from "@/lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,34 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setError("Por favor, ingresa tu correo electrónico en el campo superior para recuperar la contraseña.");
+      setResetMessage("");
+      return;
+    }
+    setError("");
+    setResetMessage("");
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetMessage("Se ha enviado un correo para restablecer tu contraseña.");
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/user-not-found') {
+        setError("No hay ningún usuario registrado con este correo.");
+      } else {
+        setError("Error al enviar el correo de recuperación. Revisa tu conexión o intenta más tarde.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -109,6 +135,11 @@ export default function Login() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            {resetMessage && (
+              <Alert className="bg-green-900/50 border-green-800 text-green-200">
+                <AlertDescription>{resetMessage}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300 font-medium ml-1">
                 Correo Corporativo
@@ -173,9 +204,20 @@ export default function Login() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col justify-center py-6 bg-white/5 border-t border-white/5 rounded-b-xl gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <Lock className="h-3 w-3" />
-            <span>Acceso restringido a personal autorizado</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
+            <div className="flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              <span>Acceso restringido</span>
+            </div>
+            <span className="hidden sm:inline">•</span>
+            <button 
+              type="button" 
+              onClick={handlePasswordReset}
+              disabled={loading}
+              className="text-amber-500 hover:text-amber-400 transition-colors font-medium cursor-pointer"
+            >
+              Recuperar Contraseña
+            </button>
           </div>
           <div className="mt-2 text-[10px] text-slate-500/50 text-center select-none">
             Creado por: <br /> Ing. en Soft. José Luis Flores Carrillo
