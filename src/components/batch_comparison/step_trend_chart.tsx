@@ -6,6 +6,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { MultiSelect } from "@/components/ui/multi_select";
 import { BatchRecord } from "@/types";
 import { Activity, Filter, Plus, Trash2 } from "lucide-react";
 import { FILTER_ALL } from "@/lib/constants";
@@ -13,7 +14,7 @@ import { FILTER_ALL } from "@/lib/constants";
 interface StepSeriesConfig {
   id: string;
   recipe: string;
-  machine: string;
+  machines: string[];
   step: string;
   param: string;
   color: string;
@@ -38,7 +39,7 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
     {
       id: "series-1",
       recipe: "",
-      machine: "",
+      machines: [],
       step: "",
       param: "Temperatura",
       color: COLORS[0],
@@ -52,7 +53,7 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
     setSeries([...series, {
       id: newId,
       recipe: FILTER_ALL,
-      machine: FILTER_ALL,
+      machines: [],
       step: "",
       param: "Temperatura",
       color: newColor,
@@ -88,8 +89,8 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
     if (s.recipe !== FILTER_ALL) {
       filtered = filtered.filter(d => d.productName === s.recipe);
     }
-    if (s.machine !== FILTER_ALL) {
-      filtered = filtered.filter(d => d.TEILANL_GRUPO === s.machine);
+    if (s.machines.length > 0) {
+      filtered = filtered.filter(d => s.machines.includes(d.TEILANL_GRUPO));
     }
     const steps = new Set<string>();
     filtered.forEach(batch => batch.steps.forEach(step => steps.add(step.stepName)));
@@ -102,8 +103,8 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
     if (s.recipe !== FILTER_ALL) {
       filtered = filtered.filter(d => d.productName === s.recipe);
     }
-    if (s.machine !== FILTER_ALL) {
-      filtered = filtered.filter(d => d.TEILANL_GRUPO === s.machine);
+    if (s.machines.length > 0) {
+      filtered = filtered.filter(d => s.machines.includes(d.TEILANL_GRUPO));
     }
     const params = new Set<string>();
     filtered.forEach(batch => {
@@ -125,7 +126,7 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
     validSeries.forEach((s) => {
       let filtered = data;
       if (s.recipe !== FILTER_ALL) filtered = filtered.filter(d => d.productName === s.recipe);
-      if (s.machine !== FILTER_ALL) filtered = filtered.filter(d => d.TEILANL_GRUPO === s.machine);
+      if (s.machines.length > 0) filtered = filtered.filter(d => s.machines.includes(d.TEILANL_GRUPO));
 
       filtered.forEach(batch => {
         const param = batch.parameters.find(p => p.stepName === s.step && p.name === s.param);
@@ -175,7 +176,7 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
                 style={{ backgroundColor: s.color }}
               />
               
-              <Select value={s.recipe} onValueChange={(v) => updateSeries(s.id, { recipe: v, machine: FILTER_ALL, step: "" })}>
+              <Select value={s.recipe} onValueChange={(v) => updateSeries(s.id, { recipe: v, machines: [], step: "" })}>
                 <SelectTrigger className="w-[140px] h-8 text-xs">
                   <SelectValue placeholder="Receta" />
                 </SelectTrigger>
@@ -185,15 +186,15 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
                 </SelectContent>
               </Select>
 
-              <Select value={s.machine} onValueChange={(v) => updateSeries(s.id, { machine: v, step: "" })}>
-                <SelectTrigger className="w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Equipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={FILTER_ALL}>Todos los Equipos</SelectItem>
-                  {getMachinesForSeries(s).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="w-[180px]">
+                <MultiSelect 
+                   options={getMachinesForSeries(s)} 
+                   selected={s.machines} 
+                   onChange={(v) => updateSeries(s.id, { machines: v, step: "" })} 
+                   placeholder="Todos los Equipos" 
+                   className="min-h-8 py-1 h-auto text-xs bg-background" 
+                 />
+              </div>
 
               <Select value={s.step} onValueChange={(v) => updateSeries(s.id, { step: v })}>
                 <SelectTrigger className={`w-[160px] h-8 text-xs font-semibold ${s.step === "" ? 'border-amber-500/50' : 'border-blue-500/30'}`}>
@@ -275,7 +276,7 @@ export function StepTrendChart({ data }: StepTrendChartProps) {
                     key={s.id}
                     type="monotone" 
                     dataKey={s.id} 
-                    name={`${s.machine === FILTER_ALL ? 'Global' : s.machine} - ${s.step}`}
+                    name={`${s.machines.length > 0 ? (s.machines.length === 1 ? s.machines[0] : 'Varios Equipos') : 'Global'} - ${s.step}`}
                     stroke={s.color} 
                     strokeWidth={2}
                     dot={{ r: 3, fill: s.color, strokeWidth: 1, stroke: "#0f172a" }}

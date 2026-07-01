@@ -48,7 +48,7 @@ export function DegradationAlerts({ data, onSelectAlert }: DegradationAlertsProp
                       <TableHead>Equipo</TableHead>
                       <TableHead>Operación</TableHead>
                       <TableHead className="text-right">Riesgo</TableHead>
-                      <TableHead className="text-right">Incremento <span className="text-muted-foreground font-normal ml-1">(vs. inicial)</span></TableHead>
+                      <TableHead className="text-right">Incremento <span className="text-muted-foreground font-normal ml-1">(vs. mediana)</span></TableHead>
                       <TableHead className="text-right">Promedio Reciente</TableHead>
                       <TableHead className="w-[40px]"></TableHead>
                   </TableRow>

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
     ResponsiveContainer,
     PieChart,
@@ -13,17 +14,38 @@ interface ProductPieChartProps {
     totalBatches: number;
     expanded?: boolean;
 }
-const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
+const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57'];
 export function ProductPieChart({ data, totalBatches, expanded = false }: ProductPieChartProps) {
+    const displayData = useMemo(() => {
+        if (expanded || data.length <= 8) return data;
+        const top8 = data.slice(0, 8);
+        const othersValue = data.slice(8).reduce((acc, curr) => acc + curr.value, 0);
+        return [...top8, { name: "Otros", value: othersValue }];
+    }, [data, expanded]);
+
     return (
         <ResponsiveContainer width="100%" height="100%">
             <PieChart>
                 <Pie
-                    data={data}
+                    data={displayData}
                     cx="50%"
                     cy="50%"
                     labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    label={(props: any) => {
+                        const { x, y, name, percent, textAnchor, index } = props;
+                        return (
+                            <text
+                                x={x}
+                                y={y}
+                                fill={PIE_COLORS[index % PIE_COLORS.length]}
+                                textAnchor={textAnchor}
+                                dominantBaseline="central"
+                                fontSize={11}
+                            >
+                                {`${name} (${(percent * 100).toFixed(0)}%)`}
+                            </text>
+                        );
+                    }}
                     outerRadius={expanded ? 200 : 130}
                     innerRadius={expanded ? 100 : 70}
                     paddingAngle={2}

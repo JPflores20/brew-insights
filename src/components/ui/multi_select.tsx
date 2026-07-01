@@ -52,20 +52,27 @@ export function MultiSelect({
         >
           <div className="flex flex-wrap gap-1 items-center overflow-hidden">
             {selected.length > 0 ? (
-              selected.map((item) => (
-                <Badge
-                  variant="secondary"
-                  key={item}
-                  className="flex items-center gap-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUnselect(item);
-                  }}
-                >
-                  {item}
-                  <X className="h-3 w-3 cursor-pointer hover:text-destructive" />
-                </Badge>
-              ))
+              <>
+                {selected.slice(0, 2).map((item) => (
+                  <Badge
+                    variant="secondary"
+                    key={item}
+                    className="flex items-center gap-1 max-w-[120px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnselect(item);
+                    }}
+                  >
+                    <span className="truncate">{item}</span>
+                    <X className="h-3 w-3 shrink-0 cursor-pointer hover:text-destructive" />
+                  </Badge>
+                ))}
+                {selected.length > 2 && (
+                  <Badge variant="secondary" className="text-xs">
+                    +{selected.length - 2} más
+                  </Badge>
+                )}
+              </>
             ) : (
               <span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">{placeholder}</span>
             )}

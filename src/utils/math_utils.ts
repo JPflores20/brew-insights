@@ -46,15 +46,19 @@ const calculatePeriodAverages = (durations: number[]) => {
   const firstThirdEnd = Math.max(1, Math.floor(count / 3));
   const lastThirdStart = count - firstThirdEnd;
   
-  const sumFirst = durations.slice(0, firstThirdEnd).reduce((a, b) => a + b, 0);
-  const firstAverage = sumFirst / firstThirdEnd;
-  
+  // Calculate recent average (last third)
   const sumLast = durations.slice(lastThirdStart).reduce((a, b) => a + b, 0);
   const lastAverage = sumLast / firstThirdEnd;
   
-  const percentIncrease = firstAverage > 0 ? ((lastAverage - firstAverage) / firstAverage) * 100 : 0;
+  // Calculate median of all durations
+  const sortedDurations = [...durations].sort((a, b) => a - b);
+  const mid = Math.floor(count / 2);
+  const median = count % 2 !== 0 ? sortedDurations[mid] : (sortedDurations[mid - 1] + sortedDurations[mid]) / 2;
   
-  return { lastAverage, percentIncrease };
+  // Calculate percent increase against the median
+  const percentIncrease = median > 0 ? ((lastAverage - median) / median) * 100 : 0;
+  
+  return { lastAverage, percentIncrease, median };
 };
 
 export function calculateDegradationAlerts(data: BatchRecord[]): AlertData[] {
@@ -81,12 +85,12 @@ export function calculateDegradationAlerts(data: BatchRecord[]): AlertData[] {
   return activeAlerts.sort((a, b) => b.percentIncrease - a.percentIncrease).slice(0, 6);
 }
 
-export const PROCESS_ORDER = [
+const PROCESS_ORDER = [
   "molienda", "grits", "cocedor", "macerador", "filtro", 
   "olla", "whirlpool", "trub", "enfriador", "ve", "tanque", "linea"
 ];
 
-export function getSortIndex(name: string): number {
+function getSortIndex(name: string): number {
   const lowerName = name.toLowerCase();
   const index = PROCESS_ORDER.findIndex(key => lowerName.includes(key));
   return index === -1 ? 999 : index;

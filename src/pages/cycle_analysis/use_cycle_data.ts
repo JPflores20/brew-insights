@@ -75,14 +75,11 @@ export function useCycleData(data: any[]) {
     return batchWithSteps ? batchWithSteps.steps.map((s: any) => s.stepName).filter((name: string) => !name.includes("⏳ Espera")) : [];
   }, [data]);
 
-  useEffect(() => {
-    if (!selectedProduct && uniqueProducts.length > 0) {
-      setSelectedProduct(uniqueProducts[0]);
-    }
-  }, [uniqueProducts, selectedProduct, setSelectedProduct]);
+  // Eliminamos el useEffect que forzaba a seleccionar el primer producto
+  // para permitir que "" (Todos los productos) sea una opción válida.
 
   const filteredData = useMemo(() => {
-    if (!selectedProduct) return [];
+    if (!selectedProduct || selectedProduct === "ALL") return data;
     const targetBatchIds = new Set(data.filter(d => d.productName === selectedProduct).map(d => d.CHARG_NR));
     return data.filter(d => targetBatchIds.has(d.CHARG_NR));
   }, [data, selectedProduct]);

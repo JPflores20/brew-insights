@@ -48,7 +48,7 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
   }, [data]);
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
   const filteredData = useMemo(() => {
-      if (selectedMachines.length === 0) return allChartData;
+      if (selectedMachines.length === 0) return allChartData.slice(0, 10);
       return allChartData.filter(d => selectedMachines.includes(d.machine));
   }, [allChartData, selectedMachines]);
   const toggleMachine = (machineName: string) => {
@@ -63,7 +63,14 @@ export function EfficiencyChart({ data, className, titleClassName }: EfficiencyC
     <Card className="bg-card border-border h-full flex flex-col overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className={cn("text-lg font-semibold text-foreground", titleClassName)}>
-          Tiempo total de ciclo
+          <div className="flex flex-col">
+            <span>Tiempo total de ciclo</span>
+            {selectedMachines.length === 0 && allChartData.length > 10 && (
+              <span className="text-xs font-normal text-muted-foreground mt-1">
+                Mostrando los primeros 10 equipos (Usa filtros para ver más)
+              </span>
+            )}
+          </div>
         </CardTitle>
         <div className="flex items-center gap-2">
             {}
