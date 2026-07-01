@@ -8,7 +8,7 @@ import { writeBatch, doc, collection } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
-  const { setData, setColdBlockData } = useData();
+  const { data, coldBlockData, setData, setColdBlockData } = useData();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -17,6 +17,7 @@ export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
   // Dynamic limit based on target - Increased to 100 for cold block as requested
   const MAX_FILES = target === 'cold' ? 100 : 4;
   const setter = target === 'cold' ? setColdBlockData : setData;
+  const currentData = target === 'cold' ? coldBlockData : data;
 
   const clearProgressInterval = () => {
     if (progressIntervalRef.current) {
@@ -70,12 +71,15 @@ export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
 
       if (combinedData.length > 0) {
         const uniqueData = mergeBatchRecords(combinedData);
-        setter(uniqueData);
+        
+        // Conservar los datos que ya estaban en pantalla y añadir los nuevos
+        const finalMergedData = mergeBatchRecords([...currentData, ...uniqueData]);
+        setter(finalMergedData);
         
         if (target === 'hot') {
           try {
             const hotBlockRef = collection(firestore, "hot_block_records");
-            const CHUNK_SIZE = 500;
+            const CHUNK_SIZE = 100; // Reducido para evitar sobrecargar el write stream
             let uploadedCount = 0;
             
             for (let i = 0; i < uniqueData.length; i += CHUNK_SIZE) {
@@ -87,11 +91,19 @@ export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
                 const safeTeil = (record.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
                 const docId = `${record.CHARG_NR}_${safeTeil}_${safeName}`;
                 const docRef = doc(hotBlockRef, docId);
-                batch.set(docRef, record, { merge: true });
+                
+                // Firestore no soporta valores "undefined". 
+                // Usamos JSON.parse/stringify para limpiar cualquier propiedad undefined del objeto y sus hijos.
+                const cleanRecord = JSON.parse(JSON.stringify(record));
+                
+                batch.set(docRef, cleanRecord, { merge: true });
               });
               
               await batch.commit();
               uploadedCount += chunk.length;
+              
+              // Pausa de 500ms para darle tiempo al SDK a liberar su stream buffer
+              await new Promise(resolve => setTimeout(resolve, 500));
             }
             
             toast({
