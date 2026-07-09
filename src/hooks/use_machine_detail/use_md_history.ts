@@ -1,14 +1,21 @@
 import { useMemo } from "react";
 import { BatchRecord } from "@/types";
 import { getMachineData } from "@/data/mock_data";
+import { FILTER_ALL } from "@/lib/constants";
+
 export function useMdHistory(
   data: BatchRecord[], 
   selectedMachine: string, 
-  selectedBatchId: string
+  selectedBatchId: string,
+  selectedRecipe?: string
 ) {
   const machineHistoryData = useMemo(() => {
     if (!selectedMachine) return [];
-    return getMachineData(data, selectedMachine)
+    let records = getMachineData(data, selectedMachine);
+    if (selectedRecipe && selectedRecipe !== FILTER_ALL) {
+      records = records.filter(r => r.productName === selectedRecipe);
+    }
+    return records
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
       .map((record) => ({
         batchId: record.CHARG_NR,
@@ -16,7 +23,7 @@ export function useMdHistory(
         idle: record.idle_wall_minus_sumsteps_min,
         isCurrent: record.CHARG_NR === selectedBatchId,
       }));
-  }, [data, selectedMachine, selectedBatchId]);
+  }, [data, selectedMachine, selectedBatchId, selectedRecipe]);
   const problematicBatches = useMemo(() => {
     const issues: any[] = [];
     data.forEach((record) => {

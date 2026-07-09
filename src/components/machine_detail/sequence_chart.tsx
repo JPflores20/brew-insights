@@ -29,6 +29,8 @@ import {
 import { ChartTooltip } from "@/components/ui/chart_tooltip";
 import { GanttStepChart } from "./gantt_step_chart";
 
+import { FILTER_ALL } from "@/lib/constants";
+
 const COLOR_PRIMARY = "hsl(var(--primary))";
 const COLOR_SECONDARY = "#3b82f6";
 const COLOR_ERROR = "#ef4444";
@@ -58,11 +60,13 @@ export const SequenceChart = memo(function SequenceChart({
 }: SequenceChartProps) {
     if (!selectedRecord || stepsData.length === 0) {
         return (
-            <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500 h-[520px]">
+            <Card className="bg-card border-border p-6 border-l-4 border-l-yellow-500">
                 <div className="flex items-center gap-2">
                     <AlertTriangle className={`h-5 w-5 ${COLOR_WARNING}`} />
                     <p className="text-sm font-medium">
-                        Selecciona un lote para ver los detalles.
+                        {selectedBatchId === FILTER_ALL
+                            ? "Selecciona un lote específico para ver su secuencia de pasos."
+                            : "Selecciona un lote para ver los detalles."}
                     </p>
                 </div>
             </Card>

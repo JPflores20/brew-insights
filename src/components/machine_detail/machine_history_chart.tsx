@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Card,
     CardTitle,
@@ -18,7 +18,8 @@ import {
     ScatterChart,
     Scatter,
     ComposedChart,
-    Legend
+    Legend,
+    ReferenceLine
 } from "recharts";
 import { FileBarChart, LineChart as LineChartIcon, Activity, Dot, Layers, Plus } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,17 +56,37 @@ export function MachineHistoryChart({
     const isMultiSeries = seriesOptions.length > 0;
     const { unifiedData, xAxisMode } = useTimeSeries(fullData, isMultiSeries, seriesOptions);
 
-    // Fallback original history data
-    const originalHistoryData = data
-        .filter(d => trendBatch === FILTER_ALL || d.CHARG_NR === trendBatch)
-        .filter(d => selectedMachine === FILTER_ALL || d.TEILANL_GRUPO === selectedMachine)
-        .map(record => ({
-            batchId: record.CHARG_NR,
-            realTime: record.real_total_min,
-            date: new Date(record.timestamp).toLocaleString([], { dateStyle: "short" }),
-        }));
+    // The `data` prop is already mapped from use_md_history.ts to contain batchId, realTime, etc.
+    const originalHistoryData = data.map(record => ({
+        ...record,
+        // Ensure date exists if needed (it might not be in the record if it comes from use_md_history, but we can fall back to batchId)
+        date: record.date || record.batchId,
+    }));
 
     const chartData = isMultiSeries ? unifiedData : originalHistoryData;
+
+    const stats = useMemo(() => {
+        if (chartData.length === 0) return { avg: 0, count: 0 };
+        let sum = 0;
+        let count = 0;
+        chartData.forEach((d: any) => {
+            if (isMultiSeries) {
+                seriesOptions.forEach(s => {
+                    const val = d[`value_${s.id}`];
+                    if (val !== undefined && val !== null) {
+                        sum += Number(val);
+                        count++;
+                    }
+                });
+            } else {
+                if (d.realTime !== undefined && d.realTime !== null) {
+                    sum += Number(d.realTime);
+                    count++;
+                }
+            }
+        });
+        return { avg: count > 0 ? sum / count : 0, count };
+    }, [chartData, isMultiSeries, seriesOptions]);
 
     if (data.length === 0) return null;
 
@@ -84,7 +105,7 @@ export function MachineHistoryChart({
         };
 
         const singleXAxisKey = trendBatch && trendBatch !== FILTER_ALL ? "date" : "batchId";
-        const multiXAxisKey = xAxisMode === "steps" ? "stepName" : (xAxisMode === "machines" ? "TEILANL_GRUPO" : "date");
+        const multiXAxisKey = xAxisMode === "steps" ? "stepName" : (xAxisMode === "machines" ? "TEILANL_GRUPO" : "batchId");
         const finalXAxisKey = isMultiSeries ? multiXAxisKey : singleXAxisKey;
 
         const commonAxes = (
@@ -94,7 +115,7 @@ export function MachineHistoryChart({
                     dataKey={finalXAxisKey}
                     tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={{ stroke: "hsl(var(--border))" }}
-                    interval={0} angle={-20} textAnchor="end" height={60}
+                    interval="preserveStartEnd" minTickGap={20} angle={-20} textAnchor="end" height={60}
                     tickFormatter={(val) => String(val).length > 15 ? String(val).slice(0, 14) + "…" : val}
                 />
                 <YAxis
@@ -102,8 +123,25 @@ export function MachineHistoryChart({
                     tick={{ fill: "hsl(var(--muted-foreground))" }}
                     axisLine={false}
                 />
+                {stats.avg > 0 && (
+                    <ReferenceLine 
+                        y={stats.avg} 
+                        stroke="hsl(var(--primary))" 
+                        strokeDasharray="3 3" 
+                        opacity={0.5} 
+                    />
+                )}
                 <Tooltip
-                    content={<ChartTooltip valueSuffix="min" />}
+                    content={
+                        <ChartTooltip 
+                            valueSuffix={(val) => {
+                                const num = Number(val);
+                                const hrs = Math.floor(num / 60);
+                                const mins = Math.round(num % 60);
+                                return hrs > 0 ? `min (${hrs}h ${mins}m)` : `min`;
+                            }} 
+                        />
+                    }
                     cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
             </>
@@ -116,8 +154,13 @@ export function MachineHistoryChart({
                     <Legend />
                     {seriesOptions.map((s) => (
                         <Line
-                            key={s.id} type="monotone" dataKey={`value_${s.id}`}
-                            stroke={s.color} strokeWidth={2} name={`Lote ${s.batch} (${s.recipe})`}
+                            key={s.id} 
+                            type="monotone" 
+                            dataKey={`value_${s.id}`}
+                            stroke={s.color} 
+                            strokeWidth={2} 
+                            name={s.batch === FILTER_ALL ? `${s.machine} (${s.recipe})` : `Lote ${s.batch} (${s.recipe})`}
+                            connectNulls={true}
                             dot={({ key, ...props }: any) => (
                                 <CustomDot key={key} {...props} selectedIndices={selectedHistoryIndices} fill={s.color} />
                             )}
@@ -140,7 +183,7 @@ export function MachineHistoryChart({
             return (
                 <LineChart {...commonProps}>
                     {commonAxes}
-                    <Line type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} dot={(props: any) => <CustomDot {...props} selectedIndices={selectedHistoryIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} name="Tiempo Real" />
+                    <Line type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} dot={({ key, ...props }: any) => <CustomDot key={key} {...props} selectedIndices={selectedHistoryIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} name="Tiempo Real" />
                 </LineChart>
             );
         }
@@ -170,7 +213,7 @@ export function MachineHistoryChart({
                     </linearGradient>
                 </defs>
                 {commonAxes}
-                <Area type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} fillOpacity={1} fill="url(#colorRealTime)" name="Tiempo Real" dot={(props: any) => <CustomDot {...props} selectedIndices={selectedHistoryIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="realTime" stroke="#8884d8" strokeWidth={2} fillOpacity={1} fill="url(#colorRealTime)" name="Tiempo Real" dot={({ key, ...props }: any) => <CustomDot key={key} {...props} selectedIndices={selectedHistoryIndices} />} activeDot={{ r: 6, strokeWidth: 0 }} />
             </AreaChart>
         );
     };
@@ -181,7 +224,19 @@ export function MachineHistoryChart({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <CardTitle className="text-lg font-semibold">
                         <div className="flex flex-col">
-                            <span>{isMultiSeries ? "Análisis de Tiempos Multiseries" : "Tendencia Histórica De Tiempos"}</span>
+                            <div className="flex items-center gap-3">
+                                <span>{isMultiSeries ? "Análisis de Tiempos Multiseries" : "Tendencia Histórica De Tiempos"}</span>
+                                {stats.count > 0 && (
+                                    <span className="bg-secondary/10 text-secondary-foreground px-2 py-0.5 rounded text-xs font-bold border border-border">
+                                        Lotes analizados: {stats.count}
+                                    </span>
+                                )}
+                                {stats.avg > 0 && (
+                                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold border border-primary/20">
+                                        Promedio: {stats.avg.toFixed(1)} min {stats.avg >= 60 ? `(${Math.floor(stats.avg / 60)}h ${Math.round(stats.avg % 60)}m)` : ''}
+                                    </span>
+                                )}
+                            </div>
                             <span className="text-sm font-normal text-muted-foreground mt-1">
                                 {isMultiSeries ? "Comparación superpuesta de múltiples lotes o equipos" : `Comparativa cronológica en ${selectedMachine}`}
                             </span>

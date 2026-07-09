@@ -90,9 +90,14 @@ export function useMdRecipe(data: BatchRecord[]) {
 
   const availableMachinesForBatch = useMemo(() => {
     if (!selectedBatchId) return [];
-    const records = data.filter((d) => d.CHARG_NR === selectedBatchId);
+    let records = data;
+    if (selectedBatchId !== FILTER_ALL) {
+      records = records.filter((d) => d.CHARG_NR === selectedBatchId);
+    } else if (selectedRecipe && selectedRecipe !== FILTER_ALL) {
+      records = records.filter((d) => d.productName === selectedRecipe);
+    }
     return Array.from(new Set(records.map((r) => r.TEILANL_GRUPO))).sort();
-  }, [data, selectedBatchId]);
+  }, [data, selectedBatchId, selectedRecipe]);
 
   useEffect(() => {
     if (availableMachinesForBatch.length === 0) {

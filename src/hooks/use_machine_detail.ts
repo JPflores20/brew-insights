@@ -18,7 +18,7 @@ export function useMachineDetail() {
   const processData = useMdProcess(data, selectedBatchId, selectedMachine);
   const { selectedRecord } = processData;
   
-  const historyData = useMdHistory(data, selectedMachine, selectedBatchId);
+  const historyData = useMdHistory(data, selectedMachine, selectedBatchId, selectedRecipe);
   const tempData = useMdTemp(data, selectedMachine, selectedRecipe, selectedBatchId);
   
   const currentGap = selectedRecord ? selectedRecord.max_gap_min : 0;

@@ -88,12 +88,19 @@ export function useTimeSeries(
         return sortedDates.map(timestamp => {
             const dateObj = new Date(timestamp);
             const dateStr = dateObj.toLocaleString([], { dateStyle: "short", timeStyle: "short" });
+            let unifiedBatchId = "";
             const datum: any = { date: dateStr, rawDate: timestamp };
             
             datasets.forEach(({ id, records }) => {
                 const r = records.find(rec => rec.timestamp === timestamp);
-                datum[`value_${id}`] = r ? r.real_total_min : null;
+                if (r) {
+                    datum[`value_${id}`] = r.real_total_min;
+                    if (!unifiedBatchId) unifiedBatchId = r.CHARG_NR;
+                } else {
+                    datum[`value_${id}`] = null;
+                }
             });
+            datum.batchId = unifiedBatchId || "Desconocido";
             return datum;
         }).filter(d => series.some(s => d[`value_${s.id}`] !== null)); // Quitar saltos de tiempo muertos
         

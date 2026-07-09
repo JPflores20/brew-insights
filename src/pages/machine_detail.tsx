@@ -43,7 +43,7 @@ export default function MachineDetail() {
       <AnimatedPage className="space-y-6 pb-12">
         <MachineHeader selectedBatchId={ctx.selectedBatchId} selectedMachine={ctx.selectedMachine} onExport={handleExport} onPrint={handlePrint} />
         <div className="print:hidden">
-            <GlobalFilters selectedRecipe={ctx.selectedRecipe} setSelectedRecipe={ctx.setSelectedRecipe} uniqueRecipes={ctx.uniqueRecipes} selectedBatchId={ctx.selectedBatchId} setSelectedBatchId={ctx.setSelectedBatchId} filteredBatches={ctx.filteredBatches} batchProductMap={ctx.batchProductMap} />
+            <GlobalFilters selectedRecipe={ctx.selectedRecipe} setSelectedRecipe={ctx.setSelectedRecipe} uniqueRecipes={ctx.uniqueRecipes} selectedBatchId={ctx.selectedBatchId} setSelectedBatchId={ctx.setSelectedBatchId} filteredBatches={ctx.filteredBatches} batchProductMap={ctx.batchProductMap} selectedMachine={ctx.selectedMachine} setSelectedMachine={ctx.setSelectedMachine} availableMachinesForBatch={ctx.availableMachinesForBatch} />
         </div>
         
         <div ref={componentRef}>

@@ -12,8 +12,8 @@ export function useBcSeries(data: BatchRecord[], initialCount: number = 0) {
             recipe: "",
             machine: "",
             batch: FILTER_ALL,
-            step: FILTER_ALL,
-            parameter: FILTER_ALL,
+            step: "",
+            parameter: "",
             color: COLORS[i % COLORS.length]
         });
     }
@@ -26,11 +26,11 @@ export function useBcSeries(data: BatchRecord[], initialCount: number = 0) {
       ...seriesList,
       {
         id: nextId.toString(),
-        recipe: lastSeries?.recipe ?? FILTER_ALL,
-        machine: lastSeries?.machine ?? FILTER_ALL,
+        recipe: lastSeries?.recipe ?? "",
+        machine: lastSeries?.machine ?? "",
         batch: lastSeries?.batch ?? FILTER_ALL,
-        step: lastSeries?.step ?? FILTER_ALL,
-        parameter: lastSeries?.parameter ?? FILTER_ALL,
+        step: lastSeries?.step ?? "",
+        parameter: lastSeries?.parameter ?? "",
         color: COLORS[(nextId - 1) % COLORS.length],
       },
     ]);
@@ -64,7 +64,7 @@ export function useBcSeries(data: BatchRecord[], initialCount: number = 0) {
     setBatch: (val: string) => updateSeries(s.id, "batch", val),
     setStep: (val: string) => updateSeries(s.id, "step", val),
     setParameter: (val: string) => updateSeries(s.id, "parameter", val),
-    onRemove: seriesList.length > 1 ? () => removeSeries(s.id) : undefined,
+    onRemove: seriesList.length > initialCount ? () => removeSeries(s.id) : undefined,
   }));
   return { 
     seriesList, 
