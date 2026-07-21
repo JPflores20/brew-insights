@@ -198,7 +198,8 @@ export async function processDbfBuffer(buffer: ArrayBuffer): Promise<BatchRecord
           unit = '°P';
         } else if (unit.includes('c') || nameUpper.includes('TEM.')) {
           if (nameUpper.includes('REG.')) name = 'Temp. Consigna';
-          else name = 'Temp. Tanque';
+          else if (nameUpper.includes('TQ')) name = 'Temp. Tanque';
+          else name = name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ');
           unit = '°C';
         } else if (nameUpper.includes('PH')) {
           name = 'pH';
@@ -425,11 +426,19 @@ export function mergeBatchRecords(records: BatchRecord[]): BatchRecord[] {
     // Pick best product name (one that isn't 'Desconocido')
     const bestProduct = group.map(g => g.productName).find(p => p && !['Desconocido', 'SIN_PRODUCTO', 'ALL', 'PRODUCTO'].includes(p)) || first.productName;
 
+    // Unique parameters by stepName and name to avoid duplicate cached data
+    const uniqueParamsMap = new Map<string, BatchRecord['parameters'][0]>();
+    allParams.forEach(p => {
+      const pKey = `${p.stepName}|${p.name}`;
+      uniqueParamsMap.set(pKey, p); // The last one (newest) overwrites the previous
+    });
+    const mergedParams = Array.from(uniqueParamsMap.values()).sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+
     return {
       ...first,
       productName: bestProduct,
       steps: Array.from(uniqueStepsMap.values()).sort((a, b) => a.startTime.localeCompare(b.startTime)),
-      parameters: allParams.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || '')),
+      parameters: mergedParams,
       materials: allMaterials, // Could be grouped too but usually fine
       alerts: Array.from(new Set(allAlerts)),
       agua_malta_points: allAguaMalta,

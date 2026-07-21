@@ -4,7 +4,7 @@ import { processDbfFile, mergeBatchRecords } from "@/utils/dbf_processor";
 import { useToast } from "@/hooks/use_toast";
 import { BatchRecord } from "@/types";
 import { useMemo } from "react";
-import { writeBatch, doc, collection } from "firebase/firestore";
+import { setDoc, doc, collection } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
@@ -79,31 +79,30 @@ export function useFileUpload(target: 'hot' | 'cold' = 'hot') {
         if (target === 'hot') {
           try {
             const hotBlockRef = collection(firestore, "hot_block_records");
-            const CHUNK_SIZE = 100; // Reducido para evitar sobrecargar el write stream
             let uploadedCount = 0;
             
-            for (let i = 0; i < uniqueData.length; i += CHUNK_SIZE) {
-              const chunk = uniqueData.slice(i, i + CHUNK_SIZE);
-              const batch = writeBatch(firestore);
+            // Usamos un bucle for clásico para que sea 100% secuencial y evitar saturar el SDK de Firebase
+            for (const record of uniqueData) {
+              const safeName = (record.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+              const safeTeil = (record.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
+              const docId = `${record.CHARG_NR}_${safeTeil}_${safeName}`;
+              const docRef = doc(hotBlockRef, docId);
               
-              chunk.forEach((record) => {
-                const safeName = (record.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
-                const safeTeil = (record.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
-                const docId = `${record.CHARG_NR}_${safeTeil}_${safeName}`;
-                const docRef = doc(hotBlockRef, docId);
-                
-                // Firestore no soporta valores "undefined". 
-                // Usamos JSON.parse/stringify para limpiar cualquier propiedad undefined del objeto y sus hijos.
-                const cleanRecord = JSON.parse(JSON.stringify(record));
-                
-                batch.set(docRef, cleanRecord, { merge: true });
-              });
+              // Firestore no soporta valores "undefined". 
+              const cleanRecord = JSON.parse(JSON.stringify(record));
               
-              await batch.commit();
-              uploadedCount += chunk.length;
+              // setDoc individual, esperando a que termine cada uno antes del siguiente
+              await setDoc(docRef, cleanRecord, { merge: true });
               
-              // Pausa de 500ms para darle tiempo al SDK a liberar su stream buffer
-              await new Promise(resolve => setTimeout(resolve, 500));
+              uploadedCount++;
+              
+              // Mostrar progreso cada 100 lotes o al terminar
+              if (uploadedCount % 100 === 0 || uploadedCount === uniqueData.length) {
+                toast({
+                  title: "Sincronizando...",
+                  description: `Subiendo a la nube: ${uploadedCount} / ${uniqueData.length} lotes.`,
+                });
+              }
             }
             
             toast({

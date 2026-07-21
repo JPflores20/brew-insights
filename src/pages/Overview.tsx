@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use_toast";
 import { exportToCSV } from "@/utils/export_utils";
 import { useData } from "@/context/data_context";
@@ -240,6 +240,8 @@ export default function Overview() {
         </Dialog>
         <Dialog open={showUploader} onOpenChange={setShowUploader}>
           <DialogContent className="max-w-4xl bg-transparent border-none shadow-none">
+            <DialogTitle className="sr-only">Cargar Datos</DialogTitle>
+            <DialogDescription className="sr-only">Sube tus archivos DBF aquí para cargarlos en el sistema.</DialogDescription>
             <div className="bg-background rounded-xl border border-border shadow-2xl">
               <EmptyStateUploader 
                 loading={loading} 

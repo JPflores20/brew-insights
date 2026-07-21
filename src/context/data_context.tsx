@@ -11,7 +11,7 @@ import { BatchRecord } from "@/data/mock_data";
 import { useIndexedDB } from "@/hooks/use_indexed_db"; 
 import { processDbfBuffer } from "@/utils/dbf_processor";
 import { useToast } from "@/hooks/use_toast";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, startAfter, orderBy } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 interface DataContextType {
@@ -56,27 +56,73 @@ export function DataProvider({ children }: { children: ReactNode }) {
         q = query(hotBlockRef, where("timestamp", ">", maxTimestamp));
       }
       
-      const querySnapshot = await getDocs(q);
-      const newRecords: BatchRecord[] = [];
-      querySnapshot.forEach((doc) => {
-        newRecords.push(doc.data() as BatchRecord);
+      const uniqueDataMap = new Map<string, BatchRecord>();
+      
+      // Llenar el mapa con los datos locales existentes
+      data.forEach(r => {
+        const safeName = (r.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+        const safeTeil = (r.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
+        const key = `${r.CHARG_NR}_${safeTeil}_${safeName}`;
+        uniqueDataMap.set(key, r);
       });
       
-      if (newRecords.length > 0) {
-        const mergedData = [...data, ...newRecords];
-        const uniqueDataMap = new Map<string, BatchRecord>();
-        mergedData.forEach(r => {
+      if (data.length === 0) {
+        // Carga inicial pesada: Descargar en bloques para no asfixiar la memoria del iPad/Móvil
+        let lastVisible = null;
+        let hasMore = true;
+        
+        while (hasMore) {
+          let chunkQuery = query(hotBlockRef, orderBy("CHARG_NR", "desc"), limit(200));
+          if (lastVisible) {
+            chunkQuery = query(hotBlockRef, orderBy("CHARG_NR", "desc"), startAfter(lastVisible), limit(200));
+          }
+          
+          const snapshot = await getDocs(chunkQuery);
+          
+          snapshot.forEach((doc) => {
+            const r = doc.data() as BatchRecord;
+            const safeName = (r.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
+            const safeTeil = (r.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
+            const key = `${r.CHARG_NR}_${safeTeil}_${safeName}`;
+            
+            // OPTIMIZACIÓN EXTREMA PARA IPAD:
+            // Conservamos 'parameters', 'steps' y 'materials' solo para los lotes más recientes (ej. los primeros 200 que descargamos en el primer chunk).
+            // Para el resto (lotes viejos), los borramos para que no asfixien la memoria RAM.
+            if (uniqueDataMap.size > 200) {
+                r.parameters = [];
+                r.steps = [];
+                r.materials = [];
+            }
+            
+            uniqueDataMap.set(key, r);
+          });
+          
+          if (snapshot.docs.length < 200) {
+            hasMore = false;
+          } else {
+            lastVisible = snapshot.docs[snapshot.docs.length - 1];
+            // Pausa minúscula para liberar el event loop y dejar que el Garbage Collector respire
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+      } else {
+        // Sincronización normal (solo los nuevos)
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          const r = doc.data() as BatchRecord;
           const safeName = (r.productName || 'Desconocido').replace(/[\/\s]+/g, '_');
           const safeTeil = (r.TEILANL_GRUPO || 'SIN_TEILANL').replace(/[\/\s]+/g, '_');
           const key = `${r.CHARG_NR}_${safeTeil}_${safeName}`;
           uniqueDataMap.set(key, r);
         });
-        const finalData = Array.from(uniqueDataMap.values());
-        
+      }
+      
+      const finalData = Array.from(uniqueDataMap.values());
+      if (finalData.length > data.length) {
         setData(finalData);
         toast({ 
           title: "Datos sincronizados", 
-          description: `Se descargaron ${newRecords.length} nuevos lotes de Firebase.` 
+          description: `Se descargaron ${finalData.length - data.length} nuevos lotes de Firebase.` 
         });
       } else if (data.length === 0) {
         // Fallback local file if Firebase is empty and we have no local data

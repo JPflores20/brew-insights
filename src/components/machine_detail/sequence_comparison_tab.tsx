@@ -31,8 +31,6 @@ const BATCH_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#0
 
 const AXIS_LABEL_STYLE = { fontSize: 10, fill: "hsl(var(--muted-foreground))" };
 
-const normalizeMachineName = (name: string) => name.replace(/[\s\.-]+(\d+)$/, '').trim();
-
 export const SequenceComparisonTab = ({ 
     data, 
     initialMachine,
@@ -48,12 +46,12 @@ export const SequenceComparisonTab = ({
     // Inicializar el grupo de máquina si está vacío
     React.useEffect(() => {
         if (!compSelectedMachineGroup && initialMachine) {
-            setCompSelectedMachineGroup(normalizeMachineName(initialMachine));
+            setCompSelectedMachineGroup(initialMachine);
         }
     }, [initialMachine, compSelectedMachineGroup, setCompSelectedMachineGroup]);
 
     const uniqueMachineGroups = useMemo(() => {
-        const rawSet = new Set(data.map((d) => normalizeMachineName(d.TEILANL_GRUPO)).filter(Boolean));
+        const rawSet = new Set(data.map((d) => d.TEILANL_GRUPO).filter(Boolean));
         return Array.from(rawSet).sort();
     }, [data]);
 
@@ -69,6 +67,18 @@ export const SequenceComparisonTab = ({
         return getUniqueBatchIds(filtered);
     }, [data, compSelectedRecipe]);
 
+    const validBatchesForMachine = useMemo(() => {
+        const validIds = new Set<string>();
+        data.forEach(d => {
+            if (d.TEILANL_GRUPO === compSelectedMachineGroup) {
+                if (d.steps && d.steps.length > 0) {
+                    validIds.add(d.CHARG_NR);
+                }
+            }
+        });
+        return validIds;
+    }, [data, compSelectedMachineGroup]);
+
     const batchProductMap = useMemo(() => {
         const map = new Map<string, string>();
         data.forEach((d) => { if (d.productName) map.set(d.CHARG_NR, d.productName); });
@@ -81,7 +91,7 @@ export const SequenceComparisonTab = ({
         compCompareBatchIds.forEach(batchId => {
             const record = data.find(d => 
                 d.CHARG_NR === batchId && 
-                normalizeMachineName(d.TEILANL_GRUPO) === compSelectedMachineGroup
+                d.TEILANL_GRUPO === compSelectedMachineGroup
             );
             
             if (record?.steps) {
@@ -103,29 +113,45 @@ export const SequenceComparisonTab = ({
         const allStepsSet = new Set<string>();
         const batchStepMap = new Map<string, Map<string, number>>();
         const batchRealMachineMap = new Map<string, string>();
+        
+        const stepIndexSum = new Map<string, number>();
+        const stepIndexCount = new Map<string, number>();
+        const stepExpectedSum = new Map<string, number>();
 
         compCompareBatchIds.forEach(batchId => {
             const record = data.find(d => 
                 d.CHARG_NR === batchId && 
-                normalizeMachineName(d.TEILANL_GRUPO) === compSelectedMachineGroup
+                d.TEILANL_GRUPO === compSelectedMachineGroup
             );
             
             if (record?.steps) {
                 batchRealMachineMap.set(batchId, record.TEILANL_GRUPO);
                 const stepDurations = new Map<string, number>();
-                record.steps.forEach(s => {
+                record.steps.forEach((s, index) => {
                     allStepsSet.add(s.stepName);
                     const current = stepDurations.get(s.stepName) || 0;
                     stepDurations.set(s.stepName, current + s.durationMin);
+
+                    stepIndexSum.set(s.stepName, (stepIndexSum.get(s.stepName) || 0) + index);
+                    stepIndexCount.set(s.stepName, (stepIndexCount.get(s.stepName) || 0) + 1);
+                    stepExpectedSum.set(s.stepName, (stepExpectedSum.get(s.stepName) || 0) + s.expectedDurationMin);
                 });
                 batchStepMap.set(batchId, stepDurations);
             }
         });
 
-        const orderedSteps = Array.from(allStepsSet);
+        const orderedSteps = Array.from(allStepsSet).sort((a, b) => {
+            const avgA = (stepIndexSum.get(a) || 0) / (stepIndexCount.get(a) || 1);
+            const avgB = (stepIndexSum.get(b) || 0) / (stepIndexCount.get(b) || 1);
+            return avgA - avgB;
+        });
 
         return orderedSteps.map(stepName => {
             const point: any = { stepName };
+            const expectedSum = stepExpectedSum.get(stepName) || 0;
+            const count = stepIndexCount.get(stepName) || 1;
+            point.Setpoint = Number((expectedSum / count).toFixed(2));
+
             compCompareBatchIds.forEach(batchId => {
                 const durations = batchStepMap.get(batchId);
                 point[batchId] = durations?.get(stepName) || 0;
@@ -261,9 +287,9 @@ export const SequenceComparisonTab = ({
                                             <CommandEmpty>No se encontraron lotes.</CommandEmpty>
                                             <CommandGroup className="max-h-[300px] overflow-auto">
                                                 {filteredBatches
+                                                    .filter(b => validBatchesForMachine.has(b))
                                                     .filter(b => b.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                                                 (batchProductMap.get(b)?.toLowerCase().includes(searchTerm.toLowerCase())))
-                                                    .slice(0, 50)
                                                     .map((batch) => (
                                                     <CommandItem
                                                         key={batch}
@@ -348,6 +374,14 @@ export const SequenceComparisonTab = ({
                                 <p className="text-sm">Usa los filtros de arriba para añadir lotes a la comparación</p>
                             </div>
                         </div>
+                    ) : comparisonStepsData.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 py-20 border-2 border-dashed rounded-xl border-muted-foreground/20">
+                            <Clock className="h-12 w-12 opacity-20" />
+                            <div className="text-center">
+                                <p className="font-medium text-lg">Sin datos de pasos</p>
+                                <p className="text-sm">Ninguno de los lotes seleccionados tiene un desglose de pasos registrado para "{compSelectedMachineGroup}"</p>
+                            </div>
+                        </div>
                     ) : (
                         <div className="h-[500px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
@@ -372,13 +406,25 @@ export const SequenceComparisonTab = ({
                                                     <div className="bg-background border border-border p-3 rounded-xl shadow-xl space-y-2">
                                                         <p className="font-bold border-b pb-1 mb-1">{label}</p>
                                                         {payload.map((entry: any) => {
-                                                            const batchId = entry.dataKey;
-                                                            const realMachine = entry.payload[`${batchId}_realMachine`];
+                                                            const dataKey = entry.dataKey;
+                                                            if (dataKey === "Setpoint") {
+                                                                return (
+                                                                    <div key={dataKey} className="flex flex-col gap-0.5">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                                                            <span className="font-medium text-primary">Setpoint:</span>
+                                                                            <span className="font-bold text-primary">{entry.value} min</span>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            
+                                                            const realMachine = entry.payload[`${dataKey}_realMachine`];
                                                             return (
-                                                                <div key={batchId} className="flex flex-col gap-0.5">
+                                                                <div key={dataKey} className="flex flex-col gap-0.5">
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                                                                        <span className="font-medium">Lote {batchId}:</span>
+                                                                        <span className="font-medium">Lote {dataKey}:</span>
                                                                         <span className="font-bold">{entry.value} min</span>
                                                                     </div>
                                                                     <div className="text-[10px] text-muted-foreground ml-4">
@@ -394,6 +440,17 @@ export const SequenceComparisonTab = ({
                                         }}
                                     />
                                     <Legend verticalAlign="top" height={36}/>
+                                    <Line
+                                        key="Setpoint"
+                                        type="stepAfter"
+                                        dataKey="Setpoint"
+                                        name="Setpoint"
+                                        stroke="hsl(var(--primary))"
+                                        strokeWidth={3}
+                                        strokeDasharray="5 5"
+                                        dot={{ r: 4, strokeWidth: 2 }}
+                                        activeDot={{ r: 6, strokeWidth: 0 }}
+                                    />
                                     {compCompareBatchIds.map((batchId, index) => (
                                         <Line
                                             key={batchId}

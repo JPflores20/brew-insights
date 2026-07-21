@@ -84,7 +84,7 @@ export default function Login() {
       } else if (err.code === 'auth/too-many-requests') {
         setError("Cuenta bloqueada temporalmente. Intenta más tarde.");
       } else {
-        setError("Error de conexión con el servidor.");
+        setError(`Error de conexión con el servidor. (${err.code || err.message})`);
       }
     } finally {
       setLoading(false);
